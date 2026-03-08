@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #f59e0b; /* Amber 500 */
+  --color-primary-dark: #d97706; /* Amber 600 */
+  --color-background: #0f172a; /* Slate 900 */
+  --color-surface: #1e293b; /* Slate 800 */
+  --color-surface-light: #334155; /* Slate 700 */
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: #f8fafc; /* Slate 50 */
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
