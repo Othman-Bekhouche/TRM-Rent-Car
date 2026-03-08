@@ -8,11 +8,10 @@ export default function Navbar() {
     return (
         <nav className="bg-[var(--color-surface)] border-b border-[var(--color-surface-light)] sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-16">
+                <div className="flex justify-between h-24">
                     <div className="flex items-center">
-                        <Link to="/" className="flex items-center gap-3">
-                            <img src="/trm-logo-pour-arriere-noir.png" alt="TRM Rent Car" className="h-10 w-auto object-contain" />
-                            <span className="font-bold text-xl tracking-tight text-white hidden sm:block">TRM Rent Car</span>
+                        <Link to="/" className="flex items-center">
+                            <img src="/trm-logo-pour-arriere-noir.png" alt="TRM Rent Car" className="h-20 md:h-24 w-auto object-contain" />
                         </Link>
                     </div>
 

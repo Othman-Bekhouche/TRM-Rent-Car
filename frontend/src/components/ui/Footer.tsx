@@ -7,9 +7,8 @@ export default function Footer() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                     <div className="col-span-1 md:col-span-1">
-                        <Link to="/" className="flex items-center gap-3 mb-4">
-                            <img src="/trm-logo-pour-arriere-noir.png" alt="TRM Rent Car" className="h-8 w-auto object-contain" />
-                            <span className="font-bold text-lg text-white">TRM Rent Car</span>
+                        <Link to="/" className="flex items-center mb-4">
+                            <img src="/trm-logo-pour-arriere-noir.png" alt="TRM Rent Car" className="h-16 w-auto object-contain -ml-2" />
                         </Link>
                         <p className="text-slate-400 text-sm">
                             Votre partenaire de confiance pour la location de véhicules premium et confortables.
