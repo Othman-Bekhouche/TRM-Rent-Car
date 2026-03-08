@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Car, Facebook, Instagram, Twitter } from 'lucide-react';
+import { Facebook, Instagram, Twitter } from 'lucide-react';
 
 export default function Footer() {
     return (
@@ -7,8 +7,8 @@ export default function Footer() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                     <div className="col-span-1 md:col-span-1">
-                        <Link to="/" className="flex items-center gap-2 mb-4">
-                            <Car className="h-6 w-6 text-[var(--color-primary)]" />
+                        <Link to="/" className="flex items-center gap-3 mb-4">
+                            <img src="/carte-recto.jpg" alt="TRM Rent Car" className="h-8 w-auto rounded object-contain shadow-sm" />
                             <span className="font-bold text-lg text-white">TRM Rent Car</span>
                         </Link>
                         <p className="text-slate-400 text-sm">

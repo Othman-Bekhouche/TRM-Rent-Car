@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Car, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Navbar() {
@@ -10,9 +10,9 @@ export default function Navbar() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
                     <div className="flex items-center">
-                        <Link to="/" className="flex items-center gap-2">
-                            <Car className="h-8 w-8 text-[var(--color-primary)]" />
-                            <span className="font-bold text-xl tracking-tight text-white">TRM Rent Car</span>
+                        <Link to="/" className="flex items-center gap-3">
+                            <img src="/carte-recto.jpg" alt="TRM Rent Car" className="h-10 w-auto rounded object-contain shadow-sm" />
+                            <span className="font-bold text-xl tracking-tight text-white hidden sm:block">TRM Rent Car</span>
                         </Link>
                     </div>
 
