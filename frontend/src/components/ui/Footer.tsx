@@ -8,7 +8,7 @@ export default function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                     <div className="col-span-1 md:col-span-1">
                         <Link to="/" className="flex items-center gap-3 mb-4">
-                            <img src="/carte-recto.jpg" alt="TRM Rent Car" className="h-8 w-auto rounded object-contain shadow-sm" />
+                            <img src="/trm-logo-pour-arriere-noir.png" alt="TRM Rent Car" className="h-8 w-auto object-contain" />
                             <span className="font-bold text-lg text-white">TRM Rent Car</span>
                         </Link>
                         <p className="text-slate-400 text-sm">

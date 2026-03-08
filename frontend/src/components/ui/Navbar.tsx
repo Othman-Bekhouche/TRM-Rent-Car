@@ -11,7 +11,7 @@ export default function Navbar() {
                 <div className="flex justify-between h-16">
                     <div className="flex items-center">
                         <Link to="/" className="flex items-center gap-3">
-                            <img src="/carte-recto.jpg" alt="TRM Rent Car" className="h-10 w-auto rounded object-contain shadow-sm" />
+                            <img src="/trm-logo-pour-arriere-noir.png" alt="TRM Rent Car" className="h-10 w-auto object-contain" />
                             <span className="font-bold text-xl tracking-tight text-white hidden sm:block">TRM Rent Car</span>
                         </Link>
                     </div>
