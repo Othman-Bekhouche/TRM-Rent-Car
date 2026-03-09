@@ -160,41 +160,61 @@ BEGIN
     (c5, 'Youssef Ziani', 'y.ziani@gmail.com', '06 11 22 33 44', 'BL567890', 'Hay Salam', 'Nador', 1500, 2, 'Actif'),
     (c6, 'Amina Tazi', 'amina.tazi@gmail.com', '06 77 66 55 44', 'BM234567', 'Quartier Industriel', 'Tanger', 1260, 1, 'Nouveau');
 
+    -- 3 Mois d'activité logiques (Janvier, Février, Mars 2026) sans cautions
     -- Réservations
     INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status)
     VALUES
-    (r1, c1, v1, '2026-03-12', '2026-03-15', 'Agence Taourirt', 'Agence Taourirt', 1260, 'confirmed', 'paid'),
+    -- Janvier 2026
+    (r1, c1, v1, '2026-01-05', '2026-01-10', 'Agence Taourirt', 'Agence Taourirt', 2100, 'completed', 'paid'),
+    (gen_random_uuid(), c2, v2, '2026-01-12', '2026-01-15', 'Aéroport Oujda', 'Aéroport Oujda', 1560, 'completed', 'paid'),
+    (gen_random_uuid(), c3, v3, '2026-01-20', '2026-01-28', 'Agence Taourirt', 'Aéroport Fès', 2400, 'completed', 'paid'),
+    (gen_random_uuid(), c4, v6, '2026-01-25', '2026-01-30', 'Agence Taourirt', 'Agence Taourirt', 1600, 'completed', 'paid'),
+    
+    -- Février 2026
+    (gen_random_uuid(), c5, v4, '2026-02-01', '2026-02-06', 'Aéroport Oujda', 'Agence Taourirt', 1500, 'completed', 'paid'),
+    (gen_random_uuid(), c6, v5, '2026-02-10', '2026-02-14', 'Aéroport Nador', 'Aéroport Nador', 1280, 'completed', 'paid'),
+    (gen_random_uuid(), c1, v8, '2026-02-15', '2026-02-20', 'Agence Taourirt', 'Agence Taourirt', 6000, 'completed', 'paid'),
+    (gen_random_uuid(), c2, v1, '2026-02-22', '2026-02-28', 'Aéroport Oujda', 'Aéroport Oujda', 2520, 'completed', 'paid'),
+    
+    -- Mars 2026
+    (gen_random_uuid(), c3, v3, '2026-03-02', '2026-03-08', 'Agence Taourirt', 'Aéroport Fès', 2100, 'completed', 'paid'),
+    (r4, c4, v6, '2026-03-05', '2026-03-12', 'Agence Taourirt', 'Agence Taourirt', 2240, 'completed', 'paid'),
     (r2, c2, v2, '2026-03-10', '2026-03-14', 'Aéroport Oujda', 'Aéroport Oujda', 2080, 'confirmed', 'paid'),
-    (r3, c3, v3, '2026-03-08', '2026-03-15', 'Agence Taourirt', 'Aéroport Fès', 2100, 'confirmed', 'paid'),
-    (r4, c4, v6, '2026-03-05', '2026-03-08', 'Agence Taourirt', 'Agence Taourirt', 960, 'completed', 'paid'),
-    (r5, c5, v4, '2026-03-01', '2026-03-06', 'Aéroport Oujda', 'Agence Taourirt', 1500, 'completed', 'paid');
+    (r3, c3, v7, '2026-03-15', '2026-03-25', 'Agence Taourirt', 'Agence Taourirt', 3200, 'pending', 'unpaid'),
+    (r5, c5, v4, '2026-03-18', '2026-03-22', 'Aéroport Oujda', 'Agence Taourirt', 1200, 'pending', 'unpaid');
 
-    -- Infractions
+    -- Infractions (Simulation sur ces 3 mois)
     INSERT INTO public.infractions (vehicle_id, reservation_id, customer_id, infraction_type, infraction_date, infraction_time, city, location, authority_name, reference_number, fine_amount, description, admin_notes, status)
     VALUES
-    (v3, r3, c3, 'radar_fixe', '2026-03-10', '14:32', 'Taza', 'Route N6 — PK 125', 'NARSA', 'NR-2026-08451', 400, 'Excès de vitesse détecté par radar fixe à 95 km/h en zone limitée à 60 km/h.', 'PV reçu par courrier le 12/03/2026.', 'matched'),
-    (v1, r1, c1, 'stationnement_interdit', '2026-03-13', '09:15', 'Oujda', 'Boulevard Mohammed V — Centre Ville', 'Police Oujda', 'PO-2026-03892', 150, 'Stationnement sur trottoir en zone interdite.', '', 'transmitted'),
-    (v5, NULL, NULL, 'feu_rouge', '2026-02-20', '18:45', 'Casablanca', 'Carrefour Bd Zerktouni / Bd Anfa', 'NARSA', 'NR-2026-07122', 700, 'Passage au feu rouge détecté par caméra de surveillance.', 'Aucune réservation trouvée. Véhicule en déplacement interne ?', 'unmatched');
+    (v3, NULL, NULL, 'radar_fixe', '2026-01-22', '14:32', 'Taza', 'Route N6 — PK 125', 'NARSA', 'NR-2026-08451', 400, 'Excès de vitesse à 95 km/h.', 'PV reçu, à lier manuellement.', 'unmatched'),
+    (v4, NULL, NULL, 'stationnement_interdit', '2026-02-05', '09:15', 'Oujda', 'Bd Mohammed V', 'Police Oujda', 'PO-2026-03892', 150, 'Stationnement sur trottoir.', 'Payé par agence.', 'unmatched'),
+    (v6, r4, c4, 'feu_rouge', '2026-03-06', '18:45', 'Casablanca', 'Carrefour Bd Anfa', 'NARSA', 'NR-2026-07122', 700, 'Passage au feu rouge.', 'Dossier transmis au client.', 'matched');
+
+    -- Transactions (Sans cautions)
+    INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, description, status, transaction_date)
+    VALUES
+    (r1, c1, 'encaissement', 2100, 'Espèces', 'Paiement location Janvier', 'Payé', '2026-01-05'),
+    (NULL, c2, 'encaissement', 1560, 'Virement', 'Paiement location Janvier', 'Payé', '2026-01-12'),
+    (NULL, c3, 'encaissement', 2400, 'Carte', 'Paiement location Janvier', 'Payé', '2026-01-20'),
+    (NULL, c4, 'encaissement', 1600, 'Espèces', 'Paiement location Janvier', 'Payé', '2026-01-25'),
+    (NULL, c5, 'encaissement', 1500, 'Virement', 'Paiement location Février', 'Payé', '2026-02-01'),
+    (NULL, c6, 'encaissement', 1280, 'Carte', 'Paiement location Février', 'Payé', '2026-02-10'),
+    (NULL, c1, 'encaissement', 6000, 'Virement', 'Paiement Range Rover Février', 'Payé', '2026-02-15'),
+    (NULL, c2, 'encaissement', 2520, 'Espèces', 'Paiement location Février', 'Payé', '2026-02-22'),
+    (NULL, c3, 'encaissement', 2100, 'Virement', 'Paiement location Mars', 'Payé', '2026-03-02'),
+    (r4, c4, 'encaissement', 2240, 'Espèces', 'Paiement location Mars', 'Payé', '2026-03-05'),
+    (r2, c2, 'encaissement', 2080, 'Virement', 'Paiement réservation Mars', 'Payé', '2026-03-10');
 
     -- Maintenance
     INSERT INTO public.maintenance (vehicle_id, maintenance_type, maintenance_date, next_maintenance_date, mileage_at_maintenance, cost, status, description)
     VALUES
-    (v7, 'Vidange + Filtres', '2026-03-09', '2026-06-09', 15000, 850, 'in_progress', 'Vidange moteur et remplacement des filtres huile/air/habitacle.'),
-    (v1, 'Contrôle technique', '2026-03-01', '2027-03-01', 22000, 400, 'completed', 'Contrôle technique annuel réglementaire.'),
-    (v3, 'Pneus (4x)', '2026-02-25', '2027-02-25', 18000, 2400, 'completed', 'Remplacement de 4 pneus toutes saisons.'),
-    (v2, 'Plaquettes frein AV', '2026-02-15', '2026-08-15', 20000, 600, 'completed', 'Remplacement des plaquettes de frein avant.'),
-    (v6, 'Vidange', '2026-02-10', '2026-05-10', 14500, 500, 'planned', 'Prochaine vidange planifiée.');
+    (v1, 'Contrôle technique', '2026-01-10', '2027-01-10', 21000, 400, 'completed', 'Visite annuelle OK.'),
+    (v6, 'Vidange', '2026-01-15', '2026-06-15', 12000, 500, 'completed', 'Vidange basique.'),
+    (v3, 'Pneus (4x)', '2026-02-10', '2027-02-10', 16000, 2400, 'completed', 'Remplacement des 4 pneus.'),
+    (v2, 'Plaquettes frein AV', '2026-02-15', '2026-08-15', 18000, 600, 'completed', 'Remplacement plaquettes usées.'),
+    (v7, 'Vidange + Filtres', '2026-03-09', '2026-07-09', 15000, 850, 'in_progress', 'Vidange complète en cours.');
 
-    -- Transactions
-    INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, description, status, transaction_date)
-    VALUES
-    (r1, c1, 'encaissement', 1260, 'Espèces', 'Paiement location Peugeot 208 Noir', 'Payé', '2026-03-12'),
-    (r2, c2, 'encaissement', 2080, 'Virement', 'Paiement location Peugeot 208 Gris', 'Payé', '2026-03-10'),
-    (r3, c3, 'caution', 3000, 'Espèces', 'Caution location Dacia Logan Blanc', 'En attente', '2026-03-08'),
-    (r4, c4, 'remboursement', 960, 'Virement', 'Remboursement caution Dacia Sandero Gris', 'Remboursé', '2026-03-05'),
-    (r5, c5, 'encaissement', 1500, 'Carte', 'Paiement location Dacia Logan Gris', 'Payé', '2026-03-01');
-
-    -- GPS Tracking (latest positions)
+    -- GPS Tracking
     INSERT INTO public.gps_tracking (vehicle_id, latitude, longitude, speed, location_name, recorded_at)
     VALUES
     (v3, 34.6800000, -1.9100000, 95, 'Route N6 — Oujda → Fès', NOW() - INTERVAL '3 minutes'),

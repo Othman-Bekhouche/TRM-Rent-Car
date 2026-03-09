@@ -54,11 +54,11 @@ export default function Accounting() {
                 </div>
                 <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
                     <div className="flex items-center justify-between mb-3">
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Cautions en cours</p>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Mois en cours</p>
                         <div className="p-2 bg-amber-50 rounded-xl text-amber-600"><CreditCard className="w-4 h-4" /></div>
                     </div>
-                    <p className="text-2xl font-black text-amber-600">8 000 MAD</p>
-                    <p className="text-xs text-slate-400 mt-2">2 cautions bloquées</p>
+                    <p className="text-2xl font-black text-amber-600">En progréssion</p>
+                    <p className="text-xs text-slate-400 mt-2">Dépôts/Cautions temporairement suspendus</p>
                 </div>
                 <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
                     <div className="flex items-center justify-between mb-3">

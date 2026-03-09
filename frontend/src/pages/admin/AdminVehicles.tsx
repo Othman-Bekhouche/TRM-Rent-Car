@@ -276,10 +276,6 @@ export default function AdminVehicles() {
                                     <input required type="number" value={formData.price_per_day} onChange={e => setFormData({ ...formData, price_per_day: parseFloat(e.target.value) })} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] font-bold text-[#1C0770]" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Caution (MAD)</label>
-                                    <input type="number" value={formData.deposit_amount} onChange={e => setFormData({ ...formData, deposit_amount: parseFloat(e.target.value) })} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" />
-                                </div>
-                                <div>
                                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Sièges / Portes</label>
                                     <div className="flex gap-2">
                                         <input type="number" value={formData.seats} onChange={e => setFormData({ ...formData, seats: parseInt(e.target.value) })} className="w-1/2 bg-white border border-slate-200 rounded-xl p-3 text-xs" placeholder="Sièges" />
