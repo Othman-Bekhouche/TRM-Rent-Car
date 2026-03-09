@@ -127,22 +127,37 @@ export default function BookingCheckout() {
     const handleSubmitBooking = async () => {
         setLoading(true);
         try {
-            // 1. Create or Update customer record
-            const { data: customerData, error: custErr } = await supabase
-                .from('customers')
-                .upsert({
+            // 1. Create or Update customer record (avoid upsert on non-unique column)
+            let customerId = null;
+            if (client.email) {
+                const { data: existingCust } = await supabase.from('customers').select('id').eq('email', client.email).maybeSingle();
+                if (existingCust) {
+                    const { data: updatedCust, error: updateErr } = await supabase.from('customers').update({
+                        full_name: `${client.firstName} ${client.lastName}`,
+                        phone: client.phone,
+                        cin: client.cin || null,
+                        address: client.address || null,
+                        city: client.city || null,
+                        status: isLoggedIn ? 'Actif' : 'Nouveau',
+                    }).eq('id', existingCust.id).select().single();
+                    if (updateErr) throw updateErr;
+                    customerId = updatedCust.id;
+                }
+            }
+
+            if (!customerId) {
+                const { data: newCust, error: insertErr } = await supabase.from('customers').insert({
                     full_name: `${client.firstName} ${client.lastName}`,
-                    email: client.email,
+                    email: client.email || null,
                     phone: client.phone,
                     cin: client.cin || null,
                     address: client.address || null,
                     city: client.city || null,
                     status: isLoggedIn ? 'Actif' : 'Nouveau',
-                }, { onConflict: 'email' })
-                .select()
-                .single();
-
-            if (custErr) throw custErr;
+                }).select().single();
+                if (insertErr) throw insertErr;
+                customerId = newCust.id;
+            }
 
             // 2. Find the vehicle by plate/name
             const { data: vehicleData } = await supabase
@@ -155,7 +170,7 @@ export default function BookingCheckout() {
             const { error: resErr } = await supabase
                 .from('reservations')
                 .insert({
-                    customer_id: customerData.id,
+                    customer_id: customerId,
                     vehicle_id: vehicleData?.id || null,
                     start_date: booking.startDate,
                     end_date: booking.endDate,
