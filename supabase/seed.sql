@@ -122,18 +122,27 @@ BEGIN
     (v1, '/images/cars/peugeot_208_noir_rear.png', false),
     (v1, '/images/cars/peugeot_208_noir_interior.png', false),
     (v2, '/images/cars/peugeot_208_gris.png', true),
+    (v2, '/images/cars/peugeot_208_gris_front.png', false),
+    (v2, '/images/cars/peugeot_208_gris_rear.png', false),
+    (v2, '/images/cars/peugeot_208_gris_interior.png', false),
     (v3, '/images/cars/dacia_logan_blanc.png', true),
     (v3, '/images/cars/dacia_logan_blanc_front.png', false),
     (v3, '/images/cars/dacia_logan_blanc_rear.png', false),
     (v3, '/images/cars/dacia_logan_blanc_interior.png', false),
     (v4, '/images/cars/dacia_logan_gris.png', true),
+    (v4, '/images/cars/dacia_logan_gris_front.png', false),
+    (v4, '/images/cars/dacia_logan_gris_rear.png', false),
+    (v4, '/images/cars/dacia_logan_gris_interior.png', false),
     (v5, '/images/cars/dacia_sandero_blanc.png', true),
     (v6, '/images/cars/dacia_sandero_gris.png', true),
     (v6, '/images/cars/dacia_sandero_gris_front.png', false),
     (v6, '/images/cars/dacia_sandero_gris_rear.png', false),
     (v6, '/images/cars/dacia_sandero_gris_interior.png', false),
     (v7, '/images/cars/dacia_sandero_blanc.png', true),
-    (v8, '/images/cars/range_rover_evoque.png', true);
+    (v8, '/images/cars/range_rover_evoque.png', true),
+    (v8, '/images/cars/range_rover_evoque_front.png', false),
+    (v8, '/images/cars/range_rover_evoque_rear.png', false),
+    (v8, '/images/cars/range_rover_evoque_interior.png', false);
 
     -- Clients
     INSERT INTO public.customers (id, full_name, email, phone, cin, address, city, total_spent, total_reservations, status)

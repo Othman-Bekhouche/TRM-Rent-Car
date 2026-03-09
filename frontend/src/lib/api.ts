@@ -25,6 +25,8 @@ export interface Vehicle {
     next_oil_change_mileage?: number;
     last_service_mileage?: number;
     next_service_mileage?: number;
+    // Images
+    vehicle_images?: { id?: string; image_url: string; is_cover: boolean }[];
 }
 
 export interface Customer {
@@ -160,24 +162,47 @@ export interface AdminUser {
 // ===== VEHICLES =====
 export const vehiclesApi = {
     async getAll() {
-        const { data, error } = await supabase.from('vehicles').select('*').order('created_at', { ascending: false });
+        const { data, error } = await supabase.from('vehicles').select('*, vehicle_images(*)').order('created_at', { ascending: false });
         if (error) throw error;
         return data as Vehicle[];
     },
     async getById(id: string) {
-        const { data, error } = await supabase.from('vehicles').select('*').eq('id', id).single();
+        const { data, error } = await supabase.from('vehicles').select('*, vehicle_images(*)').eq('id', id).single();
         if (error) throw error;
         return data as Vehicle;
     },
     async create(vehicle: Partial<Vehicle>) {
-        const { data, error } = await supabase.from('vehicles').insert(vehicle).select().single();
+        const { vehicle_images, ...vehicleData } = vehicle;
+        const { data, error } = await supabase.from('vehicles').insert(vehicleData).select().single();
         if (error) throw error;
-        return data as Vehicle;
+
+        if (vehicle_images && vehicle_images.length > 0) {
+            const imagesToInsert = vehicle_images.map(img => ({ ...img, vehicle_id: data.id }));
+            const { error: imgErr } = await supabase.from('vehicle_images').insert(imagesToInsert);
+            if (imgErr) console.error("Error inserting images: ", imgErr);
+        }
+        return this.getById(data.id);
     },
     async update(id: string, updates: Partial<Vehicle>) {
-        const { data, error } = await supabase.from('vehicles').update(updates).eq('id', id).select().single();
+        const { vehicle_images, ...vehicleData } = updates;
+        const { data, error } = await supabase.from('vehicles').update(vehicleData).eq('id', id).select().single();
         if (error) throw error;
-        return data as Vehicle;
+
+        if (vehicle_images !== undefined) { // allow clearing images
+            // Delete old images
+            await supabase.from('vehicle_images').delete().eq('vehicle_id', id);
+            // Insert new ones
+            if (vehicle_images.length > 0) {
+                const imagesToInsert = vehicle_images.map(img => ({
+                    image_url: img.image_url,
+                    is_cover: img.is_cover,
+                    vehicle_id: id
+                }));
+                const { error: imgErr } = await supabase.from('vehicle_images').insert(imagesToInsert);
+                if (imgErr) console.error("Error inserting images: ", imgErr);
+            }
+        }
+        return this.getById(data.id);
     },
     async delete(id: string) {
         const { error } = await supabase.from('vehicles').delete().eq('id', id);

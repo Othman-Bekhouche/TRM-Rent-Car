@@ -26,7 +26,11 @@ export default function AdminVehicles() {
         deposit_amount: 0,
         status: 'available',
         description: '',
+        vehicle_images: [],
     });
+
+    // Simplifies image management for the admin UI by extracting the cover image
+    const [coverImageUrl, setCoverImageUrl] = useState('');
 
     useEffect(() => {
         fetchVehicles();
@@ -47,6 +51,11 @@ export default function AdminVehicles() {
     const handleEdit = (vehicle: Vehicle) => {
         setSelectedVehicle(vehicle);
         setFormData(vehicle);
+
+        // Find existing cover image or fallback to first image
+        const coverImg = vehicle.vehicle_images?.find((img) => img.is_cover)?.image_url
+            || vehicle.vehicle_images?.[0]?.image_url || '';
+        setCoverImageUrl(coverImg);
         setShowForm(true);
     };
 
@@ -66,7 +75,9 @@ export default function AdminVehicles() {
             deposit_amount: 0,
             status: 'available',
             description: '',
+            vehicle_images: [],
         });
+        setCoverImageUrl('');
         setShowForm(true);
     };
 
@@ -84,13 +95,20 @@ export default function AdminVehicles() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
+
+        // Inject cover image back into formData
+        const dataToSave = { ...formData };
+        if (coverImageUrl) {
+            dataToSave.vehicle_images = [{ image_url: coverImageUrl, is_cover: true }];
+        }
+
         try {
             if (selectedVehicle) {
-                const updated = await vehiclesApi.update(selectedVehicle.id, formData);
+                const updated = await vehiclesApi.update(selectedVehicle.id, dataToSave);
                 setVehicles(prev => prev.map(v => v.id === updated.id ? updated : v));
                 toast.success('Véhicule mis à jour');
             } else {
-                const created = await vehiclesApi.create(formData);
+                const created = await vehiclesApi.create(dataToSave);
                 setVehicles(prev => [created, ...prev]);
                 toast.success('Véhicule ajouté');
             }
@@ -232,6 +250,16 @@ export default function AdminVehicles() {
                         </div>
 
                         <div>
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Image Principale (URL)</label>
+                            <input type="text" value={coverImageUrl} onChange={e => setCoverImageUrl(e.target.value)} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" placeholder="ex: /images/cars/dacia_logan_blanc.png" />
+                            {coverImageUrl && (
+                                <div className="mt-3 p-2 border border-slate-100 rounded-lg inline-block bg-white">
+                                    <img src={coverImageUrl} alt="Aperçu" className="h-20 object-contain" />
+                                </div>
+                            )}
+                        </div>
+
+                        <div>
                             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Description</label>
                             <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} rows={3} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" placeholder="Description du véhicule..." />
                         </div>
@@ -304,7 +332,13 @@ export default function AdminVehicles() {
                                                 <td className="p-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-14 h-10 bg-gradient-to-br from-slate-100 to-slate-50 rounded-lg overflow-hidden flex items-center justify-center p-1 border border-slate-100 group-hover:shadow-md transition-shadow">
-                                                            <Car className="w-6 h-6 text-slate-400" />
+                                                            {v.vehicle_images && v.vehicle_images.length > 0 && v.vehicle_images.some(img => img.is_cover) ? (
+                                                                <img src={v.vehicle_images.find(img => img.is_cover)?.image_url} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                                                            ) : v.vehicle_images && v.vehicle_images.length > 0 ? (
+                                                                <img src={v.vehicle_images[0].image_url} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                                                            ) : (
+                                                                <Car className="w-6 h-6 text-slate-400" />
+                                                            )}
                                                         </div>
                                                         <div>
                                                             <p className="font-bold text-slate-800">{v.brand} {v.model}</p>
