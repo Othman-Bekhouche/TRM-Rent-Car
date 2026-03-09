@@ -12,6 +12,7 @@ import About from './pages/public/About';
 import Contact from './pages/public/Contact';
 import Login from './pages/public/auth/Login';
 import Register from './pages/public/auth/Register';
+import BookingCheckout from './pages/public/BookingCheckout';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
@@ -38,6 +39,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/booking/checkout/:vehicleId" element={<BookingCheckout />} />
         </Route>
 
         {/* Admin Routes */}

@@ -9,7 +9,7 @@ export default function VehicleDetail() {
     const vehicle = {
         brand: 'Peugeot',
         model: '208',
-        year: 2024,
+        year: 2026,
         price_per_day: 420,
         image_url: '/images/cars/peugeot_208_noir.png',
         transmission: 'Manuelle 6-vitesses',
