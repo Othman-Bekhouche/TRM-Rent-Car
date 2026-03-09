@@ -4,7 +4,7 @@ export default function Contact() {
     return (
         <div className="pt-8 pb-24">
             {/* Header */}
-            <div className="bg-[var(--color-surface)] py-16 border-b border-[var(--color-surface-light)] mb-12">
+            <div className="bg-[var(--color-surface)] py-16 border-b border-[var(--color-border)] mb-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-6">Contactez-nous</h1>
                     <p className="text-xl text-slate-400 max-w-2xl mx-auto">
@@ -18,11 +18,11 @@ export default function Contact() {
 
                     {/* Contact Info */}
                     <div>
-                        <h2 className="text-2xl font-bold text-white mb-8 border-b border-[var(--color-surface-light)] pb-4">Informations de l'Agence</h2>
+                        <h2 className="text-2xl font-bold text-white mb-8 border-b border-[var(--color-border)] pb-4">Informations de l'Agence</h2>
 
                         <div className="space-y-8">
                             <div className="flex items-start">
-                                <div className="bg-[var(--color-surface)] p-4 rounded-xl border border-[var(--color-surface-light)] mr-6">
+                                <div className="bg-[var(--color-surface)] p-4 rounded-xl border border-[var(--color-border)] mr-6">
                                     <MapPin className="w-8 h-8 text-[var(--color-primary)]" />
                                 </div>
                                 <div>
@@ -36,7 +36,7 @@ export default function Contact() {
                             </div>
 
                             <div className="flex items-start">
-                                <div className="bg-[var(--color-surface)] p-4 rounded-xl border border-[var(--color-surface-light)] mr-6">
+                                <div className="bg-[var(--color-surface)] p-4 rounded-xl border border-[var(--color-border)] mr-6">
                                     <Phone className="w-8 h-8 text-[var(--color-primary)]" />
                                 </div>
                                 <div>
@@ -47,7 +47,7 @@ export default function Contact() {
                             </div>
 
                             <div className="flex items-start">
-                                <div className="bg-[var(--color-surface)] p-4 rounded-xl border border-[var(--color-surface-light)] mr-6">
+                                <div className="bg-[var(--color-surface)] p-4 rounded-xl border border-[var(--color-border)] mr-6">
                                     <Mail className="w-8 h-8 text-[var(--color-primary)]" />
                                 </div>
                                 <div>
@@ -61,7 +61,7 @@ export default function Contact() {
                     </div>
 
                     {/* Contact Form */}
-                    <div className="bg-[var(--color-surface)] p-8 md:p-12 rounded-2xl border border-[var(--color-surface-light)] shadow-2xl">
+                    <div className="bg-[var(--color-surface)] p-8 md:p-12 rounded-2xl border border-[var(--color-border)] shadow-2xl">
                         <h2 className="text-2xl font-bold text-white mb-8 text-center">Envoyez-nous un message</h2>
                         <form className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

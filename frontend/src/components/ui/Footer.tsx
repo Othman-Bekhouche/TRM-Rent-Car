@@ -3,7 +3,7 @@ import { Facebook, Instagram, Twitter } from 'lucide-react';
 
 export default function Footer() {
     return (
-        <footer className="bg-[var(--color-surface)] border-t border-[var(--color-surface-light)] pt-12 pb-8">
+        <footer className="bg-[var(--color-surface)] border-t border-[var(--color-border)] pt-12 pb-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                     <div className="col-span-1 md:col-span-1">
@@ -49,7 +49,7 @@ export default function Footer() {
                     </div>
                 </div>
 
-                <div className="border-t border-[var(--color-surface-light)] pt-8 flex flex-col md:flex-row justify-between items-center">
+                <div className="border-t border-[var(--color-border)] pt-8 flex flex-col md:flex-row justify-between items-center">
                     <p className="text-slate-500 text-sm text-center md:text-left">
                         &copy; {new Date().getFullYear()} TRM Rent Car. Tous droits réservés.
                     </p>

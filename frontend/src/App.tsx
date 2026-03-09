@@ -15,6 +15,14 @@ import Register from './pages/public/auth/Register';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
+import Reservations from './pages/admin/Reservations';
+import AdminVehicles from './pages/admin/AdminVehicles';
+import Customers from './pages/admin/Customers';
+import GPS from './pages/admin/GPS';
+import Accounting from './pages/admin/Accounting';
+import Maintenance from './pages/admin/Maintenance';
+import Settings from './pages/admin/Settings';
+import Users from './pages/admin/Users';
 
 function App() {
   return (
@@ -34,7 +42,14 @@ function App() {
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="reservations" element={<Reservations />} />
+          <Route path="vehicles" element={<AdminVehicles />} />
+          <Route path="customers" element={<Customers />} />
+          <Route path="gps" element={<GPS />} />
+          <Route path="accounting" element={<Accounting />} />
+          <Route path="maintenance" element={<Maintenance />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="users" element={<Users />} />
         </Route>
       </Routes>
     </BrowserRouter>

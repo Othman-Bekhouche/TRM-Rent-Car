@@ -2,7 +2,7 @@ export default function About() {
     return (
         <div className="pt-8 pb-24">
             {/* Header */}
-            <div className="bg-[var(--color-surface)] py-20 border-b border-[var(--color-surface-light)] mb-16 relative overflow-hidden">
+            <div className="bg-[var(--color-surface)] py-20 border-b border-[var(--color-border)] mb-16 relative overflow-hidden">
                 <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1503376710356-748af20b66b7?auto=format&fit=crop&q=80')] bg-cover bg-center" />
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
                     <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6">L'Excellence Automobile</h1>
@@ -45,7 +45,7 @@ export default function About() {
                         <img
                             src="https://images.unsplash.com/photo-1606016159991-e44b8ee7bc6d?auto=format&fit=crop&q=80"
                             alt="TRM Rent Car Premium Service"
-                            className="relative w-full rounded-2xl border border-[var(--color-surface-light)] shadow-2xl"
+                            className="relative w-full rounded-2xl border border-[var(--color-border)] shadow-2xl"
                         />
                     </div>
                 </div>

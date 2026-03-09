@@ -6,7 +6,7 @@ export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <nav className="bg-[var(--color-surface)] border-b border-[var(--color-surface-light)] sticky top-0 z-50">
+        <nav className="bg-[var(--color-surface)] border-b border-[var(--color-border)] sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-24">
                     <div className="flex items-center">
@@ -46,13 +46,13 @@ export default function Navbar() {
 
             {/* Mobile Menu */}
             {isOpen && (
-                <div className="md:hidden bg-[var(--color-surface)] border-b border-[var(--color-surface-light)]">
+                <div className="md:hidden bg-[var(--color-surface)] border-b border-[var(--color-border)]">
                     <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                        <Link to="/" className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-[var(--color-surface-light)] rounded-md">Accueil</Link>
-                        <Link to="/vehicles" className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-[var(--color-surface-light)] rounded-md">Flotte</Link>
-                        <Link to="/about" className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-[var(--color-surface-light)] rounded-md">À Propos</Link>
-                        <Link to="/contact" className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-[var(--color-surface-light)] rounded-md">Contact</Link>
-                        <div className="mt-4 pt-4 border-t border-[var(--color-surface-light)] flex flex-col gap-2 px-3">
+                        <Link to="/" className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-[var(--color-border)] rounded-md">Accueil</Link>
+                        <Link to="/vehicles" className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-[var(--color-border)] rounded-md">Flotte</Link>
+                        <Link to="/about" className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-[var(--color-border)] rounded-md">À Propos</Link>
+                        <Link to="/contact" className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-[var(--color-border)] rounded-md">Contact</Link>
+                        <div className="mt-4 pt-4 border-t border-[var(--color-border)] flex flex-col gap-2 px-3">
                             <Link to="/login" className="text-center py-2 text-slate-300 hover:text-white border border-slate-600 rounded-lg">Connexion</Link>
                             <Link to="/register" className="text-center py-2 bg-[var(--color-primary)] text-slate-900 font-bold rounded-lg">S'inscrire</Link>
                         </div>

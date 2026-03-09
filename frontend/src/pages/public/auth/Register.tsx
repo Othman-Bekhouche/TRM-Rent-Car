@@ -8,14 +8,14 @@ export default function Register() {
             <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-background)] to-[var(--color-surface)] z-0" />
             <div className="absolute bottom-0 left-0 -ml-48 -mb-48 w-96 h-96 bg-[var(--color-primary)] opacity-5 blur-[100px] rounded-full z-0 pointer-events-none" />
 
-            <div className="max-w-xl w-full space-y-8 bg-[var(--color-surface)] p-10 rounded-3xl border border-[var(--color-surface-light)] shadow-2xl relative z-10">
+            <div className="max-w-xl w-full space-y-8 bg-[var(--color-surface)] p-10 rounded-3xl border border-[var(--color-border)] shadow-2xl relative z-10">
 
                 <div>
                     <Link to="/" className="inline-flex items-center text-slate-400 hover:text-[var(--color-primary)] transition-colors mb-4 text-sm font-medium">
                         <ArrowLeft className="w-4 h-4 mr-2" /> Retour
                     </Link>
                     <div className="flex justify-center mb-6">
-                        <div className="p-4 bg-[var(--color-background)] rounded-full border border-[var(--color-surface-light)]">
+                        <div className="p-4 bg-[var(--color-background)] rounded-full border border-[var(--color-border)]">
                             <UserPlus className="w-8 h-8 text-[var(--color-primary)]" />
                         </div>
                     </div>

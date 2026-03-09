@@ -8,14 +8,14 @@ export default function Login() {
             <div className="absolute inset-0 bg-gradient-to-tr from-[var(--color-background)] to-[var(--color-surface)] z-0" />
             <div className="absolute top-0 right-0 -mr-48 -mt-48 w-96 h-96 bg-[var(--color-primary)] opacity-5 blur-[100px] rounded-full z-0 pointer-events-none" />
 
-            <div className="max-w-md w-full space-y-8 bg-[var(--color-surface)] p-10 rounded-3xl border border-[var(--color-surface-light)] shadow-2xl relative z-10">
+            <div className="max-w-md w-full space-y-8 bg-[var(--color-surface)] p-10 rounded-3xl border border-[var(--color-border)] shadow-2xl relative z-10">
 
                 <div>
                     <Link to="/" className="inline-flex items-center text-slate-400 hover:text-[var(--color-primary)] transition-colors mb-4 text-sm font-medium">
                         <ArrowLeft className="w-4 h-4 mr-2" /> Retour
                     </Link>
                     <div className="flex justify-center mb-6">
-                        <div className="p-4 bg-[var(--color-background)] rounded-full border border-[var(--color-surface-light)]">
+                        <div className="p-4 bg-[var(--color-background)] rounded-full border border-[var(--color-border)]">
                             <KeyRound className="w-8 h-8 text-[var(--color-primary)]" />
                         </div>
                     </div>
@@ -37,7 +37,7 @@ export default function Login() {
                                 type="email"
                                 autoComplete="email"
                                 required
-                                className="appearance-none relative block w-full px-4 py-4 border border-[var(--color-surface-light)] bg-[var(--color-background)] placeholder-slate-500 text-white rounded-xl focus:outline-none focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] focus:z-10 sm:text-sm transition-colors"
+                                className="appearance-none relative block w-full px-4 py-4 border border-[var(--color-border)] bg-[var(--color-background)] placeholder-slate-500 text-white rounded-xl focus:outline-none focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] focus:z-10 sm:text-sm transition-colors"
                                 placeholder="Votre adresse email"
                             />
                         </div>
@@ -49,7 +49,7 @@ export default function Login() {
                                 type="password"
                                 autoComplete="current-password"
                                 required
-                                className="appearance-none relative block w-full px-4 py-4 border border-[var(--color-surface-light)] bg-[var(--color-background)] placeholder-slate-500 text-white rounded-xl focus:outline-none focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] focus:z-10 sm:text-sm transition-colors"
+                                className="appearance-none relative block w-full px-4 py-4 border border-[var(--color-border)] bg-[var(--color-background)] placeholder-slate-500 text-white rounded-xl focus:outline-none focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] focus:z-10 sm:text-sm transition-colors"
                                 placeholder="Mot de passe"
                             />
                         </div>

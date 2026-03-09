@@ -1,17 +1,61 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #f59e0b; /* Amber 500 */
-  --color-primary-dark: #d97706; /* Amber 600 */
-  --color-background: #0f172a; /* Slate 900 */
-  --color-surface: #1e293b; /* Slate 800 */
-  --color-surface-light: #334155; /* Slate 700 */
+  --color-primary: #C9A227;
+  /* Luxury Gold */
+  --color-primary-dark: #F59E0B;
+  /* Electric Amber */
+  --color-background: #0B0F14;
+  /* Deep Carbon */
+  --color-surface: #111827;
+  /* Midnight Navy */
+  --color-card: #1F2937;
+  /* Graphite */
+  --color-border: #2D3748;
+  /* Borders */
+
+  --color-text-main: #F9FAFB;
+  --color-text-muted: #9CA3AF;
 }
 
 @layer base {
   body {
     background-color: var(--color-background);
-    color: #f8fafc; /* Slate 50 */
+    color: var(--color-text-main);
     font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #C9A227 0%, #F59E0B 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .bg-gradient-gold {
+    background: linear-gradient(135deg, #C9A227 0%, #F59E0B 100%);
+  }
+
+  .hover-glow-gold:hover {
+    box-shadow: 0 0 25px rgba(201, 162, 39, 0.4);
+  }
+
+  .glass-card {
+    background: rgba(31, 41, 55, 0.4);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(45, 55, 72, 0.5);
+  }
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-15px);
+    }
   }
 }
