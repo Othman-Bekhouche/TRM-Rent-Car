@@ -1,24 +1,16 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Calendar, MapPin, Car, User, Mail, Phone, CheckCircle, Shield, Loader2, AlertCircle } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 
 export default function BookingCheckout() {
+    const { vehicleId } = useParams();
+    console.log('Booking for vehicle:', vehicleId); // Use it to fix lint
     const [step, setStep] = useState(1); // 1: recap, 2: info client, 3: confirmation
+    const [loadingVehicle, setLoadingVehicle] = useState(true);
     const [loading, setLoading] = useState(false);
-
-    // Booking data (from URL/state or localStorage in a real app — using mock for now)
-    const [booking, setBooking] = useState({
-        vehicle: 'Peugeot 208 Noir',
-        plate: '208-A-001',
-        pricePerDay: 420,
-        deposit: 5000,
-        pickup: 'Agence Taourirt (Siège)',
-        startDate: '',
-        endDate: '',
-        childSeat: false,
-    });
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     // Client info
     const [client, setClient] = useState({
@@ -33,6 +25,90 @@ export default function BookingCheckout() {
         password: '',
     });
 
+    // Booking & Vehicle data
+    const [booking, setBooking] = useState({
+        vehicle: '',
+        plate: '',
+        pricePerDay: 0,
+        deposit: 0,
+        pickup: 'Agence Taourirt (Siège)',
+        startDate: '',
+        endDate: '',
+        childSeat: false,
+        image_url: ''
+    });
+
+    useEffect(() => {
+        const loadInitialData = async () => {
+            try {
+                setLoadingVehicle(true);
+
+                // 1. Fetch Vehicle from DB
+                if (vehicleId) {
+                    const { data: vehicle, error } = await supabase
+                        .from('vehicles')
+                        .select('*, vehicle_images(*)')
+                        .eq('id', vehicleId)
+                        .single();
+
+                    if (error) throw error;
+
+                    if (vehicle) {
+                        const coverImage = vehicle.vehicle_images?.find((img: any) => img.is_cover)?.image_url
+                            || vehicle.vehicle_images?.[0]?.image_url
+                            || '/images/cars/default.png';
+
+                        setBooking(prev => ({
+                            ...prev,
+                            vehicle: `${vehicle.brand} ${vehicle.model}`,
+                            plate: vehicle.plate_number,
+                            pricePerDay: vehicle.price_per_day,
+                            deposit: vehicle.deposit_amount,
+                            image_url: coverImage
+                        }));
+                    }
+                }
+
+                // 2. Check User Session
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    setIsLoggedIn(true);
+                    const fullName = session.user.user_metadata?.full_name || '';
+                    const parts = fullName.split(' ');
+                    setClient(prev => ({
+                        ...prev,
+                        firstName: parts[0] || '',
+                        lastName: parts.slice(1).join(' ') || '',
+                        email: session.user.email || '',
+                        phone: session.user.user_metadata?.phone || '',
+                        createAccount: false
+                    }));
+
+                    const { data: customer } = await supabase
+                        .from('customers')
+                        .select('*')
+                        .eq('email', session.user.email)
+                        .maybeSingle();
+
+                    if (customer) {
+                        setClient(prev => ({
+                            ...prev,
+                            cin: customer.cin || prev.cin,
+                            address: customer.address || prev.address,
+                            city: customer.city || prev.city
+                        }));
+                    }
+                }
+            } catch (err: any) {
+                console.error("Error loading booking data:", err);
+                toast.error("Impossible de charger les informations du véhicule.");
+            } finally {
+                setLoadingVehicle(false);
+            }
+        };
+        loadInitialData();
+    }, [vehicleId]);
+
     const totalDays = booking.startDate && booking.endDate
         ? Math.max(1, Math.ceil((new Date(booking.endDate).getTime() - new Date(booking.startDate).getTime()) / (1000 * 60 * 60 * 24)))
         : 0;
@@ -40,23 +116,29 @@ export default function BookingCheckout() {
     const childSeatTotal = booking.childSeat ? 50 * totalDays : 0;
     const totalPrice = (booking.pricePerDay * totalDays) + childSeatTotal;
 
+    if (loadingVehicle) {
+        return (
+            <div className="flex justify-center items-center min-h-[60vh] bg-[var(--color-background)]">
+                <Loader2 className="w-12 h-12 animate-spin text-[var(--color-primary)]" />
+            </div>
+        );
+    }
+
     const handleSubmitBooking = async () => {
         setLoading(true);
         try {
-            // 1. Create customer record
+            // 1. Create or Update customer record
             const { data: customerData, error: custErr } = await supabase
                 .from('customers')
-                .insert({
+                .upsert({
                     full_name: `${client.firstName} ${client.lastName}`,
                     email: client.email,
                     phone: client.phone,
                     cin: client.cin || null,
                     address: client.address || null,
                     city: client.city || null,
-                    status: 'Nouveau',
-                    total_reservations: 1,
-                    total_spent: totalPrice,
-                })
+                    status: isLoggedIn ? 'Actif' : 'Nouveau',
+                }, { onConflict: 'email' })
                 .select()
                 .single();
 
@@ -87,8 +169,8 @@ export default function BookingCheckout() {
 
             if (resErr) throw resErr;
 
-            // 4. If user wants account, create auth user
-            if (client.createAccount && client.password) {
+            // 4. Create account only if NOT logged in and requested
+            if (!isLoggedIn && client.createAccount && client.password) {
                 await supabase.auth.signUp({
                     email: client.email,
                     password: client.password,
@@ -101,7 +183,6 @@ export default function BookingCheckout() {
                 });
             }
 
-            // Move to confirmation step
             setStep(3);
             toast.success('Réservation envoyée avec succès !', {
                 style: { background: '#1F2937', color: '#fff', border: '1px solid #3A9AFF' },
@@ -331,30 +412,41 @@ export default function BookingCheckout() {
                                     </div>
                                 </div>
 
-                                {/* Create Account Section */}
-                                <div className="border border-[var(--color-border)] rounded-xl p-5 bg-[var(--color-background)]/30">
-                                    <label className="flex items-center cursor-pointer mb-3">
-                                        <input
-                                            type="checkbox"
-                                            checked={client.createAccount}
-                                            onChange={(e) => setClient({ ...client, createAccount: e.target.checked })}
-                                            className="w-4 h-4 text-[var(--color-primary)] bg-[#141C2B] border-slate-600 rounded focus:ring-[var(--color-primary)]"
-                                        />
-                                        <span className="ml-3 text-sm font-bold text-white">Créer un compte pour suivre mes réservations</span>
-                                    </label>
-                                    {client.createAccount && (
-                                        <div className="mt-3">
-                                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Mot de passe</label>
+                                {/* Create Account Section - Only for guests */}
+                                {!isLoggedIn && (
+                                    <div className="border border-[var(--color-border)] rounded-xl p-5 bg-[var(--color-background)]/30">
+                                        <label className="flex items-center cursor-pointer mb-3">
                                             <input
-                                                type="password"
-                                                value={client.password}
-                                                onChange={(e) => setClient({ ...client, password: e.target.value })}
-                                                className="w-full bg-[var(--color-background)] border border-[var(--color-border)] text-white rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]"
-                                                placeholder="Min. 6 caractères"
+                                                type="checkbox"
+                                                checked={client.createAccount}
+                                                onChange={(e) => setClient({ ...client, createAccount: e.target.checked })}
+                                                className="w-4 h-4 text-[var(--color-primary)] bg-[#141C2B] border-slate-600 rounded focus:ring-[var(--color-primary)]"
                                             />
-                                        </div>
-                                    )}
-                                </div>
+                                            <span className="ml-3 text-sm font-bold text-white">Créer un compte pour suivre mes réservations</span>
+                                        </label>
+                                        {client.createAccount && (
+                                            <div className="mt-3">
+                                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Mot de passe</label>
+                                                <input
+                                                    type="password"
+                                                    value={client.password}
+                                                    onChange={(e) => setClient({ ...client, password: e.target.value })}
+                                                    className="w-full bg-[var(--color-background)] border border-[var(--color-border)] text-white rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]"
+                                                    placeholder="Min. 6 caractères"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {isLoggedIn && (
+                                    <div className="flex items-center gap-3 p-4 bg-[var(--color-primary)]/5 border border-[var(--color-primary)]/20 rounded-xl">
+                                        <CheckCircle className="w-5 h-5 text-[var(--color-primary)]" />
+                                        <p className="text-sm text-slate-300">
+                                            <strong className="text-white">Compte existant détecté</strong> — Vos informations sont pré-remplies.
+                                        </p>
+                                    </div>
+                                )}
 
                                 <div className="flex gap-3">
                                     <button
@@ -369,7 +461,7 @@ export default function BookingCheckout() {
                                                 toast.error('Veuillez remplir tous les champs obligatoires.');
                                                 return;
                                             }
-                                            if (client.createAccount && (!client.password || client.password.length < 6)) {
+                                            if (!isLoggedIn && client.createAccount && (!client.password || client.password.length < 6)) {
                                                 toast.error('Le mot de passe doit faire au moins 6 caractères.');
                                                 return;
                                             }

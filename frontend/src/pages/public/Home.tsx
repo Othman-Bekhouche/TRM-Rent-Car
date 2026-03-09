@@ -25,17 +25,6 @@ const POPULAR_CARS = [
         doors: 5
     },
     {
-        id: '2',
-        brand: 'Peugeot',
-        model: '208 Hybride',
-        image_url: '/images/cars/peugeot_208_gris.png',
-        price_per_day: 520,
-        transmission: 'Automatique',
-        fuel_type: 'Essence',
-        seats: 5,
-        doors: 5
-    },
-    {
         id: '5',
         brand: 'Dacia',
         model: 'Sandero',
@@ -45,15 +34,26 @@ const POPULAR_CARS = [
         fuel_type: 'Essence',
         seats: 5,
         doors: 5
+    },
+    {
+        id: 'premium-7',
+        brand: 'Range Rover',
+        model: 'Evoque',
+        image_url: '/images/cars/range_rover_evoque.png',
+        price_per_day: 1200,
+        transmission: 'Automatique',
+        fuel_type: 'Diesel',
+        seats: 5,
+        doors: 5
     }
 ];
 
 const DELIVERY_ZONES = [
-    { name: 'Taourirt', desc: 'Agence Principale — Siège TRM', img: 'https://images.unsplash.com/photo-1489749798305-4fea3ae63d43?auto=format&fit=crop&q=80', abbr: 'TRT', isMain: true },
-    { name: 'Oujda', desc: 'Livraison Aéroport & Centre', img: 'https://images.unsplash.com/photo-1623946258957-61c1df768dd6?auto=format&fit=crop&q=80', abbr: 'OUD', isMain: false },
-    { name: 'Nador', desc: 'Livraison Aéroport & Ville', img: 'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&q=80', abbr: 'NDR', isMain: false },
-    { name: 'Fès', desc: 'Livraison Aéroport Saïss', img: 'https://images.unsplash.com/photo-1560677579-2c63267988ee?auto=format&fit=crop&q=80', abbr: 'FEZ', isMain: false },
-    { name: 'Berkane', desc: 'Livraison Centre Ville', img: 'https://images.unsplash.com/photo-1489749798305-4fea3ae63d43?auto=format&fit=crop&q=80', abbr: 'BRK', isMain: false },
+    { name: 'Taourirt', desc: 'Agence Principale — Siège TRM', img: '/images/locations/taourirt.png', abbr: 'TRT', isMain: true },
+    { name: 'Oujda', desc: 'Livraison Aéroport & Centre', img: '/images/locations/oujda.png', abbr: 'OUD', isMain: false },
+    { name: 'Nador', desc: 'Livraison Aéroport & Ville', img: '/images/locations/nador.png', abbr: 'NDR', isMain: false },
+    { name: 'Fès', desc: 'Livraison Aéroport Saïss', img: '/images/locations/fes.png', abbr: 'FEZ', isMain: false },
+    { name: 'Berkane', desc: 'Livraison Centre Ville', img: '/images/locations/berkane.png', abbr: 'BRK', isMain: false },
 ];
 
 export default function Home() {

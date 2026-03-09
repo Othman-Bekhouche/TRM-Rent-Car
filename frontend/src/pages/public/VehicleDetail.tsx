@@ -1,26 +1,63 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Fuel, Users, MapPin, Search as Box, CheckCircle, CreditCard, Shield } from 'lucide-react';
+import { ArrowLeft, Fuel, Users, MapPin, Search as Box, CheckCircle, CreditCard, Shield, Loader2 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 export default function VehicleDetail() {
-    // In a real app, you'd fetch the vehicle by ID
-    useParams();
+    const { id: vehicleId } = useParams();
+    const [vehicle, setVehicle] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-    // Mock specific vehicle (Peugeot 208 Noir)
-    const vehicle = {
-        brand: 'Peugeot',
-        model: '208',
-        year: 2026,
-        price_per_day: 420,
-        image_url: '/images/cars/peugeot_208_noir.png',
-        transmission: 'Manuelle 6-vitesses',
-        fuel_type: 'Diesel',
-        seats: 5,
-        doors: 5,
-        traction: 'Traction avant',
-        color: 'Noir',
-        deposit_amount: 5000,
-        description: `Superbe Peugeot 208 diesel. Confort de conduite exceptionnel, économique et maniable pour tous vos trajets professionnels ou personnels. Profitez d'un intérieur premium pensé pour votre confort et d'une technologie embarquée de dernière génération.`
-    };
+    useEffect(() => {
+        const fetchVehicle = async () => {
+            try {
+                if (!vehicleId) return;
+                const { data, error } = await supabase
+                    .from('vehicles')
+                    .select('*, vehicle_images(*)')
+                    .eq('id', vehicleId)
+                    .single();
+
+                if (error) throw error;
+                if (data) {
+                    const coverImage = data.vehicle_images?.find((img: any) => img.is_cover)?.image_url
+                        || data.vehicle_images?.[0]?.image_url
+                        || '/images/cars/default.png';
+
+                    setVehicle({
+                        ...data,
+                        image_url: coverImage
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching vehicle:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchVehicle();
+    }, [vehicleId]);
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-[60vh] bg-[var(--color-background)]">
+                <Loader2 className="w-12 h-12 animate-spin text-[var(--color-primary)]" />
+            </div>
+        );
+    }
+
+    if (!vehicle) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] bg-[var(--color-background)]">
+                <h2 className="text-2xl font-bold text-white mb-4">Véhicule introuvable</h2>
+                <Link to="/vehicles" className="text-[var(--color-primary)] hover:underline">
+                    Retour au catalogue
+                </Link>
+            </div>
+        );
+    }
 
     return (
         <div className="pb-24 bg-[var(--color-background)] min-h-screen font-sans">
@@ -56,15 +93,33 @@ export default function VehicleDetail() {
                             </p>
                         </div>
 
-                        {/* Large Image Gallery Container */}
-                        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-8 relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F19] via-transparent to-transparent opacity-50" />
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-[var(--color-primary)]/10 blur-[150px] rounded-full pointer-events-none" />
-                            <img
-                                src={vehicle.image_url}
-                                alt={`${vehicle.brand} ${vehicle.model}`}
-                                className="w-full h-[400px] object-contain relative z-10 mix-blend-screen scale-105 group-hover:scale-110 transition-transform duration-700"
-                            />
+                        {/* Image Gallery */}
+                        <div className="flex flex-col gap-4">
+                            {/* Main Large Image */}
+                            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-8 relative overflow-hidden group h-[400px]">
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F19] via-transparent to-transparent opacity-50" />
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-[var(--color-primary)]/10 blur-[150px] rounded-full pointer-events-none" />
+                                <img
+                                    src={selectedImage || vehicle.image_url}
+                                    alt={`${vehicle.brand} ${vehicle.model}`}
+                                    className="w-full h-full object-contain relative z-10 mix-blend-screen scale-105 transition-transform duration-700"
+                                />
+                            </div>
+
+                            {/* Thumbnails */}
+                            {vehicle.vehicle_images && vehicle.vehicle_images.length > 0 && (
+                                <div className="grid grid-cols-3 gap-4">
+                                    {(vehicle.vehicle_images as any[]).map((img, idx) => (
+                                        <div
+                                            key={idx}
+                                            onClick={() => setSelectedImage(img.image_url)}
+                                            className={`h-24 bg-[var(--color-surface)] border rounded-xl p-2 cursor-pointer overflow-hidden flex items-center justify-center transition-all ${selectedImage === img.image_url ? 'border-[var(--color-primary)] shadow-[0_0_15px_rgba(212,175,55,0.2)]' : 'border-[var(--color-border)] hover:border-[var(--color-primary)]/50'}`}
+                                        >
+                                            <img src={img.image_url} alt="Vue véhicule" className="w-full h-full object-contain mix-blend-screen" />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* Specifications Grid */}
@@ -132,7 +187,7 @@ export default function VehicleDetail() {
                                 </div>
                             </div>
 
-                            <form className="space-y-6">
+                            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
                                 {/* Configuration Date */}
                                 <div className="bg-[var(--color-background)] border border-[var(--color-border)] rounded-xl p-4">
                                     <div className="mb-4">
@@ -172,7 +227,7 @@ export default function VehicleDetail() {
                                 </div>
 
                                 <Link
-                                    to={`/booking/checkout/${vehicle.model}`}
+                                    to={`/booking/checkout/${vehicle.id}`}
                                     className="flex w-full justify-center items-center px-6 py-4 border border-transparent text-sm font-black rounded-xl text-[#0B0F19] bg-[var(--color-primary)] hover:bg-white hover:text-[#0B0F19] uppercase tracking-widest transition-all shadow-lg hover:-translate-y-1"
                                 >
                                     Poursuivre la Réservation

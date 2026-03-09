@@ -1,11 +1,12 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ArrowLeft, KeyRound, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { authApi } from '../../../lib/api';
+import { useRoleRedirect } from '../../../hooks/useRoleRedirect';
 
 export default function Login() {
-    const navigate = useNavigate();
+    const { redirectAfterLogin } = useRoleRedirect();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -24,7 +25,7 @@ export default function Login() {
                 }
             });
             setTimeout(() => {
-                navigate('/admin');
+                redirectAfterLogin();
             }, 1000);
         } catch (err: any) {
             toast.error(err?.message || 'Identifiants incorrects.', {

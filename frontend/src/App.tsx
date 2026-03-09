@@ -25,6 +25,7 @@ import Maintenance from './pages/admin/Maintenance';
 import Settings from './pages/admin/Settings';
 import Users from './pages/admin/Users';
 import Infractions from './pages/admin/Infractions';
+import Messages from './pages/admin/Messages';
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
           <Route path="maintenance" element={<Maintenance />} />
           <Route path="settings" element={<Settings />} />
           <Route path="users" element={<Users />} />
+          <Route path="messages" element={<Messages />} />
         </Route>
       </Routes>
     </BrowserRouter>

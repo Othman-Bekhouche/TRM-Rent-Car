@@ -77,7 +77,7 @@ INSERT INTO public.profiles (id, full_name, email, phone, role, created_at)
 VALUES 
 ('d5d4d3d2-d1d0-4a9b-8c8d-7e6f5d4c3b2a', 'Med Tahiri', 'admin@trmrentcar.ma', '+212606066426', 'super_admin', NOW()),
 ('a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', 'Ahmed Tahiri', 'ahmed.t@trmrentcar.ma', '+212600112233', 'admin', NOW()),
-('b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e', 'Sara Bennani', 'sara.b@trmrentcar.ma', '+212600445566', 'admin', NOW())
+('b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e', 'Sara Bennani', 'sara.b@trmrentcar.ma', '+212600445566', 'assistant', NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- 2. Insertion de la VRAIE flotte TRM Rent Car

@@ -3,6 +3,21 @@ import { Car as CarIcon, Users, Fuel, ArrowRight, Filter } from 'lucide-react';
 
 const MOCK_VEHICLES = [
     {
+        id: 'premium-1',
+        brand: 'Range Rover',
+        model: 'Evoque',
+        image_url: '/images/cars/range_rover_evoque.png',
+        price_per_day: 1200,
+        category: 'Luxe / SUV',
+        transmission: 'Automatique',
+        fuel_type: 'Diesel',
+        seats: 5,
+        doors: 5,
+        traction: '4x4',
+        color: 'Gris Métallisé',
+        status: 'available'
+    },
+    {
         id: '1',
         brand: 'Peugeot',
         model: '208',
@@ -18,21 +33,6 @@ const MOCK_VEHICLES = [
         status: 'available'
     },
     {
-        id: '2',
-        brand: 'Peugeot',
-        model: '208',
-        image_url: '/images/cars/peugeot_208_gris.png',
-        price_per_day: 520,
-        category: 'Citadine',
-        transmission: 'Automatique',
-        fuel_type: 'Hybride Essence',
-        seats: 5,
-        doors: 5,
-        traction: 'Traction avant',
-        color: 'Gris',
-        status: 'available'
-    },
-    {
         id: '3',
         brand: 'Dacia',
         model: 'Logan',
@@ -41,36 +41,6 @@ const MOCK_VEHICLES = [
         category: 'Économique',
         transmission: 'Manuelle',
         fuel_type: 'Diesel',
-        seats: 5,
-        doors: 5,
-        traction: 'Traction avant',
-        color: 'Blanc',
-        status: 'available'
-    },
-    {
-        id: '4',
-        brand: 'Dacia',
-        model: 'Logan',
-        image_url: '/images/cars/dacia_logan_gris.png',
-        price_per_day: 300,
-        category: 'Économique',
-        transmission: 'Manuelle',
-        fuel_type: 'Diesel',
-        seats: 5,
-        doors: 5,
-        traction: 'Traction avant',
-        color: 'Gris',
-        status: 'booked'
-    },
-    {
-        id: '5',
-        brand: 'Dacia',
-        model: 'Sandero',
-        image_url: '/images/cars/dacia_sandero_blanc.png',
-        price_per_day: 320,
-        category: 'Citadine',
-        transmission: 'Manuelle',
-        fuel_type: 'Essence',
         seats: 5,
         doors: 5,
         traction: 'Traction avant',
@@ -93,19 +63,34 @@ const MOCK_VEHICLES = [
         status: 'available'
     },
     {
-        id: '7',
-        brand: 'Dacia',
-        model: 'Sandero',
-        image_url: '/images/cars/dacia_sandero_blanc.png',
-        price_per_day: 320,
+        id: '2',
+        brand: 'Peugeot',
+        model: '208',
+        image_url: '/images/cars/peugeot_208_noir.png',
+        price_per_day: 520,
         category: 'Citadine',
-        transmission: 'Manuelle',
-        fuel_type: 'Essence',
+        transmission: 'Automatique',
+        fuel_type: 'Diesel',
         seats: 5,
         doors: 5,
         traction: 'Traction avant',
-        color: 'Bleu',
-        status: 'maintenance'
+        color: 'Noir',
+        status: 'available'
+    },
+    {
+        id: '5',
+        brand: 'Dacia',
+        model: 'Sandero Stepway',
+        image_url: '/images/cars/dacia_sandero_gris.png',
+        price_per_day: 320,
+        category: 'SUV / Citadine',
+        transmission: 'Manuelle',
+        fuel_type: 'Diesel',
+        seats: 5,
+        doors: 5,
+        traction: 'Traction avant',
+        color: 'Gris',
+        status: 'available'
     }
 ];
 

@@ -1,34 +1,79 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, Car, Users, CalendarDays, Settings,
-    LogOut, MapPin, Calculator, Wrench, Bell, UserCog, Menu, X, ChevronRight, AlertTriangle
+    LogOut, MapPin, Calculator, Wrench, Bell, UserCog, Menu, X, ChevronRight, AlertTriangle, Loader2, Mail, Shield
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 export default function AdminLayout() {
     const location = useLocation();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [profile, setProfile] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
-    const menuItems = [
-        { path: '/admin', icon: LayoutDashboard, label: 'Tableau de bord' },
-        { path: '/admin/reservations', icon: CalendarDays, label: 'Réservations' },
-        { path: '/admin/vehicles', icon: Car, label: 'Véhicules' },
-        { path: '/admin/customers', icon: Users, label: 'Clients' },
-        { path: '/admin/infractions', icon: AlertTriangle, label: 'Infractions' },
-        { path: '/admin/gps', icon: MapPin, label: 'Suivi GPS' },
-        { path: '/admin/accounting', icon: Calculator, label: 'Comptabilité' },
-        { path: '/admin/maintenance', icon: Wrench, label: 'Maintenance' },
-        { path: '/admin/settings', icon: Settings, label: 'Paramètres' },
-        { path: '/admin/users', icon: UserCog, label: 'Administrateurs' },
+    useEffect(() => {
+        const fetchProfile = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                navigate('/login');
+                return;
+            }
+
+            const { data } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+            // Force Sara's profile to assistant role for the UI
+            let profileData = data;
+            if (profileData?.email === 'sara.b@trmrentcar.ma') {
+                profileData = { ...profileData, role: 'assistant' };
+                // Try to update DB in background, but don't block
+                supabase.from('profiles').update({ role: 'assistant' }).eq('id', data.id).then(() => { });
+            }
+
+            setProfile(profileData);
+            setLoading(false);
+        };
+
+        fetchProfile();
+    }, [navigate]);
+
+    const fullMenuItems = [
+        { path: '/admin', icon: LayoutDashboard, label: 'Tableau de bord', roles: ['super_admin'] },
+        { path: '/admin/messages', icon: Mail, label: 'Boîte Mail', roles: ['super_admin', 'assistant'] },
+        { path: '/admin/reservations', icon: CalendarDays, label: 'Réservations', roles: ['super_admin', 'assistant'] },
+        { path: '/admin/vehicles', icon: Car, label: 'Véhicules', roles: ['super_admin', 'admin'] },
+        { path: '/admin/customers', icon: Users, label: 'Clients', roles: ['super_admin', 'assistant'] },
+        { path: '/admin/infractions', icon: AlertTriangle, label: 'Infractions', roles: ['super_admin', 'assistant'] },
+        { path: '/admin/gps', icon: MapPin, label: 'Suivi GPS', roles: ['super_admin', 'admin'] },
+        { path: '/admin/maintenance', icon: Wrench, label: 'Maintenance', roles: ['super_admin', 'admin'] },
+        { path: '/admin/accounting', icon: Calculator, label: 'Comptabilité', roles: ['super_admin'] },
+        { path: '/admin/users', icon: UserCog, label: 'Administrateurs', roles: ['super_admin'] },
     ];
 
-    const handleLogout = () => {
+    const menuItems = fullMenuItems.filter(item =>
+        profile && (item.roles.includes(profile.role))
+    );
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
         navigate('/login');
     };
 
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#F0F4FF] flex items-center justify-center">
+                <Loader2 className="w-12 h-12 text-[#261CC1] animate-spin" />
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen bg-[#F0F4FF] flex font-sans">
+        <div className="min-h-screen bg-[#F0F4FF] flex font-sans text-slate-900">
 
             {/* Mobile Sidebar Overlay */}
             {sidebarOpen && (
@@ -38,8 +83,8 @@ export default function AdminLayout() {
                 />
             )}
 
-            {/* Sidebar — Deep Indigo */}
-            <aside className={`fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-[#1C0770] to-[#0F0440] z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:block shadow-2xl ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            {/* Sidebar — Fixed/Sticky */}
+            <aside className={`fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-[#1C0770] to-[#0F0440] z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen lg:block shadow-2xl ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="h-full flex flex-col">
                     {/* Logo Header */}
                     <div className="h-20 flex items-center justify-between px-6 border-b border-white/10">
@@ -83,24 +128,12 @@ export default function AdminLayout() {
                         })}
                     </nav>
 
-                    {/* User Info & Logout */}
-                    <div className="p-4 border-t border-white/10">
-                        <div className="flex items-center px-4 py-3 mb-3 bg-white/5 rounded-xl border border-white/10">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3A9AFF] to-[#261CC1] flex items-center justify-center text-white font-black text-sm shadow-lg">
-                                MT
-                            </div>
-                            <div className="ml-3">
-                                <p className="text-sm font-bold text-white leading-tight">Med Tahiri</p>
-                                <p className="text-xs text-[#3A9AFF]">Super Admin</p>
-                            </div>
+                    {/* Footer Info */}
+                    <div className="p-6 border-t border-white/10">
+                        <div className="flex items-center gap-3 text-white/40 text-[10px] font-black uppercase tracking-widest">
+                            <Shield className="w-3 h-3" />
+                            <span>TRM Secure Access</span>
                         </div>
-                        <button
-                            onClick={handleLogout}
-                            className="flex w-full items-center px-4 py-2.5 text-red-300 hover:text-white hover:bg-red-500/20 rounded-xl transition-all text-sm font-semibold"
-                        >
-                            <LogOut className="w-5 h-5 mr-3" />
-                            Déconnexion
-                        </button>
                     </div>
                 </div>
             </aside>
@@ -108,18 +141,50 @@ export default function AdminLayout() {
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Top Header */}
-                <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between lg:justify-end shrink-0 shadow-sm z-30">
+                <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between z-30 shadow-sm shrink-0">
                     <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-slate-500 hover:text-[#1C0770]">
                         <Menu className="w-6 h-6" />
                     </button>
-                    <div className="flex items-center gap-4">
-                        <button className="p-2.5 text-slate-400 hover:text-[#261CC1] hover:bg-[#261CC1]/5 rounded-xl relative transition-colors">
+
+                    <div className="flex-1 lg:flex justify-end hidden">
+                        <div className="max-w-xs w-full mr-8">
+                            {/* Optional search or other header elements */}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        {profile?.role === 'super_admin' && (
+                            <Link to="/admin/settings" className="p-2.5 text-slate-400 hover:text-[#261CC1] hover:bg-[#261CC1]/5 rounded-xl transition-colors" title="Paramètres">
+                                <Settings className="w-5 h-5" />
+                            </Link>
+                        )}
+                        <button className="p-2.5 text-slate-400 hover:text-[#261CC1] hover:bg-[#261CC1]/5 rounded-xl relative transition-colors" title="Notifications">
                             <Bell className="w-5 h-5" />
                             <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
                         </button>
-                        <div className="hidden sm:flex items-center gap-2 pl-4 border-l border-slate-200">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3A9AFF] to-[#261CC1] flex items-center justify-center text-white font-bold text-xs">MT</div>
-                            <span className="text-sm font-semibold text-slate-700">Med Tahiri</span>
+
+                        <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+                            <div className="text-right hidden sm:block">
+                                <p className="text-sm font-bold text-slate-800 leading-tight">{profile?.full_name}</p>
+                                <p className="text-[10px] font-black text-[#3A9AFF] uppercase tracking-tighter">
+                                    {profile?.role === 'assistant' ? 'Assistant(e)' : profile?.role === 'admin' ? 'Gestionnaire' : 'Super Admin'}
+                                </p>
+                            </div>
+                            <div className="relative group">
+                                <button className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3A9AFF] to-[#261CC1] flex items-center justify-center text-white font-black text-sm shadow-md hover:scale-105 transition-transform">
+                                    {profile?.full_name[0].toUpperCase()}
+                                </button>
+
+                                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right scale-95 group-hover:scale-100 py-2 z-50">
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full flex items-center px-4 py-2.5 text-red-500 hover:bg-red-50 transition-colors text-sm font-bold"
+                                    >
+                                        <LogOut className="w-4 h-4 mr-3" />
+                                        Déconnexion
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </header>

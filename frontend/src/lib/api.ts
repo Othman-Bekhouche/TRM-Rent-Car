@@ -20,6 +20,11 @@ export interface Vehicle {
     description: string;
     created_at: string;
     updated_at: string;
+    // Maintenance fields
+    last_oil_change_mileage?: number;
+    next_oil_change_mileage?: number;
+    last_service_mileage?: number;
+    next_service_mileage?: number;
 }
 
 export interface Customer {
@@ -41,21 +46,23 @@ export interface Customer {
 
 export interface Reservation {
     id: string;
+    reservation_number?: string;
     customer_id: string;
     vehicle_id: string;
     start_date: string;
     end_date: string;
     pickup_location: string;
-    return_location: string;
+    dropoff_location: string;
     total_price: number;
-    status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected';
-    payment_status: string;
+    status: 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled' | 'rejected';
+    payment_method: 'Espèces' | 'Carte' | 'Virement';
+    payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
     notes: string;
     created_at: string;
     updated_at: string;
     // Joined
-    customer?: Customer;
-    vehicle?: Vehicle;
+    customers?: Customer;
+    vehicles?: Vehicle;
 }
 
 export interface Infraction {
@@ -87,15 +94,42 @@ export interface MaintenanceRecord {
     id: string;
     vehicle_id: string;
     maintenance_type: string;
-    description: string;
-    maintenance_date: string;
-    next_maintenance_date: string;
-    mileage_at_maintenance: number;
-    cost: number;
-    status: string;
+    status: 'Planifié' | 'En cours' | 'Terminé' | 'Annulé';
+    last_service_date: string;
+    last_service_mileage: number;
+    next_service_date: string;
+    next_service_mileage: number;
+    estimated_cost: number;
+    actual_cost: number;
+    vendor_name: string;
     notes: string;
     created_at: string;
     updated_at: string;
+    // Joined
+    vehicle?: Vehicle;
+}
+
+export interface MileageLog {
+    id: string;
+    vehicle_id: string;
+    mileage_value: number;
+    recorded_at: string;
+    recorded_by: string;
+    notes: string;
+    // Joined
+    vehicle?: Vehicle;
+}
+
+export interface MaintenanceAlert {
+    id: string;
+    vehicle_id: string;
+    maintenance_record_id: string | null;
+    alert_type: 'Mileage' | 'Date' | 'Document';
+    alert_message: string;
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    status: 'active' | 'resolved';
+    created_at: string;
+    // Joined
     vehicle?: Vehicle;
 }
 
@@ -184,7 +218,7 @@ export const reservationsApi = {
     async getAll() {
         const { data, error } = await supabase
             .from('reservations')
-            .select('*, customer:customers(*), vehicle:vehicles(*)')
+            .select('*, customers:customers(*), vehicles:vehicles(*)')
             .order('created_at', { ascending: false });
         if (error) throw error;
         return data as Reservation[];
@@ -192,7 +226,7 @@ export const reservationsApi = {
     async getById(id: string) {
         const { data, error } = await supabase
             .from('reservations')
-            .select('*, customer:customers(*), vehicle:vehicles(*)')
+            .select('*, customers:customers(*), vehicles:vehicles(*)')
             .eq('id', id).single();
         if (error) throw error;
         return data as Reservation;
@@ -214,7 +248,7 @@ export const reservationsApi = {
     async findByVehicleAndDate(vehicleId: string, date: string) {
         const { data, error } = await supabase
             .from('reservations')
-            .select('*, customer:customers(*), vehicle:vehicles(*)')
+            .select('*, customers:customers(*), vehicles:vehicles(*)')
             .eq('vehicle_id', vehicleId)
             .lte('start_date', date)
             .gte('end_date', date);
@@ -228,7 +262,7 @@ export const infractionsApi = {
     async getAll() {
         const { data, error } = await supabase
             .from('infractions')
-            .select('*, customer:customers(*), vehicle:vehicles(*)')
+            .select('*, customers:customers(*), vehicles:vehicles(*)')
             .order('created_at', { ascending: false });
         if (error) throw error;
         return data as Infraction[];
@@ -236,7 +270,7 @@ export const infractionsApi = {
     async getById(id: string) {
         const { data, error } = await supabase
             .from('infractions')
-            .select('*, customer:customers(*), vehicle:vehicles(*), reservation:reservations(*)')
+            .select('*, customers:customers(*), vehicles:vehicles(*), reservations:reservations(*)')
             .eq('id', id).single();
         if (error) throw error;
         return data as Infraction;
@@ -257,28 +291,77 @@ export const infractionsApi = {
     },
 };
 
-// ===== MAINTENANCE =====
+// ===== MAINTENANCE (New Version) =====
 export const maintenanceApi = {
     async getAll() {
         const { data, error } = await supabase
-            .from('maintenance')
+            .from('vehicle_maintenance_records')
             .select('*, vehicle:vehicles(*)')
-            .order('maintenance_date', { ascending: false });
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data as MaintenanceRecord[];
+    },
+    async getByVehicleId(vId: string) {
+        const { data, error } = await supabase
+            .from('vehicle_maintenance_records')
+            .select('*')
+            .eq('vehicle_id', vId)
+            .order('created_at', { ascending: false });
         if (error) throw error;
         return data as MaintenanceRecord[];
     },
     async create(record: Partial<MaintenanceRecord>) {
-        const { data, error } = await supabase.from('maintenance').insert(record).select().single();
+        const { data, error } = await supabase.from('vehicle_maintenance_records').insert(record).select().single();
         if (error) throw error;
         return data as MaintenanceRecord;
     },
     async update(id: string, updates: Partial<MaintenanceRecord>) {
-        const { data, error } = await supabase.from('maintenance').update(updates).eq('id', id).select().single();
+        const { data, error } = await supabase.from('vehicle_maintenance_records').update(updates).eq('id', id).select().single();
         if (error) throw error;
         return data as MaintenanceRecord;
     },
     async delete(id: string) {
-        const { error } = await supabase.from('maintenance').delete().eq('id', id);
+        const { error } = await supabase.from('vehicle_maintenance_records').delete().eq('id', id);
+        if (error) throw error;
+    },
+};
+
+// ===== MILEAGE LOGS =====
+export const mileageApi = {
+    async getAll() {
+        const { data, error } = await supabase
+            .from('vehicle_mileage_logs')
+            .select('*, vehicle:vehicles(*)')
+            .order('recorded_at', { ascending: false });
+        if (error) throw error;
+        return data as MileageLog[];
+    },
+    async create(log: Partial<MileageLog>) {
+        const { data, error } = await supabase.from('vehicle_mileage_logs').insert(log).select().single();
+        if (error) throw error;
+
+        // Also update vehicle's current mileage
+        if (log.vehicle_id && log.mileage_value) {
+            await supabase.from('vehicles').update({ mileage: log.mileage_value }).eq('id', log.vehicle_id);
+        }
+
+        return data as MileageLog;
+    },
+};
+
+// ===== MAINTENANCE ALERTS =====
+export const alertsApi = {
+    async getAllActive() {
+        const { data, error } = await supabase
+            .from('maintenance_alerts')
+            .select('*, vehicle:vehicles(*)')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data as MaintenanceAlert[];
+    },
+    async resolve(id: string) {
+        const { error } = await supabase.from('maintenance_alerts').update({ status: 'resolved' }).eq('id', id);
         if (error) throw error;
     },
 };
@@ -314,7 +397,7 @@ export const gpsApi = {
     async getLatestPositions() {
         const { data, error } = await supabase
             .from('gps_tracking')
-            .select('*, vehicle:vehicles(*)')
+            .select('*, vehicles:vehicles(*)')
             .order('recorded_at', { ascending: false });
         if (error) throw error;
         return data;
@@ -327,15 +410,21 @@ export const adminsApi = {
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
-            .in('role', ['admin', 'super_admin'])
+            .in('role', ['admin', 'super_admin', 'assistant', 'client']) // Get potential admin candidates too or all profiles
+            .filter('role', 'neq', 'client') // we only want staff
             .order('created_at', { ascending: true });
         if (error) throw error;
         return data as AdminUser[];
     },
     async update(id: string, updates: Partial<AdminUser>) {
-        const { data, error } = await supabase.from('profiles').update(updates).eq('id', id).select().single();
+        const { data, error } = await supabase.from('profiles').update(updates).eq('id', id).select();
         if (error) throw error;
-        return data as AdminUser;
+        if (!data || data.length === 0) throw new Error("Aucun profil trouvé à mettre à jour");
+        return data[0] as AdminUser;
+    },
+    async delete(id: string) {
+        const { error } = await supabase.from('profiles').delete().eq('id', id);
+        if (error) throw error;
     },
 };
 

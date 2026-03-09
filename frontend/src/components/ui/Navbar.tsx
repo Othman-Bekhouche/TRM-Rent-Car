@@ -1,9 +1,29 @@
-import { Link } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, X, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
+    const [user, setUser] = useState<any>(null);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null);
+        });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        navigate('/');
+    };
 
     return (
         <nav className="bg-[var(--color-surface)] border-b border-[var(--color-border)] sticky top-0 z-50">
@@ -19,16 +39,34 @@ export default function Navbar() {
                     <div className="hidden md:flex items-center space-x-8">
                         <Link to="/" className="text-slate-300 hover:text-white transition-colors">Accueil</Link>
                         <Link to="/vehicles" className="text-slate-300 hover:text-white transition-colors">Flotte</Link>
+                        {user && <Link to="/my-reservations" className="text-slate-300 hover:text-white transition-colors">Mes Réservations</Link>}
                         <Link to="/about" className="text-slate-300 hover:text-white transition-colors">À Propos</Link>
                         <Link to="/contact" className="text-slate-300 hover:text-white transition-colors">Contact</Link>
 
                         <div className="flex items-center gap-4 ml-4">
-                            <Link to="/login" className="text-slate-300 hover:text-white font-medium transition-colors">
-                                Connexion
-                            </Link>
-                            <Link to="/register" className="bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] hover:from-[#1C0770] hover:to-[#261CC1] text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-[0_4px_15px_rgba(58,154,255,0.3)] hover:shadow-[0_6px_20px_rgba(58,154,255,0.5)]">
-                                S'inscrire
-                            </Link>
+                            {user ? (
+                                <div className="flex items-center gap-4">
+                                    <span className="text-slate-400 text-sm hidden lg:inline">{user.email}</span>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="text-slate-300 hover:text-red-400 font-medium transition-colors"
+                                    >
+                                        Déconnexion
+                                    </button>
+                                    <Link to="/profile" className="p-2 bg-slate-800 rounded-full text-slate-300 hover:text-white transition-all">
+                                        <User className="w-5 h-5" />
+                                    </Link>
+                                </div>
+                            ) : (
+                                <>
+                                    <Link to="/login" className="text-slate-300 hover:text-white font-medium transition-colors">
+                                        Connexion
+                                    </Link>
+                                    <Link to="/register" className="bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] hover:from-[#1C0770] hover:to-[#261CC1] text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-[0_4px_15px_rgba(58,154,255,0.3)] hover:shadow-[0_6px_20px_rgba(58,154,255,0.5)]">
+                                        S'inscrire
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
 

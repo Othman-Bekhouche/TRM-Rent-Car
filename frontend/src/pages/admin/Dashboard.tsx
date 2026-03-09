@@ -1,32 +1,52 @@
-import { Car, Users, Calendar, DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, Clock, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Car, Users, Calendar, DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, Clock, ChevronRight, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-const STATS = [
-    { label: 'Revenus (Ce mois)', value: '45 200 MAD', change: '+12.5%', up: true, icon: DollarSign, color: 'from-[#261CC1] to-[#3A9AFF]', shadow: 'shadow-[0_8px_30px_rgba(38,28,193,0.3)]' },
-    { label: 'Réservations Actives', value: '18', change: '3 en attente', up: true, icon: Calendar, color: 'from-[#1C0770] to-[#261CC1]', shadow: 'shadow-[0_8px_30px_rgba(28,7,112,0.3)]' },
-    { label: 'Véhicules Disponibles', value: '5 / 7', change: '71% dispo', up: true, icon: Car, color: 'from-[#3A9AFF] to-[#60B8FF]', shadow: 'shadow-[0_8px_30px_rgba(58,154,255,0.3)]' },
-    { label: 'Nouveaux Clients', value: '42', change: '+5 ce mois', up: true, icon: Users, color: 'from-[#00C853] to-[#69F0AE]', shadow: 'shadow-[0_8px_30px_rgba(0,200,83,0.2)]' },
-];
-
-const RECENT_BOOKINGS = [
-    { id: '#RES-2026', client: 'Mohammed Alaoui', vehicle: 'Peugeot 208 Noir', dates: '12 Mar – 15 Mar', status: 'En attente', statusColor: 'bg-amber-100 text-amber-700 border-amber-200', amount: '1 260 MAD' },
-    { id: '#RES-2025', client: 'Sophie Martin', vehicle: 'Peugeot 208 Gris (Hybride)', dates: '10 Mar – 12 Mar', status: 'Confirmé', statusColor: 'bg-emerald-100 text-emerald-700 border-emerald-200', amount: '1 040 MAD' },
-    { id: '#RES-2024', client: 'Hassan Benali', vehicle: 'Dacia Logan Blanc', dates: '08 Mar – 15 Mar', status: 'En cours', statusColor: 'bg-blue-100 text-blue-700 border-blue-200', amount: '2 100 MAD' },
-    { id: '#RES-2023', client: 'Fatima El Ouardi', vehicle: 'Dacia Sandero Gris', dates: '05 Mar – 08 Mar', status: 'Terminé', statusColor: 'bg-slate-100 text-slate-500 border-slate-200', amount: '960 MAD' },
-    { id: '#RES-2022', client: 'Youssef Ziani', vehicle: 'Dacia Logan Gris', dates: '01 Mar – 06 Mar', status: 'Terminé', statusColor: 'bg-slate-100 text-slate-500 border-slate-200', amount: '1 500 MAD' },
-];
-
-const FLEET_STATUS = [
-    { vehicle: 'Peugeot 208 Noir', plate: '208-A-001', status: 'Disponible', color: 'bg-emerald-100 text-emerald-700' },
-    { vehicle: 'Peugeot 208 Gris', plate: '208-B-002', status: 'Disponible', color: 'bg-emerald-100 text-emerald-700' },
-    { vehicle: 'Dacia Logan Blanc', plate: 'LOG-C-003', status: 'Loué', color: 'bg-blue-100 text-blue-700' },
-    { vehicle: 'Dacia Logan Gris', plate: 'LOG-C-004', status: 'Loué', color: 'bg-blue-100 text-blue-700' },
-    { vehicle: 'Dacia Sandero Blanc', plate: 'SND-D-005', status: 'Disponible', color: 'bg-emerald-100 text-emerald-700' },
-    { vehicle: 'Dacia Sandero Gris', plate: 'SND-D-006', status: 'Disponible', color: 'bg-emerald-100 text-emerald-700' },
-    { vehicle: 'Dacia Sandero Bleu', plate: 'SND-D-007', status: 'Maintenance', color: 'bg-orange-100 text-orange-700' },
-];
+import { dashboardApi, reservationsApi, vehiclesApi, type Reservation, type Vehicle } from '../../lib/api';
 
 export default function Dashboard() {
+    const [stats, setStats] = useState<any>(null);
+    const [recentBookings, setRecentBookings] = useState<Reservation[]>([]);
+    const [fleetStatus, setFleetStatus] = useState<Vehicle[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadDashboardData();
+    }, []);
+
+    const loadDashboardData = async () => {
+        try {
+            setLoading(true);
+            const [s, rb, fs] = await Promise.all([
+                dashboardApi.getStats(),
+                reservationsApi.getAll(),
+                vehiclesApi.getAll()
+            ]);
+            setStats(s);
+            setRecentBookings(rb.slice(0, 5));
+            setFleetStatus(fs.slice(0, 7));
+        } catch (err) {
+            console.error("Error loading dashboard data:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="h-full flex flex-col items-center justify-center py-20 gap-4">
+                <Loader2 className="w-12 h-12 text-[#261CC1] animate-spin" />
+                <p className="text-slate-400 font-bold animate-pulse uppercase tracking-widest text-xs">Initialisation du panel...</p>
+            </div>
+        );
+    }
+
+    const cards = [
+        { label: 'Revenus Totaux', value: `${stats?.totalRevenue.toLocaleString()} MAD`, change: '+12.5%', up: true, icon: DollarSign, color: 'from-[#261CC1] to-[#3A9AFF]', shadow: 'shadow-[0_8px_30px_rgba(38,28,193,0.3)]' },
+        { label: 'Réservations Actives', value: stats?.activeReservations.toString(), change: `${stats?.totalReservations} total`, up: true, icon: Calendar, color: 'from-[#1C0770] to-[#261CC1]', shadow: 'shadow-[0_8px_30px_rgba(28,7,112,0.3)]' },
+        { label: 'Véhicules Dispo', value: `${stats?.availableVehicles} / ${stats?.totalVehicles}`, change: `${Math.round((stats?.availableVehicles / stats?.totalVehicles) * 100)}% dispo`, up: true, icon: Car, color: 'from-[#3A9AFF] to-[#60B8FF]', shadow: 'shadow-[0_8px_30px_rgba(58,154,255,0.3)]' },
+        { label: 'Total Clients', value: stats?.totalCustomers.toString(), change: '+5 ce mois', up: true, icon: Users, color: 'from-[#00C853] to-[#69F0AE]', shadow: 'shadow-[0_8px_30px_rgba(0,200,83,0.2)]' },
+    ];
+
     return (
         <div className="space-y-8 animate-[fadeIn_0.5s_ease-out]">
             {/* Page Header */}
@@ -39,15 +59,15 @@ export default function Dashboard() {
                     <button className="px-5 py-2.5 bg-white border border-slate-200 text-sm font-bold text-slate-600 rounded-xl hover:shadow-md transition-all">
                         Rapport Mensuel
                     </button>
-                    <button className="px-5 py-2.5 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-sm font-bold text-white rounded-xl hover:shadow-[0_6px_20px_rgba(58,154,255,0.4)] transition-all">
+                    <Link to="/admin/reservations" className="px-5 py-2.5 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-sm font-bold text-white rounded-xl hover:shadow-[0_6px_20px_rgba(58,154,255,0.4)] transition-all flex items-center gap-2">
                         + Nouvelle Réservation
-                    </button>
+                    </Link>
                 </div>
             </div>
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {STATS.map((stat, i) => {
+                {cards.map((stat, i) => {
                     const Icon = stat.icon;
                     return (
                         <div key={i} className={`bg-white rounded-2xl p-6 border border-slate-100 hover:-translate-y-1 transition-all duration-300 ${stat.shadow} group`}>
@@ -74,14 +94,13 @@ export default function Dashboard() {
                     <div className="p-6 border-b border-slate-100 flex justify-between items-center">
                         <div>
                             <h2 className="text-lg font-bold text-[#1C0770]">Chiffre d'Affaires</h2>
-                            <p className="text-xs text-slate-400">Mars 2026</p>
+                            <p className="text-xs text-slate-400">Derniers 30 jours (Estimation)</p>
                         </div>
                         <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full text-xs font-bold">
                             <TrendingUp className="w-3.5 h-3.5" /> +12.5%
                         </div>
                     </div>
                     <div className="p-6">
-                        {/* Simulated Bar Chart */}
                         <div className="flex items-end gap-3 h-48">
                             {[35, 50, 42, 68, 55, 72, 60, 80, 45].map((h, i) => (
                                 <div key={i} className="flex-1 flex flex-col items-center gap-2">
@@ -107,13 +126,16 @@ export default function Dashboard() {
                         <Link to="/admin/vehicles" className="text-[#3A9AFF] text-xs font-bold hover:underline flex items-center">Voir <ChevronRight className="w-3 h-3" /></Link>
                     </div>
                     <div className="divide-y divide-slate-50">
-                        {FLEET_STATUS.map((v, i) => (
+                        {fleetStatus.map((v, i) => (
                             <div key={i} className="px-6 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
                                 <div>
-                                    <p className="text-sm font-semibold text-slate-800">{v.vehicle}</p>
-                                    <p className="text-xs text-slate-400 font-mono">{v.plate}</p>
+                                    <p className="text-sm font-semibold text-slate-800">{v.brand} {v.model}</p>
+                                    <p className="text-xs text-slate-400 font-mono">{v.plate_number}</p>
                                 </div>
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${v.color}`}>{v.status}</span>
+                                <span className={`text-[10px] uppercase font-black px-2.5 py-1 rounded-full border ${v.status === 'available' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                        v.status === 'booked' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                                            'bg-rose-50 text-rose-700 border-rose-100'
+                                    }`}>{v.status}</span>
                             </div>
                         ))}
                     </div>
@@ -144,16 +166,19 @@ export default function Dashboard() {
                             </tr>
                         </thead>
                         <tbody className="text-sm">
-                            {RECENT_BOOKINGS.map((b, i) => (
+                            {recentBookings.map((b, i) => (
                                 <tr key={i} className="hover:bg-[#F0F4FF] transition-colors border-b border-slate-50 cursor-pointer">
-                                    <td className="p-4 text-slate-400 font-mono text-xs">{b.id}</td>
-                                    <td className="p-4 text-slate-800 font-semibold">{b.client}</td>
-                                    <td className="p-4 text-slate-600">{b.vehicle}</td>
-                                    <td className="p-4 text-slate-400">{b.dates}</td>
+                                    <td className="p-4 text-slate-400 font-mono text-xs">#{b.reservation_number || b.id.slice(0, 8)}</td>
+                                    <td className="p-4 text-slate-800 font-semibold">{b.customers?.full_name}</td>
+                                    <td className="p-4 text-slate-600">{b.vehicles?.brand} {b.vehicles?.model}</td>
+                                    <td className="p-4 text-slate-400">{new Date(b.start_date).toLocaleDateString()} – {new Date(b.end_date).toLocaleDateString()}</td>
                                     <td className="p-4">
-                                        <span className={`${b.statusColor} px-3 py-1.5 rounded-full text-xs font-bold border`}>{b.status}</span>
+                                        <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase border ${b.status === 'confirmed' || b.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                                b.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                                                    'bg-rose-50 text-rose-700 border-rose-100'
+                                            }`}>{b.status}</span>
                                     </td>
-                                    <td className="p-4 text-right font-bold text-[#1C0770]">{b.amount}</td>
+                                    <td className="p-4 text-right font-bold text-[#1C0770]">{b.total_price} MAD</td>
                                 </tr>
                             ))}
                         </tbody>
