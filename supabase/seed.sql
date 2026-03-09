@@ -83,13 +83,14 @@ ON CONFLICT (id) DO NOTHING;
 -- 2. Insertion de la VRAIE flotte TRM Rent Car
 DO $$
 DECLARE
-    v1 UUID := gen_random_uuid();
-    v2 UUID := gen_random_uuid();
-    v3 UUID := gen_random_uuid();
-    v4 UUID := gen_random_uuid();
-    v5 UUID := gen_random_uuid();
-    v6 UUID := gen_random_uuid();
-    v7 UUID := gen_random_uuid();
+    v1 UUID := '11111111-1111-1111-1111-111111111111';
+    v2 UUID := '22222222-2222-2222-2222-222222222222';
+    v3 UUID := '33333333-3333-3333-3333-333333333333';
+    v4 UUID := '44444444-4444-4444-4444-444444444444';
+    v5 UUID := '55555555-5555-5555-5555-555555555555';
+    v6 UUID := '66666666-6666-6666-6666-666666666666';
+    v7 UUID := '77777777-7777-7777-7777-777777777777';
+    v8 UUID := '88888888-8888-8888-8888-888888888888';
     c1 UUID := gen_random_uuid();
     c2 UUID := gen_random_uuid();
     c3 UUID := gen_random_uuid();
@@ -111,17 +112,28 @@ BEGIN
     (v4, 'Dacia', 'Logan', 'Gris', 'Diesel', 'Manuelle', 5, 5, 'Traction avant', 2026, 'LOG-C-004', 300.00, 3000.00, 'booked', 'Spacieuse et robuste, cette Dacia Logan répond à toutes vos exigences.'),
     (v5, 'Dacia', 'Sandero', 'Blanc', 'Essence', 'Manuelle', 5, 5, 'Traction avant', 2026, 'SND-D-005', 320.00, 3000.00, 'available', 'Citadine polyvalente avec un grand confort. Très maniable.'),
     (v6, 'Dacia', 'Sandero', 'Gris', 'Essence', 'Manuelle', 5, 5, 'Traction avant', 2026, 'SND-D-006', 320.00, 3000.00, 'available', 'Conduite souple et économique pour cette Dacia Sandero.'),
-    (v7, 'Dacia', 'Sandero', 'Bleu', 'Essence', 'Manuelle', 5, 5, 'Traction avant', 2026, 'SND-D-007', 320.00, 3000.00, 'maintenance', 'Sandero élégante pour tous types de parcours.');
+    (v7, 'Dacia', 'Sandero', 'Bleu', 'Essence', 'Manuelle', 5, 5, 'Traction avant', 2026, 'SND-D-007', 320.00, 3000.00, 'maintenance', 'Sandero élégante pour tous types de parcours.'),
+    (v8, 'Range Rover', 'Evoque', 'Gris Métallisé', 'Diesel', 'Automatique', 5, 5, '4x4', 2026, 'RRE-E-008', 1200.00, 15000.00, 'available', 'SUV de luxe, le Range Rover Evoque premium offre un confort absolu et des performances de pointe.');
 
     -- Images
     INSERT INTO public.vehicle_images (vehicle_id, image_url, is_cover) VALUES
     (v1, '/images/cars/peugeot_208_noir.png', true),
+    (v1, '/images/cars/peugeot_208_noir_front.png', false),
+    (v1, '/images/cars/peugeot_208_noir_rear.png', false),
+    (v1, '/images/cars/peugeot_208_noir_interior.png', false),
     (v2, '/images/cars/peugeot_208_gris.png', true),
     (v3, '/images/cars/dacia_logan_blanc.png', true),
+    (v3, '/images/cars/dacia_logan_blanc_front.png', false),
+    (v3, '/images/cars/dacia_logan_blanc_rear.png', false),
+    (v3, '/images/cars/dacia_logan_blanc_interior.png', false),
     (v4, '/images/cars/dacia_logan_gris.png', true),
     (v5, '/images/cars/dacia_sandero_blanc.png', true),
     (v6, '/images/cars/dacia_sandero_gris.png', true),
-    (v7, '/images/cars/dacia_sandero_blanc.png', true);
+    (v6, '/images/cars/dacia_sandero_gris_front.png', false),
+    (v6, '/images/cars/dacia_sandero_gris_rear.png', false),
+    (v6, '/images/cars/dacia_sandero_gris_interior.png', false),
+    (v7, '/images/cars/dacia_sandero_blanc.png', true),
+    (v8, '/images/cars/range_rover_evoque.png', true);
 
     -- Clients
     INSERT INTO public.customers (id, full_name, email, phone, cin, address, city, total_spent, total_reservations, status)

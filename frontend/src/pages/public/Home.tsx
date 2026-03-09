@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const POPULAR_CARS = [
     {
-        id: '1',
+        id: '11111111-1111-1111-1111-111111111111',
         brand: 'Peugeot',
         model: '208',
         image_url: '/images/cars/peugeot_208_noir.png',
@@ -14,7 +14,7 @@ const POPULAR_CARS = [
         doors: 5
     },
     {
-        id: '3',
+        id: '33333333-3333-3333-3333-333333333333',
         brand: 'Dacia',
         model: 'Logan',
         image_url: '/images/cars/dacia_logan_blanc.png',
@@ -25,7 +25,7 @@ const POPULAR_CARS = [
         doors: 5
     },
     {
-        id: '5',
+        id: '66666666-6666-6666-6666-666666666666',
         brand: 'Dacia',
         model: 'Sandero',
         image_url: '/images/cars/dacia_sandero_gris.png',
@@ -36,7 +36,7 @@ const POPULAR_CARS = [
         doors: 5
     },
     {
-        id: 'premium-7',
+        id: '88888888-8888-8888-8888-888888888888',
         brand: 'Range Rover',
         model: 'Evoque',
         image_url: '/images/cars/range_rover_evoque.png',

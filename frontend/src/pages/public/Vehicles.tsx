@@ -1,100 +1,64 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Car as CarIcon, Users, Fuel, ArrowRight, Filter } from 'lucide-react';
-
-const MOCK_VEHICLES = [
-    {
-        id: 'premium-1',
-        brand: 'Range Rover',
-        model: 'Evoque',
-        image_url: '/images/cars/range_rover_evoque.png',
-        price_per_day: 1200,
-        category: 'Luxe / SUV',
-        transmission: 'Automatique',
-        fuel_type: 'Diesel',
-        seats: 5,
-        doors: 5,
-        traction: '4x4',
-        color: 'Gris Métallisé',
-        status: 'available'
-    },
-    {
-        id: '1',
-        brand: 'Peugeot',
-        model: '208',
-        image_url: '/images/cars/peugeot_208_noir.png',
-        price_per_day: 420,
-        category: 'Citadine',
-        transmission: 'Manuelle 6-vitesses',
-        fuel_type: 'Diesel',
-        seats: 5,
-        doors: 5,
-        traction: 'Traction avant',
-        color: 'Noir',
-        status: 'available'
-    },
-    {
-        id: '3',
-        brand: 'Dacia',
-        model: 'Logan',
-        image_url: '/images/cars/dacia_logan_blanc.png',
-        price_per_day: 300,
-        category: 'Économique',
-        transmission: 'Manuelle',
-        fuel_type: 'Diesel',
-        seats: 5,
-        doors: 5,
-        traction: 'Traction avant',
-        color: 'Blanc',
-        status: 'available'
-    },
-    {
-        id: '6',
-        brand: 'Dacia',
-        model: 'Sandero',
-        image_url: '/images/cars/dacia_sandero_gris.png',
-        price_per_day: 320,
-        category: 'Citadine',
-        transmission: 'Manuelle',
-        fuel_type: 'Essence',
-        seats: 5,
-        doors: 5,
-        traction: 'Traction avant',
-        color: 'Gris',
-        status: 'available'
-    },
-    {
-        id: '2',
-        brand: 'Peugeot',
-        model: '208',
-        image_url: '/images/cars/peugeot_208_noir.png',
-        price_per_day: 520,
-        category: 'Citadine',
-        transmission: 'Automatique',
-        fuel_type: 'Diesel',
-        seats: 5,
-        doors: 5,
-        traction: 'Traction avant',
-        color: 'Noir',
-        status: 'available'
-    },
-    {
-        id: '5',
-        brand: 'Dacia',
-        model: 'Sandero Stepway',
-        image_url: '/images/cars/dacia_sandero_gris.png',
-        price_per_day: 320,
-        category: 'SUV / Citadine',
-        transmission: 'Manuelle',
-        fuel_type: 'Diesel',
-        seats: 5,
-        doors: 5,
-        traction: 'Traction avant',
-        color: 'Gris',
-        status: 'available'
-    }
-];
+import { Car as CarIcon, Users, Fuel, ArrowRight, Filter, Loader2 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 export default function Vehicles() {
+    const [vehicles, setVehicles] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState('all');
+
+    useEffect(() => {
+        const fetchVehicles = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('vehicles')
+                    .select('*, vehicle_images(image_url, is_cover)');
+
+                if (error) throw error;
+
+                if (data) {
+                    const mappedVehicles = data.map(v => {
+                        const coverImg = v.vehicle_images?.find((img: any) => img.is_cover)?.image_url
+                            || v.vehicle_images?.[0]?.image_url
+                            || '/images/cars/default.png';
+                        return {
+                            ...v,
+                            image_url: coverImg,
+                            category: v.price_per_day > 1000 ? 'Luxe / SUV' : (v.price_per_day < 350 ? 'Économique' : 'Citadine')
+                        };
+                    });
+
+                    // Sort to put premium first (highest price per day)
+                    mappedVehicles.sort((a, b) => b.price_per_day - a.price_per_day);
+                    setVehicles(mappedVehicles);
+                }
+            } catch (error) {
+                console.error("Error fetching vehicles:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchVehicles();
+    }, []);
+
+    const filteredVehicles = vehicles.filter(v => {
+        if (filter === 'all') return true;
+        if (filter === 'eco') return v.category === 'Économique';
+        if (filter === 'city') return v.category === 'Citadine';
+        if (filter === 'suv') return v.category === 'Luxe / SUV';
+        return true;
+    });
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-[60vh] bg-[var(--color-background)]">
+                <Loader2 className="w-12 h-12 animate-spin text-[var(--color-primary)]" />
+            </div>
+        );
+    }
+
     return (
         <div className="bg-[var(--color-background)] min-h-screen pb-24">
             {/* Dark Cinematic Header */}
@@ -123,11 +87,15 @@ export default function Vehicles() {
                         </div>
 
                         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 w-full md:w-auto flex-1 md:ml-8">
-                            <select className="bg-[var(--color-background)] border border-[var(--color-border)] text-white text-sm rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block w-full p-2.5">
-                                <option value="">Tous les Types</option>
+                            <select
+                                value={filter}
+                                onChange={(e) => setFilter(e.target.value)}
+                                className="bg-[var(--color-background)] border border-[var(--color-border)] text-white text-sm rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block w-full p-2.5"
+                            >
+                                <option value="all">Tous les Types</option>
                                 <option value="eco">Économique</option>
-                                <option value="suv">SUV</option>
-                                <option value="luxe">Luxe</option>
+                                <option value="city">Citadine</option>
+                                <option value="suv">SUV / Luxe</option>
                             </select>
                             <select className="bg-[var(--color-background)] border border-[var(--color-border)] text-white text-sm rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block w-full p-2.5">
                                 <option value="">Transmission</option>
@@ -154,7 +122,7 @@ export default function Vehicles() {
 
                 {/* Vehicle Grid (Glassmorphism & SaaS styled) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {MOCK_VEHICLES.map((vehicle) => (
+                    {filteredVehicles.map((vehicle) => (
                         <div key={vehicle.id} className="bg-[var(--color-card)] rounded-2xl overflow-hidden flex flex-col group border border-[var(--color-border)] hover:border-[var(--color-primary)]/50 transition-all duration-300 shadow-xl hover:shadow-[var(--color-primary)]/10 hover:-translate-y-1">
                             {/* Image Container */}
                             <div className="relative h-56 bg-gradient-to-t from-[var(--color-card)] to-[#111827] overflow-hidden flex items-center justify-center border-b border-[var(--color-border)] p-4">
