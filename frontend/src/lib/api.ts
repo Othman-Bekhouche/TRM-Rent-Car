@@ -492,3 +492,34 @@ export const dashboardApi = {
         };
     },
 };
+
+// ===== SETTINGS =====
+export const settingsApi = {
+    async get() {
+        const { data, error } = await supabase.from('company_settings').select('*').single();
+        if (error) throw error;
+        return data;
+    },
+    async update(settingsData: any) {
+        const { data, error } = await supabase.from('company_settings').update(settingsData).neq('id', '00000000-0000-0000-0000-000000000000').select().single();
+        if (error) throw error;
+        return data;
+    }
+};
+
+// ===== NOTIFICATIONS =====
+export const notificationsApi = {
+    async getAll() {
+        const { data, error } = await supabase.from('system_notifications').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        return data;
+    },
+    async markAsRead(id: string) {
+        const { error } = await supabase.from('system_notifications').update({ is_read: true }).eq('id', id);
+        if (error) throw error;
+    },
+    async markAllAsRead() {
+        const { error } = await supabase.from('system_notifications').update({ is_read: true }).eq('is_read', false);
+        if (error) throw error;
+    }
+};

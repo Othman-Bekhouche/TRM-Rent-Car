@@ -5,6 +5,9 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { notificationsApi } from '../lib/api';
+import { formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 export default function AdminLayout() {
     const location = useLocation();
@@ -12,6 +15,8 @@ export default function AdminLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [showNotifications, setShowNotifications] = useState(false);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -31,16 +36,41 @@ export default function AdminLayout() {
             let profileData = data;
             if (profileData?.email === 'sara.b@trmrentcar.ma') {
                 profileData = { ...profileData, role: 'assistant' };
-                // Try to update DB in background, but don't block
                 supabase.from('profiles').update({ role: 'assistant' }).eq('id', data.id).then(() => { });
             }
 
             setProfile(profileData);
             setLoading(false);
+
+            // Fetch notifications
+            const notifs = await notificationsApi.getAll();
+            setNotifications(notifs);
+
+            // Subscribe to new notifications
+            const channel = supabase.channel('public:system_notifications')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'system_notifications' }, (payload) => {
+                    if (!payload.new.profile_id || payload.new.profile_id === session.user.id) {
+                        setNotifications(prev => [payload.new, ...prev]);
+                    }
+                })
+                .subscribe();
+
+            return () => {
+                supabase.removeChannel(channel);
+            };
         };
 
         fetchProfile();
     }, [navigate]);
+
+    const unreadCount = notifications.filter(n => !n.is_read).length;
+
+    const handleQuickRead = async (id: string, link: string) => {
+        await notificationsApi.markAsRead(id);
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+        setShowNotifications(false);
+        if (link) navigate(link);
+    };
 
     const fullMenuItems = [
         { path: '/admin', icon: LayoutDashboard, label: 'Tableau de bord', roles: ['super_admin'] },
@@ -158,10 +188,67 @@ export default function AdminLayout() {
                                 <Settings className="w-5 h-5" />
                             </Link>
                         )}
-                        <button className="p-2.5 text-slate-400 hover:text-[#261CC1] hover:bg-[#261CC1]/5 rounded-xl relative transition-colors" title="Notifications">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
-                        </button>
+                        {/* NOTIFICATIONS */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowNotifications(!showNotifications)}
+                                className="p-2.5 text-slate-400 hover:text-[#261CC1] hover:bg-[#261CC1]/5 rounded-xl relative transition-colors"
+                                title="Notifications"
+                            >
+                                <Bell className="w-5 h-5" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-black text-white">
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                    </span>
+                                )}
+                            </button>
+
+                            {/* Notifications Dropdown */}
+                            {showNotifications && (
+                                <>
+                                    <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)}></div>
+                                    <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-100 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] py-3 z-50 flex flex-col max-h-96">
+                                        <div className="px-4 pb-2 border-b border-slate-100 flex items-center justify-between shrink-0">
+                                            <h3 className="font-bold text-[#1C0770] text-sm">Notifications</h3>
+                                            {unreadCount > 0 && (
+                                                <button
+                                                    onClick={async () => {
+                                                        await notificationsApi.markAllAsRead();
+                                                        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+                                                    }}
+                                                    className="text-[10px] uppercase font-bold text-[#3A9AFF] hover:text-[#261CC1]"
+                                                >
+                                                    Tout marquer lu
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto w-full">
+                                            {notifications.length === 0 ? (
+                                                <div className="px-4 py-8 text-center text-slate-400 text-sm">
+                                                    Aucune notification
+                                                </div>
+                                            ) : (
+                                                notifications.map(notif => (
+                                                    <div
+                                                        key={notif.id}
+                                                        onClick={() => handleQuickRead(notif.id, notif.link)}
+                                                        className={`px-4 py-3 border-b border-light/50 last:border-0 cursor-pointer transition-colors hover:bg-slate-50 w-full ${!notif.is_read ? 'bg-[#3A9AFF]/5' : ''}`}
+                                                    >
+                                                        <div className="flex justify-between items-start mb-1 w-full">
+                                                            <p className={`text-xs font-bold ${!notif.is_read ? 'text-[#1C0770]' : 'text-slate-600'}`}>{notif.title}</p>
+                                                            <span className="text-[10px] text-slate-400 shrink-0 ml-2">
+                                                                {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: fr })}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-[11px] text-slate-500 leading-snug truncate w-full break-normal whitespace-normal">{notif.message}</p>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
 
                         <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                             <div className="text-right hidden sm:block">
@@ -175,7 +262,15 @@ export default function AdminLayout() {
                                     {profile?.full_name[0].toUpperCase()}
                                 </button>
 
-                                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right scale-95 group-hover:scale-100 py-2 z-50">
+                                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right py-2 z-50">
+                                    <Link
+                                        to="/admin/profile"
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors text-sm font-bold"
+                                    >
+                                        <UserCog className="w-4 h-4" />
+                                        Mon Profil
+                                    </Link>
+                                    <hr className="my-1 border-slate-100" />
                                     <button
                                         onClick={handleLogout}
                                         className="w-full flex items-center px-4 py-2.5 text-red-500 hover:bg-red-50 transition-colors text-sm font-bold"

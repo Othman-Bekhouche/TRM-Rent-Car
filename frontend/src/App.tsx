@@ -26,6 +26,7 @@ import Settings from './pages/admin/Settings';
 import Users from './pages/admin/Users';
 import Infractions from './pages/admin/Infractions';
 import Messages from './pages/admin/Messages';
+import Profile from './pages/admin/Profile';
 
 function App() {
   return (
@@ -56,6 +57,7 @@ function App() {
           <Route path="settings" element={<Settings />} />
           <Route path="users" element={<Users />} />
           <Route path="messages" element={<Messages />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
       </Routes>
     </BrowserRouter>
