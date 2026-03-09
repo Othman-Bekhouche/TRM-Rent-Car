@@ -5,43 +5,23 @@ import { Car, Fuel, Settings, Users, ArrowRight } from 'lucide-react';
 const MOCK_VEHICLES = [
     {
         id: '1',
-        brand: 'Mercedes-Benz',
-        model: 'S-Class S500',
-        price_per_day: 2500,
-        image_url: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&q=80',
-        transmission: 'Automatique',
-        fuel_type: 'Hybride',
-        seats: 5,
-    },
-    {
-        id: '2',
-        brand: 'Range Rover',
-        model: 'Sport HSE',
-        price_per_day: 2200,
-        image_url: 'https://images.unsplash.com/photo-1606016159991-e44b8ee7bc6d?auto=format&fit=crop&q=80',
-        transmission: 'Automatique',
+        brand: 'Dacia',
+        model: 'Logan',
+        price_per_day: 300,
+        image_url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80',
+        transmission: 'Manuelle',
         fuel_type: 'Diesel',
         seats: 5,
     },
     {
-        id: '3',
-        brand: 'Porsche',
-        model: 'Cayenne Coupe',
-        price_per_day: 3000,
-        image_url: 'https://images.unsplash.com/photo-1503376710356-748af20b66b7?auto=format&fit=crop&q=80',
-        transmission: 'Automatique',
+        id: '2',
+        brand: 'Peugeot',
+        model: '208',
+        price_per_day: 300,
+        image_url: 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&q=80',
+        transmission: 'Manuelle',
         fuel_type: 'Essence',
         seats: 5,
-    },
-    {
-        id: '4',
-        brand: 'BMW',
-        model: 'M4 Competition',
-        price_per_day: 2800,
-        image_url: 'https://images.unsplash.com/photo-1617814076367-b77134882df5?auto=format&fit=crop&q=80',
-        transmission: 'Automatique',
-        fuel_type: 'Essence',
-        seats: 4,
     }
 ];
 
@@ -51,9 +31,9 @@ export default function Vehicles() {
             {/* Header */}
             <div className="bg-[var(--color-surface)] py-16 border-b border-[var(--color-surface-light)] mb-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-6">Notre Flotte Premium</h1>
+                    <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-6">Notre Flotte</h1>
                     <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-                        Découvrez notre sélection exclusive de véhicules haut de gamme, préparés avec soin pour vous offrir une expérience de conduite inoubliable.
+                        Découvrez notre sélection de véhicules fiables et économiques, préparés avec soin pour vous offrir confort et tranquillité sur la route.
                     </p>
                 </div>
             </div>
@@ -62,9 +42,9 @@ export default function Vehicles() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
                 <div className="flex flex-wrap gap-4 items-center justify-center p-4 bg-[var(--color-surface)] rounded-xl border border-[var(--color-surface-light)] shadow-lg">
                     <button className="px-6 py-2 bg-[var(--color-primary)] text-slate-900 font-bold rounded-lg">Tous</button>
-                    <button className="px-6 py-2 bg-[var(--color-background)] text-slate-300 hover:text-white border border-slate-700 rounded-lg transition-colors">SUV</button>
-                    <button className="px-6 py-2 bg-[var(--color-background)] text-slate-300 hover:text-white border border-slate-700 rounded-lg transition-colors">Berline Luxe</button>
-                    <button className="px-6 py-2 bg-[var(--color-background)] text-slate-300 hover:text-white border border-slate-700 rounded-lg transition-colors">Sport</button>
+                    <button className="px-6 py-2 bg-[var(--color-background)] text-slate-300 hover:text-white border border-slate-700 rounded-lg transition-colors">Économique</button>
+                    <button className="px-6 py-2 bg-[var(--color-background)] text-slate-300 hover:text-white border border-slate-700 rounded-lg transition-colors">Citadine</button>
+                    <button className="px-6 py-2 bg-[var(--color-background)] text-slate-300 hover:text-white border border-slate-700 rounded-lg transition-colors">Compacte</button>
                 </div>
             </div>
 

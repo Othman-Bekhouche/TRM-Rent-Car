@@ -7,7 +7,7 @@ export default function About() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
                     <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6">L'Excellence Automobile</h1>
                     <p className="text-xl text-slate-300 max-w-3xl mx-auto">
-                        Chez <span className="text-[var(--color-primary)] font-bold">TRM Rent Car</span>, nous redéfinissons les standards de la location de véhicules premium pour vous offrir bien plus qu'un simple déplacement : une véritable expérience.
+                        Chez <span className="text-[var(--color-primary)] font-bold">TRM Rent Car</span>, nous redéfinissons les standards de la location de véhicules pour vous offrir bien plus qu'un simple déplacement : une véritable expérience abordable et sécurisée.
                     </p>
                 </div>
             </div>
@@ -18,7 +18,7 @@ export default function About() {
                         <h2 className="text-3xl font-bold text-white mb-6">Notre Histoire & Valeurs</h2>
                         <div className="space-y-6 text-lg text-slate-400">
                             <p>
-                                Fondée sur une passion indéniable pour l'automobile d'exception, notre agence s'est donnée pour mission de rendre accessible le luxe et le confort aux professionnels comme aux particuliers exigeants.
+                                Fondée sur une passion indéniable pour l'automobile, notre agence s'est donnée pour mission de rendre accessible des véhicules modernes et fiables aux professionnels comme aux particuliers.
                             </p>
                             <p>
                                 Chaque véhicule de notre flotte est minutieusement inspecté, entretenu et préparé avant de vous être confié. Nous ne faisons aucun compromis sur la sécurité et l'hygiène de nos habitacles.
@@ -30,8 +30,8 @@ export default function About() {
 
                         <div className="mt-10 grid grid-cols-2 gap-6">
                             <div className="border-l-4 border-[var(--color-primary)] pl-4">
-                                <span className="block text-4xl font-extrabold text-white">20+</span>
-                                <span className="text-slate-400 text-sm">Véhicules de luxe récents</span>
+                                <span className="block text-4xl font-extrabold text-white">40+</span>
+                                <span className="text-slate-400 text-sm">Véhicules récents</span>
                             </div>
                             <div className="border-l-4 border-[var(--color-primary)] pl-4">
                                 <span className="block text-4xl font-extrabold text-white">100%</span>

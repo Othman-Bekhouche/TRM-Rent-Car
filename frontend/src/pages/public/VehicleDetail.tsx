@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Calendar, CheckCircle2, Shield, ArrowLeft } from 'lucide-react';
 
 export default function VehicleDetail() {
-    const { id } = useParams();
+    useParams();
 
     // Dans un cas réel, nous ferions un fetch Supabase ici selon l'ID.
     // Affichage factice pour le UI/UX
@@ -12,8 +12,8 @@ export default function VehicleDetail() {
             {/* Hero Image Section */}
             <div className="relative h-[50vh] min-h-[400px] w-full bg-slate-900 border-b border-[var(--color-surface-light)]">
                 <img
-                    src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&q=80"
-                    alt="Mercedes-Benz S-Class"
+                    src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80"
+                    alt="Dacia Logan"
                     className="w-full h-full object-cover opacity-60"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-background)] via-transparent to-transparent" />
@@ -27,8 +27,8 @@ export default function VehicleDetail() {
 
                 <div className="absolute bottom-0 left-0 w-full">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-                        <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-2 drop-shadow-xl">Mercedes-Benz</h1>
-                        <h2 className="text-3xl text-[var(--color-primary)] font-medium drop-shadow-lg">S-Class S500</h2>
+                        <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-2 drop-shadow-xl">Dacia</h1>
+                        <h2 className="text-3xl text-[var(--color-primary)] font-medium drop-shadow-lg">Logan</h2>
                     </div>
                 </div>
             </div>
@@ -43,11 +43,11 @@ export default function VehicleDetail() {
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                                 <div className="bg-[var(--color-surface)] p-4 rounded-xl border border-[var(--color-surface-light)] text-center">
                                     <p className="text-slate-400 text-sm mb-1">Transmission</p>
-                                    <p className="text-white font-semibold">Automatique</p>
+                                    <p className="text-white font-semibold">Manuelle</p>
                                 </div>
                                 <div className="bg-[var(--color-surface)] p-4 rounded-xl border border-[var(--color-surface-light)] text-center">
                                     <p className="text-slate-400 text-sm mb-1">Carburant</p>
-                                    <p className="text-white font-semibold">Hybride</p>
+                                    <p className="text-white font-semibold">Diesel</p>
                                 </div>
                                 <div className="bg-[var(--color-surface)] p-4 rounded-xl border border-[var(--color-surface-light)] text-center">
                                     <p className="text-slate-400 text-sm mb-1">Places</p>
@@ -55,7 +55,7 @@ export default function VehicleDetail() {
                                 </div>
                                 <div className="bg-[var(--color-surface)] p-4 rounded-xl border border-[var(--color-surface-light)] text-center">
                                     <p className="text-slate-400 text-sm mb-1">Année</p>
-                                    <p className="text-white font-semibold">2024</p>
+                                    <p className="text-white font-semibold">2026</p>
                                 </div>
                             </div>
                         </section>
@@ -63,8 +63,8 @@ export default function VehicleDetail() {
                         <section>
                             <h3 className="text-2xl font-bold text-white mb-6 border-b border-[var(--color-surface-light)] pb-4">Description</h3>
                             <p className="text-slate-300 leading-relaxed text-lg">
-                                The ultimate luxury sedan combining supreme comfort, advanced technology, and powerful hybrid performance. Perfect for VIP transport and special events.
-                                Vivez une expérience de conduite sans pareille grâce à un moteur silencieux mais surpuissant, et un intérieur paré de cuir nappa et de boiseries précieuses.
+                                Le choix économique par excellence. La nouvelle Dacia Logan 2026 offre un espace généreux, une consommation de carburant très faible et un confort optimal pour vos trajets en ville comme sur autoroute.
+                                Vivez une expérience de conduite sereine et économique avec une fiabilité à toute épreuve.
                             </p>
                         </section>
 
@@ -97,12 +97,12 @@ export default function VehicleDetail() {
                             <div className="mb-6 pb-6 border-b border-[var(--color-surface-light)]">
                                 <p className="text-slate-400 text-sm mb-2">Tarif Journalier</p>
                                 <div className="flex items-baseline text-white">
-                                    <span className="text-4xl font-bold">2 500</span>
+                                    <span className="text-4xl font-bold">300</span>
                                     <span className="text-xl ml-2">MAD</span>
                                 </div>
                                 <div className="mt-4 flex items-center text-sm text-amber-500/80 bg-amber-500/10 p-3 rounded-lg">
                                     <Shield className="w-4 h-4 mr-2" />
-                                    Caution exigée: 10 000 MAD
+                                    Caution exigée: 5 000 MAD
                                 </div>
                             </div>
 

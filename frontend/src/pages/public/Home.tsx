@@ -14,7 +14,7 @@ export default function Home() {
                         </span>
                     </h1>
                     <p className="mt-4 max-w-2xl text-xl text-slate-300 mx-auto mb-10">
-                        TRM Rent Car vous propose une flotte de véhicules haut de gamme pour vos déplacements professionnels ou personnels.
+                        TRM Rent Car vous propose une flotte de véhicules fiables et économiques pour vos déplacements professionnels ou personnels.
                     </p>
                     <div className="flex flex-col sm:flex-row justify-center gap-4">
                         <button className="px-8 py-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-slate-900 rounded-xl font-bold text-lg transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:shadow-[0_0_25px_rgba(245,158,11,0.5)] cursor-pointer">
@@ -38,9 +38,9 @@ export default function Home() {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                         <div className="bg-[var(--color-background)] p-8 rounded-2xl border border-[var(--color-surface-light)] hover:-translate-y-2 transition-transform duration-300">
                             <Car className="h-12 w-12 text-[var(--color-primary)] mb-6" />
-                            <h3 className="text-xl font-bold text-white mb-3">Flotte Premium</h3>
+                            <h3 className="text-xl font-bold text-white mb-3">Flotte Récente</h3>
                             <p className="text-slate-400 text-sm leading-relaxed">
-                                Des véhicules récents, parfaitement entretenus et équipés pour un confort optimal.
+                                Des véhicules économiques, parfaitement entretenus et équipés pour un confort optimal à petit prix.
                             </p>
                         </div>
 
