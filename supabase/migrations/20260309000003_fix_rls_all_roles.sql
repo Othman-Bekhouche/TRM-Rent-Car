@@ -57,9 +57,19 @@ CREATE POLICY "Staff can manage gps tracking." ON public.gps_tracking FOR ALL US
     EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND profiles.role IN ('admin', 'super_admin', 'gestionnaire', 'assistant'))
 );
 
--- 4. Fix profiles policy: Admins should be able to manage ALL profiles (for user management)
+-- 4. Helper function to check role WITHOUT triggering RLS on profiles (avoids infinite recursion)
+CREATE OR REPLACE FUNCTION public.get_my_role()
+RETURNS TEXT
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+    SELECT role::text FROM public.profiles WHERE id = auth.uid();
+$$;
+
+-- 5. Fix profiles policy: Admins should be able to manage ALL profiles (for user management)
 DROP POLICY IF EXISTS "Users can update own profile." ON public.profiles;
 CREATE POLICY "Users can update own profile." ON public.profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Staff can manage all profiles." ON public.profiles FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND profiles.role IN ('admin', 'super_admin'))
+    public.get_my_role() IN ('admin', 'super_admin')
 );
