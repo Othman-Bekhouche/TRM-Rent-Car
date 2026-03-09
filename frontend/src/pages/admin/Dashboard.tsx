@@ -1,142 +1,161 @@
-import { Car, Users, Calendar, DollarSign, ArrowUpRight, Clock } from 'lucide-react';
+import { Car, Users, Calendar, DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, Clock, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const STATS = [
+    { label: 'Revenus (Ce mois)', value: '45 200 MAD', change: '+12.5%', up: true, icon: DollarSign, color: 'from-[#261CC1] to-[#3A9AFF]', shadow: 'shadow-[0_8px_30px_rgba(38,28,193,0.3)]' },
+    { label: 'Réservations Actives', value: '18', change: '3 en attente', up: true, icon: Calendar, color: 'from-[#1C0770] to-[#261CC1]', shadow: 'shadow-[0_8px_30px_rgba(28,7,112,0.3)]' },
+    { label: 'Véhicules Disponibles', value: '5 / 7', change: '71% dispo', up: true, icon: Car, color: 'from-[#3A9AFF] to-[#60B8FF]', shadow: 'shadow-[0_8px_30px_rgba(58,154,255,0.3)]' },
+    { label: 'Nouveaux Clients', value: '42', change: '+5 ce mois', up: true, icon: Users, color: 'from-[#00C853] to-[#69F0AE]', shadow: 'shadow-[0_8px_30px_rgba(0,200,83,0.2)]' },
+];
+
+const RECENT_BOOKINGS = [
+    { id: '#RES-2026', client: 'Mohammed Alaoui', vehicle: 'Peugeot 208 Noir', dates: '12 Mar – 15 Mar', status: 'En attente', statusColor: 'bg-amber-100 text-amber-700 border-amber-200', amount: '1 260 MAD' },
+    { id: '#RES-2025', client: 'Sophie Martin', vehicle: 'Peugeot 208 Gris (Hybride)', dates: '10 Mar – 12 Mar', status: 'Confirmé', statusColor: 'bg-emerald-100 text-emerald-700 border-emerald-200', amount: '1 040 MAD' },
+    { id: '#RES-2024', client: 'Hassan Benali', vehicle: 'Dacia Logan Blanc', dates: '08 Mar – 15 Mar', status: 'En cours', statusColor: 'bg-blue-100 text-blue-700 border-blue-200', amount: '2 100 MAD' },
+    { id: '#RES-2023', client: 'Fatima El Ouardi', vehicle: 'Dacia Sandero Gris', dates: '05 Mar – 08 Mar', status: 'Terminé', statusColor: 'bg-slate-100 text-slate-500 border-slate-200', amount: '960 MAD' },
+    { id: '#RES-2022', client: 'Youssef Ziani', vehicle: 'Dacia Logan Gris', dates: '01 Mar – 06 Mar', status: 'Terminé', statusColor: 'bg-slate-100 text-slate-500 border-slate-200', amount: '1 500 MAD' },
+];
+
+const FLEET_STATUS = [
+    { vehicle: 'Peugeot 208 Noir', plate: '208-A-001', status: 'Disponible', color: 'bg-emerald-100 text-emerald-700' },
+    { vehicle: 'Peugeot 208 Gris', plate: '208-B-002', status: 'Disponible', color: 'bg-emerald-100 text-emerald-700' },
+    { vehicle: 'Dacia Logan Blanc', plate: 'LOG-C-003', status: 'Loué', color: 'bg-blue-100 text-blue-700' },
+    { vehicle: 'Dacia Logan Gris', plate: 'LOG-C-004', status: 'Loué', color: 'bg-blue-100 text-blue-700' },
+    { vehicle: 'Dacia Sandero Blanc', plate: 'SND-D-005', status: 'Disponible', color: 'bg-emerald-100 text-emerald-700' },
+    { vehicle: 'Dacia Sandero Gris', plate: 'SND-D-006', status: 'Disponible', color: 'bg-emerald-100 text-emerald-700' },
+    { vehicle: 'Dacia Sandero Bleu', plate: 'SND-D-007', status: 'Maintenance', color: 'bg-orange-100 text-orange-700' },
+];
 
 export default function Dashboard() {
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
+        <div className="space-y-8 animate-[fadeIn_0.5s_ease-out]">
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-white tracking-widest uppercase">Tableau de bord</h1>
-                    <p className="text-[var(--color-text-muted)] text-sm mt-1">Vue d'ensemble de votre flotte TRM Rent Car</p>
+                    <h1 className="text-3xl font-black text-[#1C0770] tracking-tight">Tableau de bord</h1>
+                    <p className="text-slate-500 text-sm mt-1">Vue d'ensemble de votre agence TRM Rent Car — Taourirt</p>
                 </div>
-                <div className="flex gap-2">
-                    <button className="px-4 py-2 bg-[var(--color-card)] border border-[var(--color-border)] text-sm font-bold text-white uppercase tracking-widest hover:bg-[var(--color-surface)] transition-colors rounded-sm">
+                <div className="flex gap-3">
+                    <button className="px-5 py-2.5 bg-white border border-slate-200 text-sm font-bold text-slate-600 rounded-xl hover:shadow-md transition-all">
                         Rapport Mensuel
                     </button>
-                    <button className="px-4 py-2 bg-gradient-gold text-sm font-bold text-slate-900 uppercase tracking-widest hover:opacity-90 transition-opacity rounded-sm shadow-lg">
+                    <button className="px-5 py-2.5 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-sm font-bold text-white rounded-xl hover:shadow-[0_6px_20px_rgba(58,154,255,0.4)] transition-all">
                         + Nouvelle Réservation
                     </button>
                 </div>
             </div>
 
-            {/* KPI Cards CRM Style */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-[var(--color-card)] p-6 rounded-sm border border-[var(--color-border)] relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-primary)]/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-                    <div className="flex items-center justify-between mb-4">
-                        <p className="text-[var(--color-text-muted)] text-xs font-bold tracking-widest uppercase">Revenus (Ce mois)</p>
-                        <div className="bg-[var(--color-background)] p-2 rounded-sm border border-[var(--color-primary)]/20 text-[var(--color-primary)]">
-                            <DollarSign className="h-5 w-5" />
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {STATS.map((stat, i) => {
+                    const Icon = stat.icon;
+                    return (
+                        <div key={i} className={`bg-white rounded-2xl p-6 border border-slate-100 hover:-translate-y-1 transition-all duration-300 ${stat.shadow} group`}>
+                            <div className="flex items-center justify-between mb-4">
+                                <p className="text-slate-500 text-xs font-bold tracking-wider uppercase">{stat.label}</p>
+                                <div className={`bg-gradient-to-br ${stat.color} p-2.5 rounded-xl text-white shadow-lg group-hover:scale-110 transition-transform`}>
+                                    <Icon className="h-5 w-5" />
+                                </div>
+                            </div>
+                            <p className="text-3xl font-black text-[#1C0770] mb-2">{stat.value}</p>
+                            <div className={`flex items-center text-xs font-bold ${stat.up ? 'text-emerald-600' : 'text-red-500'}`}>
+                                {stat.up ? <ArrowUpRight className="w-3.5 h-3.5 mr-1" /> : <ArrowDownRight className="w-3.5 h-3.5 mr-1" />}
+                                {stat.change}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Revenue Chart Placeholder + Fleet Status */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Chart */}
+                <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                        <div>
+                            <h2 className="text-lg font-bold text-[#1C0770]">Chiffre d'Affaires</h2>
+                            <p className="text-xs text-slate-400">Mars 2026</p>
+                        </div>
+                        <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full text-xs font-bold">
+                            <TrendingUp className="w-3.5 h-3.5" /> +12.5%
                         </div>
                     </div>
-                    <div>
-                        <p className="text-3xl font-black text-white">45 200</p>
-                        <div className="flex items-center mt-2 text-emerald-400 text-xs font-bold bg-emerald-400/10 w-fit px-2 py-1 rounded-sm">
-                            <ArrowUpRight className="w-3 h-3 mr-1" />
-                            +12.5% vs mois dernier
+                    <div className="p-6">
+                        {/* Simulated Bar Chart */}
+                        <div className="flex items-end gap-3 h-48">
+                            {[35, 50, 42, 68, 55, 72, 60, 80, 45].map((h, i) => (
+                                <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                                    <div
+                                        className="w-full bg-gradient-to-t from-[#261CC1] to-[#3A9AFF] rounded-t-lg transition-all duration-500 hover:from-[#1C0770] hover:to-[#261CC1] cursor-pointer relative group"
+                                        style={{ height: `${h}%` }}
+                                    >
+                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#1C0770] text-white text-[10px] font-bold px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg">
+                                            {Math.round(h * 600)} MAD
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] text-slate-400 font-medium">{['1', '4', '7', '10', '13', '16', '19', '22', '25'][i]} Mar</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-[var(--color-card)] p-6 rounded-sm border border-[var(--color-border)] relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-primary)]/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-                    <div className="flex items-center justify-between mb-4">
-                        <p className="text-[var(--color-text-muted)] text-xs font-bold tracking-widest uppercase">Réservations Actives</p>
-                        <div className="bg-[var(--color-background)] p-2 rounded-sm border border-blue-500/20 text-blue-400">
-                            <Calendar className="h-5 w-5" />
-                        </div>
+                {/* Fleet Status */}
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                        <h2 className="text-lg font-bold text-[#1C0770]">État Flotte</h2>
+                        <Link to="/admin/vehicles" className="text-[#3A9AFF] text-xs font-bold hover:underline flex items-center">Voir <ChevronRight className="w-3 h-3" /></Link>
                     </div>
-                    <div>
-                        <p className="text-3xl font-black text-white">18</p>
-                        <div className="flex items-center mt-2 text-[var(--color-text-muted)] text-xs font-medium">
-                            <Clock className="w-3 h-3 mr-1" />
-                            3 en attente de validation
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-[var(--color-card)] p-6 rounded-sm border border-[var(--color-border)] relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-primary)]/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-                    <div className="flex items-center justify-between mb-4">
-                        <p className="text-[var(--color-text-muted)] text-xs font-bold tracking-widest uppercase">Flotte Disponibilité</p>
-                        <div className="bg-[var(--color-background)] p-2 rounded-sm border border-emerald-500/20 text-emerald-400">
-                            <Car className="h-5 w-5" />
-                        </div>
-                    </div>
-                    <div>
-                        <p className="text-3xl font-black text-white">8<span className="text-lg text-[var(--color-text-muted)]"> / 24</span></p>
-                        <div className="flex w-full h-1.5 bg-[var(--color-background)] rounded-full mt-3 overflow-hidden">
-                            <div className="bg-emerald-500 w-1/3 h-full rounded-full" />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-[var(--color-card)] p-6 rounded-sm border border-[var(--color-border)] relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-primary)]/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-                    <div className="flex items-center justify-between mb-4">
-                        <p className="text-[var(--color-text-muted)] text-xs font-bold tracking-widest uppercase">Nouveaux Clients</p>
-                        <div className="bg-[var(--color-background)] p-2 rounded-sm border border-purple-500/20 text-purple-400">
-                            <Users className="h-5 w-5" />
-                        </div>
-                    </div>
-                    <div>
-                        <p className="text-3xl font-black text-white">42</p>
-                        <div className="flex items-center mt-2 text-emerald-400 text-xs font-bold bg-emerald-400/10 w-fit px-2 py-1 rounded-sm">
-                            <ArrowUpRight className="w-3 h-3 mr-1" />
-                            +5% ce mois
-                        </div>
+                    <div className="divide-y divide-slate-50">
+                        {FLEET_STATUS.map((v, i) => (
+                            <div key={i} className="px-6 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                                <div>
+                                    <p className="text-sm font-semibold text-slate-800">{v.vehicle}</p>
+                                    <p className="text-xs text-slate-400 font-mono">{v.plate}</p>
+                                </div>
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${v.color}`}>{v.status}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
 
-            {/* Recent Bookings Table Style CRM */}
-            <div className="mt-8 bg-[var(--color-card)] rounded-sm border border-[var(--color-border)] overflow-hidden">
-                <div className="p-6 border-b border-[var(--color-border)] flex justify-between items-center">
-                    <h2 className="text-sm font-bold text-white tracking-widest uppercase">Réservations Récentes</h2>
-                    <button className="text-[var(--color-primary)] text-xs font-bold hover:underline">Tout voir</button>
+            {/* Recent Bookings Table */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-[#261CC1]/10 rounded-xl">
+                            <Clock className="w-5 h-5 text-[#261CC1]" />
+                        </div>
+                        <h2 className="text-lg font-bold text-[#1C0770]">Réservations Récentes</h2>
+                    </div>
+                    <Link to="/admin/reservations" className="text-[#3A9AFF] text-xs font-bold hover:underline flex items-center">Tout voir <ChevronRight className="w-3 h-3" /></Link>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-[#151a24] text-[var(--color-text-muted)] text-xs uppercase tracking-widest font-bold">
-                                <th className="p-4 border-b border-[#2b3548]">ID</th>
-                                <th className="p-4 border-b border-[#2b3548]">Client</th>
-                                <th className="p-4 border-b border-[#2b3548]">Véhicule</th>
-                                <th className="p-4 border-b border-[#2b3548]">Dates</th>
-                                <th className="p-4 border-b border-[#2b3548]">Statut</th>
-                                <th className="p-4 border-b border-[#2b3548] text-right">Montant</th>
+                            <tr className="bg-slate-50 text-slate-400 text-[11px] uppercase tracking-[0.15em] font-bold">
+                                <th className="p-4">ID</th>
+                                <th className="p-4">Client</th>
+                                <th className="p-4">Véhicule</th>
+                                <th className="p-4">Dates</th>
+                                <th className="p-4">Statut</th>
+                                <th className="p-4 text-right">Montant</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm">
-                            <tr className="hover:bg-[#151a24] transition-colors border-b border-[#2b3548]">
-                                <td className="p-4 text-slate-400 font-mono text-xs">#RES-2026</td>
-                                <td className="p-4 text-white font-medium">Mohammed Alaoui</td>
-                                <td className="p-4 text-slate-300">Dacia Logan 2026</td>
-                                <td className="p-4 text-slate-400">12 Mar - 15 Mar</td>
-                                <td className="p-4">
-                                    <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 px-2 py-1 rounded-sm text-xs font-bold uppercase">En attente</span>
-                                </td>
-                                <td className="p-4 text-right font-bold text-white">900 MAD</td>
-                            </tr>
-                            <tr className="hover:bg-[#151a24] transition-colors border-b border-[#2b3548]">
-                                <td className="p-4 text-slate-400 font-mono text-xs">#RES-2025</td>
-                                <td className="p-4 text-white font-medium">Sophie Martin</td>
-                                <td className="p-4 text-slate-300">Peugeot 208</td>
-                                <td className="p-4 text-slate-400">10 Mar - 12 Mar</td>
-                                <td className="p-4">
-                                    <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-sm text-xs font-bold uppercase">Confirmé</span>
-                                </td>
-                                <td className="p-4 text-right font-bold text-white">600 MAD</td>
-                            </tr>
-                            <tr className="hover:bg-[#151a24] transition-colors">
-                                <td className="p-4 text-slate-400 font-mono text-xs">#RES-2024</td>
-                                <td className="p-4 text-white font-medium">Hassan Benali</td>
-                                <td className="p-4 text-slate-300">Mercedes Classe C</td>
-                                <td className="p-4 text-slate-400">08 Mar - 15 Mar</td>
-                                <td className="p-4">
-                                    <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded-sm text-xs font-bold uppercase">En cours</span>
-                                </td>
-                                <td className="p-4 text-right font-bold text-white">10 500 MAD</td>
-                            </tr>
+                            {RECENT_BOOKINGS.map((b, i) => (
+                                <tr key={i} className="hover:bg-[#F0F4FF] transition-colors border-b border-slate-50 cursor-pointer">
+                                    <td className="p-4 text-slate-400 font-mono text-xs">{b.id}</td>
+                                    <td className="p-4 text-slate-800 font-semibold">{b.client}</td>
+                                    <td className="p-4 text-slate-600">{b.vehicle}</td>
+                                    <td className="p-4 text-slate-400">{b.dates}</td>
+                                    <td className="p-4">
+                                        <span className={`${b.statusColor} px-3 py-1.5 rounded-full text-xs font-bold border`}>{b.status}</span>
+                                    </td>
+                                    <td className="p-4 text-right font-bold text-[#1C0770]">{b.amount}</td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>

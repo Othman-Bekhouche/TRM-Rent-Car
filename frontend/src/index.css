@@ -1,20 +1,14 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #C9A227;
-  /* Luxury Gold */
-  --color-primary-dark: #F59E0B;
-  /* Electric Amber */
-  --color-background: #0B0F14;
-  /* Deep Carbon */
-  --color-surface: #111827;
-  /* Midnight Navy */
-  --color-card: #1F2937;
-  /* Graphite */
-  --color-border: #2D3748;
-  /* Borders */
-
-  --color-text-main: #F9FAFB;
+  --color-primary: #3A9AFF;
+  --color-primary-dark: #261CC1;
+  --color-accent: #1C0770;
+  --color-background: #0B0F19;
+  --color-surface: #121826;
+  --color-border: #1F2A3D;
+  --color-card: #141C2B;
+  --color-text-main: #FFFFFF;
   --color-text-muted: #9CA3AF;
 }
 
@@ -27,18 +21,22 @@
 }
 
 @layer utilities {
-  .text-gradient-gold {
-    background: linear-gradient(135deg, #C9A227 0%, #F59E0B 100%);
+  .text-gradient-blue {
+    background: linear-gradient(135deg, #261CC1 0%, #3A9AFF 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+  }
+
+  .bg-gradient-blue {
+    background: linear-gradient(135deg, #1C0770 0%, #3A9AFF 100%);
   }
 
   .bg-gradient-gold {
     background: linear-gradient(135deg, #C9A227 0%, #F59E0B 100%);
   }
 
-  .hover-glow-gold:hover {
-    box-shadow: 0 0 25px rgba(201, 162, 39, 0.4);
+  .hover-glow-blue:hover {
+    box-shadow: 0 0 25px rgba(58, 154, 255, 0.4);
   }
 
   .glass-card {
@@ -56,6 +54,18 @@
 
     50% {
       transform: translateY(-15px);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 }

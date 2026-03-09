@@ -1,192 +1,186 @@
 import { useParams, Link } from 'react-router-dom';
-import { Calendar, Shield, ArrowLeft, Fuel, Users, MapPin, Search } from 'lucide-react';
-import { Truck, MessagesSquare, ShieldCheck } from 'lucide-react'; // Trust icons
+import { ArrowLeft, Fuel, Users, MapPin, Search as Box, CheckCircle, CreditCard, Shield } from 'lucide-react';
 
 export default function VehicleDetail() {
+    // In a real app, you'd fetch the vehicle by ID
     useParams();
 
-    // Mock specific vehicle (Dacia Logan) for UI purposes
+    // Mock specific vehicle (Peugeot 208 Noir)
     const vehicle = {
-        brand: 'Dacia',
-        model: 'Logan',
-        year: 2026,
-        price_per_day: 250,
-        image_url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80',
-        transmission: 'Manuelle',
+        brand: 'Peugeot',
+        model: '208',
+        year: 2024,
+        price_per_day: 420,
+        image_url: '/images/cars/peugeot_208_noir.png',
+        transmission: 'Manuelle 6-vitesses',
         fuel_type: 'Diesel',
         seats: 5,
-        deposit_amount: 3000,
-        description: `Le choix économique par excellence. La nouvelle Dacia Logan 2026 offre un espace généreux pour cinq adultes, une consommation de carburant très faible et un coffre volumineux. Parfaite pour vos trajets urbains ou vos déplacements professionnels inter-villes au Maroc.`
+        doors: 5,
+        traction: 'Traction avant',
+        color: 'Noir',
+        deposit_amount: 5000,
+        description: `Superbe Peugeot 208 diesel. Confort de conduite exceptionnel, économique et maniable pour tous vos trajets professionnels ou personnels. Profitez d'un intérieur premium pensé pour votre confort et d'une technologie embarquée de dernière génération.`
     };
 
     return (
-        <div className="pb-24 bg-[var(--color-background)] min-h-screen">
-            {/* Cinematic Hero Image Section */}
-            <div className="relative h-[60vh] min-h-[500px] w-full bg-[var(--color-background)] border-b border-[var(--color-border)] overflow-hidden">
-                <img
-                    src={vehicle.image_url}
-                    alt={`${vehicle.brand} ${vehicle.model}`}
-                    className="w-full h-full object-cover opacity-60 mix-blend-luminosity brightness-110 contrast-125"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-background)] via-[#0F141D]/60 to-transparent" />
-
-                <div className="absolute top-8 left-8 z-20">
-                    <Link to="/vehicles" className="group flex items-center px-4 py-2 bg-[var(--color-card)]/80 backdrop-blur-md rounded-sm text-white hover:text-[var(--color-primary)] transition-colors border border-[var(--color-border)] font-medium text-sm tracking-widest uppercase">
-                        <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                        Retour au catalogue
+        <div className="pb-24 bg-[var(--color-background)] min-h-screen font-sans">
+            {/* SaaS Header Breadcrumb Navigation */}
+            <div className="bg-[#141C2B] border-b border-[var(--color-border)] py-4">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <Link to="/vehicles" className="inline-flex items-center text-sm font-bold text-slate-400 hover:text-[var(--color-primary)] transition-colors uppercase tracking-wider">
+                        <ArrowLeft className="w-4 h-4 mr-2" /> Retour au catalogue
                     </Link>
-                </div>
-
-                <div className="absolute bottom-0 left-0 w-full z-10 pb-16">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="inline-block px-3 py-1 bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/30 text-[var(--color-primary)] text-xs font-bold tracking-widest uppercase rounded-sm mb-4 backdrop-blur-md">
-                            Économique
-                        </div>
-                        <h1 className="text-6xl md:text-8xl font-black text-white mb-0 drop-shadow-2xl tracking-tighter uppercase">{vehicle.brand}</h1>
-                        <h2 className="text-4xl text-gradient-gold font-light tracking-wide -mt-2">{vehicle.model}</h2>
-                    </div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-30">
+            {/* Main Content Layout */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
-                    {/* Details Column */}
-                    <div className="lg:col-span-2 space-y-16">
-                        {/* Specs */}
-                        <section className="glass-card p-8 rounded-sm shadow-2xl">
-                            <h3 className="text-xl font-bold text-white mb-8 border-b border-[var(--color-border)] pb-4 tracking-wider uppercase">Fiche Technique</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                <div className="text-center group">
-                                    <div className="w-12 h-12 mx-auto bg-[var(--color-background)] rounded-full flex items-center justify-center border border-[var(--color-border)] group-hover:border-[var(--color-primary)] transition-colors mb-3">
-                                        <Search className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-primary)]" />
-                                    </div>
-                                    <p className="text-[var(--color-text-muted)] text-xs uppercase tracking-widest mb-1">Boîte</p>
-                                    <p className="text-white font-bold">{vehicle.transmission}</p>
+                    {/* Left Column (Images & Details) */}
+                    <div className="lg:col-span-2 flex flex-col gap-10">
+                        {/* Title Section */}
+                        <div>
+                            <div className="flex justify-between items-start mb-2">
+                                <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter">
+                                    {vehicle.brand} <span className="text-[var(--color-primary)]">{vehicle.model}</span>
+                                </h1>
+                                <span className="px-4 py-1.5 bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-sm font-black tracking-widest uppercase rounded-lg border border-[var(--color-primary)]/50">
+                                    Disponible
+                                </span>
+                            </div>
+                            <p className="text-slate-400 text-lg flex items-center font-medium">
+                                <MapPin className="w-4 h-4 mr-2" />
+                                Retrait à l'Agence Taourirt ou Livraison (Oujda, Nador, Fès)
+                            </p>
+                        </div>
+
+                        {/* Large Image Gallery Container */}
+                        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-8 relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F19] via-transparent to-transparent opacity-50" />
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-[var(--color-primary)]/10 blur-[150px] rounded-full pointer-events-none" />
+                            <img
+                                src={vehicle.image_url}
+                                alt={`${vehicle.brand} ${vehicle.model}`}
+                                className="w-full h-[400px] object-contain relative z-10 mix-blend-screen scale-105 group-hover:scale-110 transition-transform duration-700"
+                            />
+                        </div>
+
+                        {/* Specifications Grid */}
+                        <div className="bg-[#141C2B] rounded-3xl p-8 border border-[var(--color-border)] shadow-xl">
+                            <h3 className="text-xl font-black text-white mb-6 uppercase tracking-wider">Caractéristiques <span className="text-[var(--color-primary)]">Techniques</span></h3>
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                                <div className="bg-[var(--color-background)] rounded-xl p-4 border border-[var(--color-border)] flex flex-col items-center justify-center text-center">
+                                    <Box className="w-6 h-6 text-[var(--color-primary)] mb-2" />
+                                    <span className="text-xs text-slate-500 uppercase tracking-widest mb-1">Boîte</span>
+                                    <span className="text-sm text-white font-bold">{vehicle.transmission}</span>
                                 </div>
-                                <div className="text-center group">
-                                    <div className="w-12 h-12 mx-auto bg-[var(--color-background)] rounded-full flex items-center justify-center border border-[var(--color-border)] group-hover:border-[var(--color-primary)] transition-colors mb-3">
-                                        <Fuel className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-primary)]" />
-                                    </div>
-                                    <p className="text-[var(--color-text-muted)] text-xs uppercase tracking-widest mb-1">Énergie</p>
-                                    <p className="text-white font-bold">{vehicle.fuel_type}</p>
+                                <div className="bg-[var(--color-background)] rounded-xl p-4 border border-[var(--color-border)] flex flex-col items-center justify-center text-center">
+                                    <Fuel className="w-6 h-6 text-[var(--color-primary)] mb-2" />
+                                    <span className="text-xs text-slate-500 uppercase tracking-widest mb-1">Carburant</span>
+                                    <span className="text-sm text-white font-bold">{vehicle.fuel_type}</span>
                                 </div>
-                                <div className="text-center group">
-                                    <div className="w-12 h-12 mx-auto bg-[var(--color-background)] rounded-full flex items-center justify-center border border-[var(--color-border)] group-hover:border-[var(--color-primary)] transition-colors mb-3">
-                                        <Users className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-primary)]" />
-                                    </div>
-                                    <p className="text-[var(--color-text-muted)] text-xs uppercase tracking-widest mb-1">Passagers</p>
-                                    <p className="text-white font-bold">{vehicle.seats}</p>
+                                <div className="bg-[var(--color-background)] rounded-xl p-4 border border-[var(--color-border)] flex flex-col items-center justify-center text-center">
+                                    <Users className="w-6 h-6 text-[var(--color-primary)] mb-2" />
+                                    <span className="text-xs text-slate-500 uppercase tracking-widest mb-1">Places</span>
+                                    <span className="text-sm text-white font-bold">{vehicle.seats} Passagers</span>
                                 </div>
-                                <div className="text-center group">
-                                    <div className="w-12 h-12 mx-auto bg-[var(--color-background)] rounded-full flex items-center justify-center border border-[var(--color-border)] group-hover:border-[var(--color-primary)] transition-colors mb-3">
-                                        <Calendar className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-primary)]" />
-                                    </div>
-                                    <p className="text-[var(--color-text-muted)] text-xs uppercase tracking-widest mb-1">Année</p>
-                                    <p className="text-white font-bold">{vehicle.year}</p>
+                                <div className="bg-[var(--color-background)] rounded-xl p-4 border border-[var(--color-border)] flex flex-col items-center justify-center text-center">
+                                    <div className="w-6 h-6 text-[var(--color-primary)] mb-2 font-black flex items-center justify-center text-lg">P</div>
+                                    <span className="text-xs text-slate-500 uppercase tracking-widest mb-1">Portes</span>
+                                    <span className="text-sm text-white font-bold">{vehicle.doors} Portes</span>
                                 </div>
                             </div>
-                        </section>
 
-                        <section>
-                            <h3 className="text-xl font-bold text-white mb-6 tracking-wider uppercase">À propos de ce véhicule</h3>
-                            <p className="text-[var(--color-text-muted)] leading-loose text-lg font-light text-justify">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 border-t border-[var(--color-border)] pt-6">
+                                <div className="flex items-center text-sm font-medium text-slate-300">
+                                    <CheckCircle className="w-4 h-4 text-[var(--color-primary)] mr-2" /> Couleur : <span className="text-white ml-2">{vehicle.color}</span>
+                                </div>
+                                <div className="flex items-center text-sm font-medium text-slate-300">
+                                    <CheckCircle className="w-4 h-4 text-[var(--color-primary)] mr-2" /> Traction : <span className="text-white ml-2">{vehicle.traction}</span>
+                                </div>
+                                <div className="flex items-center text-sm font-medium text-slate-300">
+                                    <CheckCircle className="w-4 h-4 text-[var(--color-primary)] mr-2" /> Année : <span className="text-white ml-2">{vehicle.year}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Description */}
+                        <div className="bg-[#141C2B] rounded-3xl p-8 border border-[var(--color-border)] shadow-xl">
+                            <h3 className="text-xl font-black text-white mb-6 uppercase tracking-wider">Aperçu du <span className="text-[var(--color-primary)]">Véhicule</span></h3>
+                            <p className="text-slate-300 leading-loose text-lg font-light">
                                 {vehicle.description}
                             </p>
-                        </section>
+                        </div>
 
-                        {/* Trust / Features */}
-                        <section className="bg-[var(--color-card)] border border-[var(--color-border)] p-8 rounded-sm">
-                            <h3 className="text-xl font-bold text-white mb-8 tracking-wider uppercase text-center">L'Engagement TRM Rent Car</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                <div className="flex flex-col items-center text-center">
-                                    <ShieldCheck className="w-10 h-10 text-[var(--color-primary)] mb-4" />
-                                    <h4 className="text-white font-bold mb-2">Assurance Tous Risques</h4>
-                                    <p className="text-[var(--color-text-muted)] text-sm">Voyagez en toute sérénité. Nos tarifs incluent une couverture complète.</p>
-                                </div>
-                                <div className="flex flex-col items-center text-center">
-                                    <Truck className="w-10 h-10 text-[var(--color-primary)] mb-4" />
-                                    <h4 className="text-white font-bold mb-2">Livraison sur Mesure</h4>
-                                    <p className="text-[var(--color-text-muted)] text-sm">Récupérez votre voiture à l'aéroport, à l'hôtel ou dans nos agences.</p>
-                                </div>
-                                <div className="flex flex-col items-center text-center">
-                                    <MessagesSquare className="w-10 h-10 text-[var(--color-primary)] mb-4" />
-                                    <h4 className="text-white font-bold mb-2">Assistance 24/7</h4>
-                                    <p className="text-[var(--color-text-muted)] text-sm">Notre équipe est à votre disposition à tout moment via WhatsApp ou par téléphone.</p>
-                                </div>
-                            </div>
-                        </section>
                     </div>
 
-                    {/* Booking Widget Column */}
+                    {/* Right Column (Booking SaaS Widget) */}
                     <div className="lg:col-span-1">
-                        <div className="bg-[var(--color-card)] p-8 rounded-sm border border-[var(--color-border)] shadow-2xl sticky top-32">
-                            <div className="mb-8 pb-6 border-b border-[var(--color-border)]">
-                                <p className="text-[var(--color-text-muted)] text-xs tracking-widest uppercase mb-2">Tarif Journalier TTC</p>
-                                <div className="flex items-baseline text-white">
-                                    <span className="text-5xl font-black">{vehicle.price_per_day}</span>
-                                    <span className="text-lg ml-2 text-[var(--color-primary)] font-bold">MAD</span>
+                        <div className="bg-[#141C2B] p-8 rounded-3xl border border-[var(--color-border)] shadow-2xl sticky top-24">
+
+                            <div className="mb-8 pb-6 border-b border-[var(--color-border)]/50">
+                                <p className="text-slate-400 text-xs font-bold tracking-widest uppercase mb-2">Prix location TTC</p>
+                                <div className="flex items-end">
+                                    <span className="text-5xl font-black text-[var(--color-primary)] leading-none">{vehicle.price_per_day}</span>
+                                    <span className="text-sm ml-2 text-slate-400 font-bold uppercase tracking-widest mb-1">MAD / jour</span>
                                 </div>
-                                <div className="mt-4 flex items-center text-xs text-[var(--color-text-muted)] bg-[var(--color-background)] border border-[var(--color-border)] p-3 rounded-sm uppercase tracking-wider">
-                                    <Shield className="w-4 h-4 mr-2 text-[var(--color-primary)]" />
-                                    Caution: {vehicle.deposit_amount} MAD
+                                <div className="mt-5 flex items-center text-xs text-slate-300 bg-[var(--color-background)] border border-[var(--color-primary)]/30 p-4 rounded-xl font-medium">
+                                    <Shield className="w-5 h-5 mr-3 text-[var(--color-primary)]" />
+                                    Caution requise : {vehicle.deposit_amount} MAD
                                 </div>
                             </div>
 
                             <form className="space-y-6">
-                                <div>
-                                    <label className="block text-xs font-bold tracking-wider uppercase text-[var(--color-text-muted)] mb-2">Dates de location</label>
-                                    <div className="flex items-center gap-2">
-                                        <div className="relative flex-1">
-                                            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-muted)] w-4 h-4" />
-                                            <input type="date" className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-sm py-3 pl-10 pr-2 text-white text-sm focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]" placeholder="Départ" />
-                                        </div>
-                                        <span className="text-[var(--color-text-muted)]">-</span>
-                                        <div className="relative flex-1">
-                                            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-muted)] w-4 h-4" />
-                                            <input type="date" className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-sm py-3 pl-10 pr-2 text-white text-sm focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]" placeholder="Retour" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold tracking-wider uppercase text-[var(--color-text-muted)] mb-2">Ville de retrait</label>
-                                    <div className="relative">
-                                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-muted)] w-4 h-4" />
-                                        <select className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-sm py-3 pl-10 pr-4 text-white text-sm appearance-none focus:outline-none focus:border-[var(--color-primary)]">
-                                            <option>Casablanca (Aéroport CMN)</option>
-                                            <option>Casablanca (Centre Ville)</option>
-                                            <option>Rabat (Aéroport RBA)</option>
-                                            <option>Marrakech (Aéroport RAK)</option>
+                                {/* Configuration Date */}
+                                <div className="bg-[var(--color-background)] border border-[var(--color-border)] rounded-xl p-4">
+                                    <div className="mb-4">
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Lieu de retrait</label>
+                                        <select className="w-full bg-transparent border-b border-[var(--color-border)] text-white text-sm focus:ring-0 focus:border-[var(--color-primary)] block pb-2 px-0 appearance-none font-medium">
+                                            <option className="bg-[#141C2B]">Agence Taourirt (Siège)</option>
+                                            <option className="bg-[#141C2B]">Livraison Oujda</option>
+                                            <option className="bg-[#141C2B]">Livraison Nador</option>
+                                            <option className="bg-[#141C2B]">Livraison Fès</option>
                                         </select>
                                     </div>
-                                </div>
 
-                                <div>
-                                    <label className="block text-xs font-bold tracking-wider uppercase text-[var(--color-text-muted)] mb-2">Ville de restitution</label>
-                                    <div className="relative">
-                                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-muted)] w-4 h-4" />
-                                        <select className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-sm py-3 pl-10 pr-4 text-white text-sm appearance-none focus:outline-none focus:border-[var(--color-primary)]">
-                                            <option>Idem (Retrait)</option>
-                                            <option>Casablanca (Aéroport CMN)</option>
-                                            <option>Marrakech (Aéroport RAK)</option>
-                                            <option>Tanger (Aéroport TNG)</option>
-                                        </select>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Retrait</label>
+                                            <input type="date" className="w-full bg-transparent border-b border-[var(--color-border)] text-white text-sm focus:ring-0 focus:border-[var(--color-primary)] block pb-2 px-0 font-medium" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Retour</label>
+                                            <input type="date" className="w-full bg-transparent border-b border-[var(--color-border)] text-white text-sm focus:ring-0 focus:border-[var(--color-primary)] block pb-2 px-0 font-medium" />
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="pt-6 border-t border-[var(--color-border)]">
-                                    <div className="flex justify-between items-center text-sm mb-6 text-[var(--color-text-muted)]">
-                                        <span>Total estimé (3 jours)</span>
-                                        <span className="text-white font-bold text-lg">{vehicle.price_per_day * 3} MAD</span>
-                                    </div>
+                                {/* Options */}
+                                <div className="space-y-3">
+                                    <label className="flex items-center p-3 rounded-xl border border-[var(--color-primary)] bg-[var(--color-primary)]/5 cursor-pointer">
+                                        <input type="checkbox" className="w-4 h-4 text-[var(--color-primary)] bg-[var(--color-background)] border-[var(--color-primary)] rounded focus:ring-[var(--color-primary)] focus:ring-2" defaultChecked />
+                                        <span className="ml-3 text-sm font-bold text-white uppercase tracking-wider">Assurance Multirisque</span>
+                                        <span className="ml-auto text-xs font-bold text-[var(--color-primary)]">INCLUS</span>
+                                    </label>
+                                    <label className="flex items-center p-3 rounded-xl border border-[var(--color-border)] hover:border-[var(--color-primary)]/50 bg-[var(--color-background)] cursor-pointer transition-colors">
+                                        <input type="checkbox" className="w-4 h-4 text-[var(--color-primary)] bg-[#141C2B] border-slate-600 rounded focus:ring-[var(--color-primary)]" />
+                                        <span className="ml-3 text-sm font-medium text-slate-300">Siège Enfant</span>
+                                        <span className="ml-auto text-xs font-bold text-slate-400">+50 MAD/J</span>
+                                    </label>
+                                </div>
 
-                                    <Link to="/login" className="block w-full text-center bg-gradient-gold hover:opacity-90 text-slate-900 font-bold py-4 rounded-sm transition-all hover-glow-gold tracking-wider uppercase text-sm">
-                                        Continuer la réservation
-                                    </Link>
-                                    <p className="text-center text-xs text-[var(--color-text-muted)] mt-4">
-                                        Aucun paiement immédiat requis. Vous finaliserez votre réservation dans l'étape suivante.
-                                    </p>
+                                <Link
+                                    to={`/booking/checkout/${vehicle.model}`}
+                                    className="flex w-full justify-center items-center px-6 py-4 border border-transparent text-sm font-black rounded-xl text-[#0B0F19] bg-[var(--color-primary)] hover:bg-white hover:text-[#0B0F19] uppercase tracking-widest transition-all shadow-lg hover:-translate-y-1"
+                                >
+                                    Poursuivre la Réservation
+                                </Link>
+
+                                <div className="flex items-center justify-center text-xs text-slate-500 font-medium">
+                                    <CreditCard className="w-4 h-4 mr-2" />
+                                    Paiement sécurisé ou à la livraison
                                 </div>
                             </form>
                         </div>

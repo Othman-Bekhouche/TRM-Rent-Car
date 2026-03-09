@@ -28,6 +28,9 @@ CREATE TABLE public.vehicles (
     transmission TEXT DEFAULT 'Automatic',
     fuel_type TEXT,
     seats INT DEFAULT 5,
+    doors INT DEFAULT 5,
+    color TEXT,
+    traction TEXT DEFAULT 'Traction avant',
     mileage INT DEFAULT 0,
     price_per_day DECIMAL(10,2) NOT NULL,
     deposit_amount DECIMAL(10,2) NOT NULL,
@@ -47,9 +50,11 @@ CREATE TABLE public.vehicle_images (
 );
 
 -- Reservations (Foundation for Accounting later)
+-- Note: customer_id will reference customers table (added in extended schema)
+-- Using DEFERRABLE to allow creation order flexibility
 CREATE TABLE public.reservations (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    customer_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    customer_id UUID,  -- Will be linked to customers table via extended schema
     vehicle_id UUID REFERENCES public.vehicles(id) ON DELETE RESTRICT,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,

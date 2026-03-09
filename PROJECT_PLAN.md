@@ -1,96 +1,244 @@
-# TRM Rent Car - Web Platform Project Plan
+# TRM Rent Car — Documentation Projet
 
-## Business Goals & Vision
-- **Identity:** Premium, modern, dark automotive design style tailored for "TRM Rent Car" to convey professionalism, elegance, and trust.
-- **Customer Experience:** Users can effortlessly browse the vehicle fleet, check availability, make reservations online, and receive automated email notifications.
-- **Admin Operations:** A powerful CRM intended for the business owner to seamlessly manage operations, vehicles, reservations, and inventory.
-- **Future-Proofing:** Architecture designed to systematically grow from a scalable MVP into a comprehensive enterprise platform with GPS and Accounting integrations.
+## 🏢 Informations Agence
 
----
-
-## Technical Stack
-- **Frontend:** React, TypeScript, Vite
-- **Styling:** Tailwind CSS (configured for a dark, premium aesthetic)
-- **Backend / Database:** Supabase (Self-hosted), PostgreSQL
-- **Auth & Storage:** Supabase Auth, Supabase Storage
-- **Infrastructure:** Docker (for local development & isolated services)
-- **Deployment:** Future deployment to a VPS with a Custom Domain
+- **Nom :** TRM Rent Car
+- **Siège :** Appt Sabrine, 2ème Étage N°6 Bloc A, 65800 Taourirt
+- **Téléphone :** 06 06 06 6426
+- **Email :** trm.rentcar@gmail.com
+- **Zone de livraison :** Taourirt (siège), Oujda, Nador, Fès, Berkane
 
 ---
 
-## 1. User Roles
-1. **Guest (Unregistered):** Can browse the public vehicle catalog, view individual car details, check availability, and read business info.
-2. **Customer (Registered):** Can make vehicle reservations, manage their personal profile, view upcoming/past bookings, upload necessary documents (like driver's licenses), and manage their reservations in the Customer Area.
-3. **Admin (Business Owner):** Has unrestricted access to the CRM dashboard. Can perform full CRUD (Create, Read, Update, Delete) operations on the vehicle fleet, approve or decline reservations, manage customer data, track inventory, and access all future integrations.
+## 🛠 Stack Technique
+
+| Composant | Technologie |
+|-----------|-------------|
+| **Frontend** | React 19, TypeScript, Vite 7 |
+| **Styling** | Tailwind CSS 4 (thème sombre premium) |
+| **Backend / BDD** | Supabase (Self-hosted), PostgreSQL 17 |
+| **Auth** | Supabase Auth (email/password) |
+| **Cartographie** | Leaflet + React-Leaflet (OpenStreetMap) |
+| **Icônes** | Lucide React |
+| **Infrastructure** | Docker (dev local) |
+| **Déploiement** | VPS avec domaine personnalisé (futur) |
 
 ---
 
-## 2. Main Modules
-- **Public Website:** Landing page, premium vehicle catalog (list/grid views), individual vehicle detail pages, availability calendar, and company information.
-- **Customer Booking Area:** Authentication portal, centralized customer dashboard, reservation tracking, and profile management.
-- **Admin CRM / Operations Dashboard:** Secure back-office interface featuring fleet management, reservation oversight, customer relationship database, and business tracking metrics.
-- **Email Notifications Module:** Triggered automated emails for booking confirmations, cancellations, and status updates.
-- **Future-Ready Modules:** Planned architecture for GPS Tracking and Financial Accounting integrations.
+## 🎨 Design & Palette
+
+| Couleur | Hex | Usage |
+|---------|-----|-------|
+| Deep Indigo | `#1C0770` | Titres, accents forts |
+| Electric Blue | `#261CC1` | Dégradés, boutons actifs |
+| Sky Blue | `#3A9AFF` | Primary, liens, CTA |
+| Background | `#0B0F19` | Fond principal |
+| Surface | `#121826` | Cards, modales |
+| Border | `#1F2A3D` | Séparateurs, bordures |
+
+- Logo utilisé : `trm-logo-pour-arriere-noir.png` (optimisé pour fond sombre)
+- Style : Dark mode premium, glassmorphism, animations subtiles
 
 ---
 
-## 3. Functional Breakdown
-- **Authentication & Security:** Email/Password based login via Supabase Auth, with strict Row-Level Security (RLS) in PostgreSQL securing tenant/user data.
-- **Fleet Management System:** Capture vehicle data such as Make, Model, Year, Transmission, Fuel Type, Seats, Daily Rate, Status (Available/Maintenance/Rented), and multiple image support via Supabase Storage.
-- **Reservation Engine:** Date-picker logic to calculate total rental days and costs, while preventing double-bookings and managing reservation statuses (Pending, Confirmed, Completed, Cancelled).
-- **Automated Webhooks:** Edge functions/webhooks listening to database changes to trigger customer-facing emails via standard SMTP or services like Resend/SendGrid.
+## 👥 Rôles & Identifiants
+
+### Comptes Admin (Supabase Auth)
+
+| Rôle | Nom | Email | Mot de passe |
+|------|-----|-------|-------------|
+| **Super Admin** | Med Tahiri | `admin@trmrentcar.ma` | `AdminTRM2026!` |
+| **Admin** | Ahmed Tahiri | `ahmed.t@trmrentcar.ma` | `AhmedTRM2026!` |
+| **Admin** | Sara Bennani | `sara.b@trmrentcar.ma` | `SaraTRM2026!` |
+
+### Rôles utilisateur
+
+1. **Guest** — Navigation publique, catalogue, réservation
+2. **Customer** — Espace client, historique, profil
+3. **Admin** — Gestion flotte, réservations, clients
+4. **Super Admin** — Tout + gestion des admins, paramètres
 
 ---
 
-## 4. MVP Scope (Phase 1)
-*Focus: Core operations, taking the business online, and replacing manual processes.*
-- **Premium Public Website & Dark Mode UI:** High-end landing page, vehicle catalog with filtering, and detailed car pages.
-- **Booking Flow:** Customers can select dates, review total pricing, and submit a reservation request (payment handled offline/in-person initially).
-- **Customer Area:** Basic dashboard to view booking status.
-- **Admin Operations Dashboard:** 
-  - Manage Fleet Inventory (Add, edit, and safely remove vehicles).
-  - Manage Bookings (Approve, reject, update).
-  - Basic Customer Roster.
-- **Email Notifications:** Automated email summarizing the requested booking sent to both the user and the admin.
-- **Deployment:** Complete Docker local setup and transition to VPS base infrastructure.
+## 🗄 Architecture Base de Données
+
+### Tables
+
+| Table | Description | Lignes seed |
+|-------|-------------|-------------|
+| `profiles` | Comptes admin (lié à auth.users) | 3 |
+| `vehicles` | Flotte automobile | 7 |
+| `vehicle_images` | Photos des véhicules | 7 |
+| `customers` | Clients CRM (nom, CIN, tél, adresse) | 6 |
+| `reservations` | Réservations (lié clients + véhicules) | 5 |
+| `infractions` | Infractions routières (lié véhicules + clients) | 3 |
+| `maintenance` | Entretien véhicules | 5 |
+| `transactions` | Comptabilité (encaissements, cautions) | 5 |
+| `gps_tracking` | Positions GPS en temps réel | 2 |
+
+### Fonctionnalités DB avancées
+
+- **Trigger `match_infraction_to_reservation()`** — Match automatique infraction → réservation → client
+- **Trigger `update_updated_at()`** — Mise à jour auto du champ `updated_at`
+- **RLS (Row Level Security)** — Admin-only sur toutes les tables métier
+- **Indexes** — Sur vehicle_id, customer_id, dates, status, CIN, phone
 
 ---
 
-## 5. Phase 2 Scope (Refinement & Automation)
-*Focus: Financial transactions and operational streamlining.*
-- **Integrated Payments:** Integration with payment platforms (e.g., Stripe) to accept security deposits or full payments online.
-- **Document Verification Flow:** Customers can securely upload their ID/Driver's License for pre-approval by the admin.
-- **Damage Assessment Tool:** Give admins securely uploaded photo-logs of the vehicle before checkout and after check-in.
-- **SMS & Advanced Reminders:** Automated reminders sent 24 hours prior to pickup or drop-off times.
+## 🚗 Flotte Véhicules
+
+| Véhicule | Plaque | Prix/jour | Statut |
+|----------|--------|-----------|--------|
+| Peugeot 208 Noir | 208-A-001 | 420 MAD | Disponible |
+| Peugeot 208 Gris | 208-B-002 | 520 MAD | Disponible |
+| Dacia Logan Blanc | LOG-C-003 | 300 MAD | Disponible |
+| Dacia Logan Gris | LOG-C-004 | 300 MAD | Réservé |
+| Dacia Sandero Blanc | SND-D-005 | 320 MAD | Disponible |
+| Dacia Sandero Gris | SND-D-006 | 320 MAD | Disponible |
+| Dacia Sandero Bleu | SND-D-007 | 320 MAD | Maintenance |
 
 ---
 
-## 6. Phase 3 Scope (Enterprise Addons)
-*Focus: Utilizing the future-ready data hooks to build enterprise functionality.*
-- **GPS Integration Module:** Connect to third-party OBD2/GPS tracking APIs (e.g., Traccar or Samsara) to display real-time vehicle locations, speed monitoring, and geofencing directly inside the Admin Dashboard.
-- **Accounting Module:** Custom ledger tracking revenues, operational expenses (e.g., fuel, car washes, maintenance), or synchronization interfaces to QuickBooks/Xero.
-- **Advanced Analytics:** Utilization rate charting, predictive maintenance reminders based on mileage, and revenue forecasting.
+## 📁 Structure du Projet
+
+```
+TRM Rent Car/
+├── frontend/
+│   ├── src/
+│   │   ├── components/ui/       # Navbar, Footer
+│   │   ├── layouts/             # PublicLayout, AdminLayout
+│   │   ├── lib/                 # supabase.ts, api.ts (CRUD services)
+│   │   ├── pages/
+│   │   │   ├── public/          # Home, Vehicles, VehicleDetail, About, Contact
+│   │   │   │   └── auth/        # Login, Register
+│   │   │   └── admin/           # Dashboard, Reservations, AdminVehicles,
+│   │   │                        # Customers, Infractions, GPS, Accounting,
+│   │   │                        # Maintenance, Settings, Users
+│   │   ├── App.tsx              # Routes (public + admin)
+│   │   └── index.css            # Variables CSS + animations
+│   ├── public/
+│   │   ├── images/cars/         # Photos véhicules (PNG réalistes)
+│   │   ├── trm-logo-pour-arriere-noir.png
+│   │   └── trm-logo-pour-arriere-blanc.png
+│   └── package.json
+├── supabase/
+│   ├── config.toml              # Config Supabase locale
+│   ├── migrations/
+│   │   ├── 20260308_initial_schema.sql     # profiles, vehicles, reservations
+│   │   └── 20260309_extended_schema.sql    # customers, infractions, maintenance,
+│   │                                       # transactions, gps_tracking + triggers
+│   └── seed.sql                 # Données de démonstration complètes
+└── PROJECT_PLAN.md              # Ce fichier
+```
 
 ---
 
-## 7. Recommended Development Order
-1. **Planning & Setup:** 
-   - Initialize Vite + React & TypeScript. 
-   - Configure Tailwind CSS with the premium dark theme. 
-   - Set up local Docker-based Supabase.
-2. **Database & Auth Foundation:** 
-   - Build PostgreSQL tables: `profiles`, `vehicles`, `bookings`. 
-   - Hook up Supabase Auth and configure RLS.
-3. **Admin CRM Core (Backoffice first):** 
-   - Build Admin layout to add, edit, and upload images for Vehicles.
-   - Establish the foundation so there is actual data for the frontend to consume.
-4. **Public Layout & Catalog (Frontend):** 
-   - Build the high-aesthetic landing page and vehicle catalog drawing from the Supabase backend.
-5. **Booking Engine:** 
-   - Build the calendar picker logic, cost calculators, and the checkout form inserting into the `bookings` table.
-6. **Customer Client Area:** 
-   - Build the user-facing dashboard for managing personal reservations.
-7. **Triggers & Notifications:** 
-   - Implement Database Webhooks to trigger Postmark/SendGrid/Resend confirmation emails.
-8. **Final Polish & VPS Deployment:** 
-   - Micro-animations, responsive layout checks on mobile devices, and the final Docker composition deployment to the production VPS server.
+## 🖥 Pages Publiques
+
+| Page | URL | Description |
+|------|-----|-------------|
+| **Accueil** | `/` | Hero cinématique, widget réservation, flotte populaire, zones livraison, "Pourquoi TRM" |
+| **Flotte** | `/vehicles` | Catalogue filtrable (type, transmission, carburant, prix) |
+| **Détail** | `/vehicles/:id` | Fiche véhicule, galerie, specs, widget réservation sticky |
+| **À propos** | `/about` | Histoire, valeurs, statistiques, CTA |
+| **Contact** | `/contact` | Téléphone, email, WhatsApp, horaires, formulaire |
+| **Connexion** | `/login` | Auth Supabase (email/password) |
+| **Inscription** | `/register` | Formulaire création compte |
+
+---
+
+## 🏗 Pages Admin (`/admin`)
+
+| Page | URL | Description |
+|------|-----|-------------|
+| **Dashboard** | `/admin` | KPIs (revenus, véhicules, réservations), graphiques, activité récente |
+| **Réservations** | `/admin/reservations` | Table CRM filtrale, statuts, recherche |
+| **Véhicules** | `/admin/vehicles` | Gestion flotte, ajout/édition/suppression |
+| **Clients** | `/admin/customers` | CRM clients avec CIN, historique, statuts |
+| **Infractions** | `/admin/infractions` | ⚠️ Module complet : amendes routières, matching auto client/véhicule, transmission aux autorités |
+| **GPS** | `/admin/gps` | Carte Leaflet interactive, positions véhicules temps réel |
+| **Comptabilité** | `/admin/accounting` | KPIs financiers, transactions, revenus |
+| **Maintenance** | `/admin/maintenance` | Suivi entretien, alertes, coûts |
+| **Paramètres** | `/admin/settings` | Info agence, tarifs, notifications |
+| **Administrateurs** | `/admin/users` | Gestion comptes admin, rôles |
+
+---
+
+## 🔗 API Services (`src/lib/api.ts`)
+
+Couche CRUD complète connectée à Supabase :
+
+| Service | Opérations |
+|---------|-----------|
+| `vehiclesApi` | getAll, getById, create, update, delete |
+| `customersApi` | getAll, getById, create, update, delete |
+| `reservationsApi` | getAll, getById, create, update, delete, findByVehicleAndDate |
+| `infractionsApi` | getAll, getById, create, update, delete |
+| `maintenanceApi` | getAll, create, update, delete |
+| `transactionsApi` | getAll, create, update, delete |
+| `gpsApi` | getLatestPositions |
+| `adminsApi` | getAll, update |
+| `authApi` | signIn, signOut, getCurrentUser, getSession |
+| `dashboardApi` | getStats (KPIs agrégés) |
+
+---
+
+## 🚀 Lancement
+
+### Prérequis
+- Node.js 18+
+- Docker Desktop
+- Supabase CLI (`npx supabase`)
+
+### Démarrer Supabase (base de données)
+```bash
+cd "TRM Rent Car"
+npx supabase start
+npx supabase db reset   # Applique migrations + seed
+```
+
+### Démarrer le Frontend
+```bash
+cd frontend
+npm install
+npm run dev             # http://localhost:5173
+```
+
+### Accès Supabase Studio
+```
+http://127.0.0.1:54423
+```
+
+### Build Production
+```bash
+cd frontend
+npm run build           # Génère dist/
+```
+
+---
+
+## 📋 Roadmap
+
+### ✅ Phase 1 — MVP (Complété)
+- [x] Site public premium (Home, Flotte, Détail, About, Contact)
+- [x] Système de réservation (widget dates + lieu)
+- [x] Auth (Login/Register via Supabase)
+- [x] Admin CRM complet (Dashboard, Réservations, Véhicules, Clients)
+- [x] Module Infractions avec matching automatique
+- [x] GPS avec carte Leaflet interactive
+- [x] Comptabilité, Maintenance, Paramètres, Gestion Admins
+- [x] Base de données complète avec triggers et RLS
+- [x] API CRUD pour toutes les tables
+
+### 🔲 Phase 2 — Intégration & Automatisation
+- [ ] Connexion pages admin au backend Supabase (données live)
+- [ ] Paiement en ligne (Stripe ou CMI)
+- [ ] Upload documents (permis, CIN) via Supabase Storage
+- [ ] Notifications email (confirmation réservation)
+- [ ] Export PDF (infractions, factures)
+
+### 🔲 Phase 3 — Enterprise
+- [ ] GPS temps réel (Traccar / OBD2)
+- [ ] Reporting avancé + analytics
+- [ ] Application mobile (Capacitor)
+- [ ] Multi-agences

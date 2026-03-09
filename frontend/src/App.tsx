@@ -23,6 +23,7 @@ import Accounting from './pages/admin/Accounting';
 import Maintenance from './pages/admin/Maintenance';
 import Settings from './pages/admin/Settings';
 import Users from './pages/admin/Users';
+import Infractions from './pages/admin/Infractions';
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
           <Route path="reservations" element={<Reservations />} />
           <Route path="vehicles" element={<AdminVehicles />} />
           <Route path="customers" element={<Customers />} />
+          <Route path="infractions" element={<Infractions />} />
           <Route path="gps" element={<GPS />} />
           <Route path="accounting" element={<Accounting />} />
           <Route path="maintenance" element={<Maintenance />} />

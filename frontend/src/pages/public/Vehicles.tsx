@@ -1,79 +1,111 @@
 import { Link } from 'react-router-dom';
-import { Car as CarIcon, Users, Fuel, ArrowRight, Calendar, Filter } from 'lucide-react';
+import { Car as CarIcon, Users, Fuel, ArrowRight, Filter } from 'lucide-react';
 
-// Demo Data for Moroccan Market
 const MOCK_VEHICLES = [
     {
         id: '1',
-        brand: 'Dacia',
-        model: 'Logan',
-        image_url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80',
-        price_per_day: 250,
-        category: 'Économique',
-        transmission: 'Manuelle',
+        brand: 'Peugeot',
+        model: '208',
+        image_url: '/images/cars/peugeot_208_noir.png',
+        price_per_day: 420,
+        category: 'Citadine',
+        transmission: 'Manuelle 6-vitesses',
         fuel_type: 'Diesel',
         seats: 5,
+        doors: 5,
+        traction: 'Traction avant',
+        color: 'Noir',
         status: 'available'
     },
     {
         id: '2',
         brand: 'Peugeot',
         model: '208',
-        image_url: 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&q=80',
-        price_per_day: 300,
+        image_url: '/images/cars/peugeot_208_gris.png',
+        price_per_day: 520,
         category: 'Citadine',
         transmission: 'Automatique',
-        fuel_type: 'Essence',
+        fuel_type: 'Hybride Essence',
         seats: 5,
+        doors: 5,
+        traction: 'Traction avant',
+        color: 'Gris',
         status: 'available'
     },
     {
         id: '3',
-        brand: 'Renault',
-        model: 'Clio 5',
-        image_url: 'https://images.unsplash.com/photo-1542318858-a5796a5af520?auto=format&fit=crop&q=80',
-        price_per_day: 350,
-        category: 'Citadine',
-        transmission: 'Automatique',
+        brand: 'Dacia',
+        model: 'Logan',
+        image_url: '/images/cars/dacia_logan_blanc.png',
+        price_per_day: 300,
+        category: 'Économique',
+        transmission: 'Manuelle',
         fuel_type: 'Diesel',
         seats: 5,
-        status: 'booked'
+        doors: 5,
+        traction: 'Traction avant',
+        color: 'Blanc',
+        status: 'available'
     },
     {
         id: '4',
         brand: 'Dacia',
-        model: 'Duster',
-        image_url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80',
-        price_per_day: 450,
-        category: 'SUV',
+        model: 'Logan',
+        image_url: '/images/cars/dacia_logan_gris.png',
+        price_per_day: 300,
+        category: 'Économique',
         transmission: 'Manuelle',
         fuel_type: 'Diesel',
         seats: 5,
-        status: 'available'
+        doors: 5,
+        traction: 'Traction avant',
+        color: 'Gris',
+        status: 'booked'
     },
     {
         id: '5',
-        brand: 'Hyundai',
-        model: 'Tucson',
-        image_url: 'https://images.unsplash.com/photo-1627454819213-f56f18b52a92?auto=format&fit=crop&q=80',
-        price_per_day: 800,
-        category: 'SUV Premium',
-        transmission: 'Automatique',
-        fuel_type: 'Diesel',
+        brand: 'Dacia',
+        model: 'Sandero',
+        image_url: '/images/cars/dacia_sandero_blanc.png',
+        price_per_day: 320,
+        category: 'Citadine',
+        transmission: 'Manuelle',
+        fuel_type: 'Essence',
         seats: 5,
+        doors: 5,
+        traction: 'Traction avant',
+        color: 'Blanc',
         status: 'available'
     },
     {
         id: '6',
-        brand: 'Mercedes-Benz',
-        model: 'Classe C',
-        image_url: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&q=80',
-        price_per_day: 1500,
-        category: 'Luxe',
-        transmission: 'Automatique',
-        fuel_type: 'Diesel',
+        brand: 'Dacia',
+        model: 'Sandero',
+        image_url: '/images/cars/dacia_sandero_gris.png',
+        price_per_day: 320,
+        category: 'Citadine',
+        transmission: 'Manuelle',
+        fuel_type: 'Essence',
         seats: 5,
+        doors: 5,
+        traction: 'Traction avant',
+        color: 'Gris',
         status: 'available'
+    },
+    {
+        id: '7',
+        brand: 'Dacia',
+        model: 'Sandero',
+        image_url: '/images/cars/dacia_sandero_blanc.png',
+        price_per_day: 320,
+        category: 'Citadine',
+        transmission: 'Manuelle',
+        fuel_type: 'Essence',
+        seats: 5,
+        doors: 5,
+        traction: 'Traction avant',
+        color: 'Bleu',
+        status: 'maintenance'
     }
 ];
 
@@ -90,7 +122,7 @@ export default function Vehicles() {
                         Notre Flotte Automobile
                     </h1>
                     <p className="text-xl text-[var(--color-text-muted)] max-w-3xl mx-auto">
-                        Que vous cherchiez la praticité d'une citadine ou le prestige d'une berline de luxe, TRM Rent Car vous propose un large choix pour vos déplacements au Maroc.
+                        Que vous cherchiez la praticité d'une citadine ou le confort pour les longs trajets, TRM Rent Car vous propose un large choix pour vos déplacements au Maroc.
                     </p>
                 </div>
             </div>
@@ -98,70 +130,70 @@ export default function Vehicles() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* Advanced Filters */}
-                <div className="glass-card p-6 rounded-sm mb-12 shadow-2xl relative z-20 hover:border-[var(--color-primary)]/30 transition-colors">
+                <div className="glass-card p-6 rounded-xl mb-12 shadow-2xl relative z-20 hover:border-[var(--color-primary)]/30 transition-colors">
                     <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
                         <div className="flex items-center gap-2 text-[var(--color-primary)] font-bold text-lg">
                             <Filter className="w-5 h-5" />
                             <span>Affiner votre recherche</span>
                         </div>
 
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full md:w-auto flex-1 md:ml-8">
-                            <select className="bg-[var(--color-background)] border border-[var(--color-border)] text-white text-sm rounded-sm focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block w-full p-2.5 max-w-[200px]">
-                                <option value="">Toutes les Villes</option>
-                                <option value="casablanca">Casablanca</option>
-                                <option value="marrakech">Marrakech</option>
-                                <option value="rabat">Rabat</option>
-                                <option value="tanger">Tanger</option>
-                                <option value="fes">Fès</option>
-                                <option value="oujda">Oujda</option>
-                            </select>
-                            <select className="bg-[var(--color-background)] border border-[var(--color-border)] text-white text-sm rounded-sm focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block w-full p-2.5 max-w-[200px]">
-                                <option value="">Toutes Catégories</option>
+                        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 w-full md:w-auto flex-1 md:ml-8">
+                            <select className="bg-[var(--color-background)] border border-[var(--color-border)] text-white text-sm rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block w-full p-2.5">
+                                <option value="">Tous les Types</option>
                                 <option value="eco">Économique</option>
-                                <option value="city">Citadine</option>
                                 <option value="suv">SUV</option>
-                                <option value="luxe">Luxe & Premium</option>
+                                <option value="luxe">Luxe</option>
                             </select>
-                            <select className="bg-[var(--color-background)] border border-[var(--color-border)] text-white text-sm rounded-sm focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block w-full p-2.5 max-w-[200px]">
-                                <option value="">Boîte de Vitesse</option>
+                            <select className="bg-[var(--color-background)] border border-[var(--color-border)] text-white text-sm rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block w-full p-2.5">
+                                <option value="">Transmission</option>
                                 <option value="auto">Automatique</option>
                                 <option value="man">Manuelle</option>
                             </select>
-                            <button className="bg-[var(--color-border)] hover:bg-[var(--color-primary)] hover:text-slate-900 text-white font-medium text-sm rounded-sm px-5 py-2.5 text-center transition-colors">
+                            <select className="bg-[var(--color-background)] border border-[var(--color-border)] text-white text-sm rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block w-full p-2.5">
+                                <option value="">Carburant</option>
+                                <option value="diesel">Diesel</option>
+                                <option value="essence">Essence</option>
+                                <option value="hybride">Hybride</option>
+                            </select>
+                            <select className="bg-[var(--color-background)] border border-[var(--color-border)] text-white text-sm rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block w-full p-2.5">
+                                <option value="">Prix</option>
+                                <option value="asc">Croissant</option>
+                                <option value="desc">Décroissant</option>
+                            </select>
+                            <button className="bg-[var(--color-border)] hover:bg-[var(--color-primary)] hover:text-slate-900 text-white font-medium text-sm rounded-lg px-5 py-2.5 text-center transition-colors">
                                 Rechercher
                             </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Vehicle Grid */}
+                {/* Vehicle Grid (Glassmorphism & SaaS styled) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {MOCK_VEHICLES.map((vehicle) => (
-                        <div key={vehicle.id} className="glass-card rounded-sm overflow-hidden flex flex-col group hover:-translate-y-1 hover:border-[var(--color-primary)]/50 transition-all duration-300 shadow-2xl">
+                        <div key={vehicle.id} className="bg-[var(--color-card)] rounded-2xl overflow-hidden flex flex-col group border border-[var(--color-border)] hover:border-[var(--color-primary)]/50 transition-all duration-300 shadow-xl hover:shadow-[var(--color-primary)]/10 hover:-translate-y-1">
                             {/* Image Container */}
-                            <div className="relative h-56 bg-gradient-to-t from-[var(--color-card)] to-[#111827] overflow-hidden flex items-center justify-center border-b border-[var(--color-border)]">
+                            <div className="relative h-56 bg-gradient-to-t from-[var(--color-card)] to-[#111827] overflow-hidden flex items-center justify-center border-b border-[var(--color-border)] p-4">
                                 <img
                                     src={vehicle.image_url}
                                     alt={`${vehicle.brand} ${vehicle.model}`}
-                                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
+                                    className="w-full h-full object-contain opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 mix-blend-screen"
                                 />
-                                <div className="absolute top-4 right-4">
-                                    <span className="px-3 py-1 bg-black/60 backdrop-blur-md text-[var(--color-text-main)] text-xs font-semibold tracking-wider rounded border border-white/10 shadow-sm uppercase">
+                                <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
+                                    <span className="px-3 py-1 bg-black/60 backdrop-blur-md text-white text-xs font-semibold tracking-wider rounded border border-white/10 shadow-sm uppercase">
                                         {vehicle.category}
                                     </span>
                                 </div>
-                                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-background)] to-transparent opacity-80" />
                             </div>
 
                             {/* Content Container */}
-                            <div className="p-6 flex-1 flex flex-col relative z-10 bg-[var(--color-card)]">
+                            <div className="p-6 flex-1 flex flex-col relative z-10">
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
                                         <h3 className="text-2xl font-extrabold text-white tracking-tight mb-1">{vehicle.brand}</h3>
                                         <p className="text-[var(--color-primary)] font-medium text-lg">{vehicle.model}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xl font-bold text-white leading-none">{vehicle.price_per_day} <span className="text-sm font-normal text-[var(--color-text-muted)]">MAD</span></p>
+                                        <p className="text-2xl font-black text-[var(--color-primary)] leading-none">{vehicle.price_per_day} <span className="text-sm font-normal text-[var(--color-text-muted)]">MAD</span></p>
                                         <p className="text-[var(--color-text-muted)] text-xs mt-1 uppercase tracking-widest">/ jour</p>
                                     </div>
                                 </div>
@@ -169,35 +201,40 @@ export default function Vehicles() {
                                 {/* Specs Grid */}
                                 <div className="grid grid-cols-2 gap-4 mt-4 mb-8">
                                     <div className="flex items-center text-[var(--color-text-muted)] text-sm">
-                                        <CarIcon className="w-4 h-4 mr-2 opacity-70" />
+                                        <CarIcon className="w-4 h-4 mr-2" />
                                         {vehicle.transmission}
                                     </div>
                                     <div className="flex items-center text-[var(--color-text-muted)] text-sm">
-                                        <Fuel className="w-4 h-4 mr-2 opacity-70" />
+                                        <Fuel className="w-4 h-4 mr-2" />
                                         {vehicle.fuel_type}
                                     </div>
                                     <div className="flex items-center text-[var(--color-text-muted)] text-sm">
-                                        <Users className="w-4 h-4 mr-2 opacity-70" />
+                                        <Users className="w-4 h-4 mr-2" />
                                         {vehicle.seats} Places
                                     </div>
                                     <div className="flex items-center text-[var(--color-text-muted)] text-sm">
-                                        <Calendar className="w-4 h-4 mr-2 opacity-70" />
-                                        250 km / j
+                                        <div className="w-4 h-4 mr-2 font-bold flex items-center justify-center text-xs">P</div>
+                                        {vehicle.doors} Portes
                                     </div>
                                 </div>
 
                                 {/* Footer Action */}
                                 <Link
                                     to={`/vehicles/${vehicle.id}`}
-                                    className="mt-auto flex items-center justify-center w-full py-3 bg-transparent border border-[var(--color-primary)] hover:bg-[var(--color-primary)] text-[var(--color-primary)] hover:text-slate-900 font-bold tracking-wide rounded-sm transition-all group/btn"
+                                    className="mt-auto flex items-center justify-center w-full py-3 bg-[var(--color-background)] border border-[var(--color-border)] hover:bg-[var(--color-primary)] text-white hover:text-slate-900 font-bold tracking-wide rounded-lg transition-all"
                                 >
-                                    Détails & Réservation
-                                    <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                                    Réserver
+                                    <ArrowRight className="w-4 h-4 ml-2" />
                                 </Link>
 
                                 {vehicle.status === 'booked' && (
-                                    <div className="absolute inset-x-0 bottom-0 bg-red-900/90 text-red-100 text-center py-1.5 text-xs font-bold uppercase tracking-widest border-t border-red-800">
+                                    <div className="absolute inset-x-0 bottom-0 bg-red-900/90 text-red-100 text-center py-1 text-xs font-bold uppercase tracking-widest border-t border-red-800 backdrop-blur-md">
                                         Indisponible pour le moment
+                                    </div>
+                                )}
+                                {vehicle.status === 'maintenance' && (
+                                    <div className="absolute inset-x-0 bottom-0 bg-orange-900/90 text-orange-100 text-center py-1 text-xs font-bold uppercase tracking-widest border-t border-orange-800 backdrop-blur-md">
+                                        En maintenance
                                     </div>
                                 )}
                             </div>

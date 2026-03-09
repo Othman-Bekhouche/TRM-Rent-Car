@@ -26,7 +26,7 @@ export default function Navbar() {
                             <Link to="/login" className="text-slate-300 hover:text-white font-medium transition-colors">
                                 Connexion
                             </Link>
-                            <Link to="/register" className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-slate-900 px-4 py-2 rounded-lg font-bold transition-all shadow-[0_0_10px_rgba(245,158,11,0.2)] hover:shadow-[0_0_15px_rgba(245,158,11,0.4)]">
+                            <Link to="/register" className="bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] hover:from-[#1C0770] hover:to-[#261CC1] text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-[0_4px_15px_rgba(58,154,255,0.3)] hover:shadow-[0_6px_20px_rgba(58,154,255,0.5)]">
                                 S'inscrire
                             </Link>
                         </div>
@@ -54,7 +54,7 @@ export default function Navbar() {
                         <Link to="/contact" className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-[var(--color-border)] rounded-md">Contact</Link>
                         <div className="mt-4 pt-4 border-t border-[var(--color-border)] flex flex-col gap-2 px-3">
                             <Link to="/login" className="text-center py-2 text-slate-300 hover:text-white border border-slate-600 rounded-lg">Connexion</Link>
-                            <Link to="/register" className="text-center py-2 bg-[var(--color-primary)] text-slate-900 font-bold rounded-lg">S'inscrire</Link>
+                            <Link to="/register" className="text-center py-2 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-white font-bold rounded-lg">S'inscrire</Link>
                         </div>
                     </div>
                 </div>
