@@ -540,7 +540,7 @@ export default function BookingCheckout() {
                                 <img src="/images/cars/peugeot_208_noir.png" alt="Vehicle" className="w-20 h-14 object-contain" />
                                 <div>
                                     <p className="text-white font-bold text-sm">{booking.vehicle}</p>
-                                    <p className="text-xs text-slate-400 font-mono">{booking.plate}</p>
+                                    <p className="text-xs text-slate-400 flex items-center gap-1"><img src="/images/logo-trm.png" alt="TRM" className="h-3 inline-block opacity-60" /> TRM Rent Car</p>
                                 </div>
                             </div>
 

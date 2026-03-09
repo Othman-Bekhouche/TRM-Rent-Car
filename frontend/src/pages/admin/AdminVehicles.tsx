@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, X, Loader2, AlertCircle, Check, Car } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, X, Loader2, AlertCircle, Check, Car, ImagePlus, Eye } from 'lucide-react';
 import { vehiclesApi, type Vehicle } from '../../lib/api';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -26,11 +26,13 @@ export default function AdminVehicles() {
         deposit_amount: 0,
         status: 'available',
         description: '',
-        vehicle_images: [],
     });
 
-    // Simplifies image management for the admin UI by extracting the cover image
+    // Image state — 4 separate slots for full multi-image CRUD
     const [coverImageUrl, setCoverImageUrl] = useState('');
+    const [frontImageUrl, setFrontImageUrl] = useState('');
+    const [rearImageUrl, setRearImageUrl] = useState('');
+    const [interiorImageUrl, setInteriorImageUrl] = useState('');
 
     useEffect(() => {
         fetchVehicles();
@@ -48,39 +50,41 @@ export default function AdminVehicles() {
         }
     };
 
+    // --- CRUD: EDIT ---
     const handleEdit = (vehicle: Vehicle) => {
         setSelectedVehicle(vehicle);
         setFormData(vehicle);
 
-        // Find existing cover image or fallback to first image
-        const coverImg = vehicle.vehicle_images?.find((img) => img.is_cover)?.image_url
-            || vehicle.vehicle_images?.[0]?.image_url || '';
+        // Extract images by type from vehicle_images array
+        const imgs = vehicle.vehicle_images || [];
+        const coverImg = imgs.find((img) => img.is_cover)?.image_url || imgs[0]?.image_url || '';
+        const frontImg = imgs.find((img) => img.image_url.includes('front'))?.image_url || '';
+        const rearImg = imgs.find((img) => img.image_url.includes('rear'))?.image_url || '';
+        const interiorImg = imgs.find((img) => img.image_url.includes('interior'))?.image_url || '';
+
         setCoverImageUrl(coverImg);
+        setFrontImageUrl(frontImg);
+        setRearImageUrl(rearImg);
+        setInteriorImageUrl(interiorImg);
         setShowForm(true);
     };
 
+    // --- CRUD: ADD ---
     const handleAdd = () => {
         setSelectedVehicle(null);
         setFormData({
-            brand: '',
-            model: '',
-            year: 2026,
-            color: '',
-            plate_number: '',
-            fuel_type: 'Diesel',
-            transmission: 'Manuelle',
-            seats: 5,
-            doors: 5,
-            price_per_day: 0,
-            deposit_amount: 0,
-            status: 'available',
-            description: '',
-            vehicle_images: [],
+            brand: '', model: '', year: 2026, color: '', plate_number: '',
+            fuel_type: 'Diesel', transmission: 'Manuelle', seats: 5, doors: 5,
+            price_per_day: 0, deposit_amount: 0, status: 'available', description: '',
         });
         setCoverImageUrl('');
+        setFrontImageUrl('');
+        setRearImageUrl('');
+        setInteriorImageUrl('');
         setShowForm(true);
     };
 
+    // --- CRUD: DELETE ---
     const handleDelete = async (id: string) => {
         if (!confirm('Êtes-vous sûr de vouloir supprimer ce véhicule ?')) return;
         try {
@@ -92,15 +96,19 @@ export default function AdminVehicles() {
         }
     };
 
+    // --- CRUD: SUBMIT (CREATE / UPDATE) ---
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
 
-        // Inject cover image back into formData
+        // Build vehicle_images array from the 4 image slots
         const dataToSave = { ...formData };
-        if (coverImageUrl) {
-            dataToSave.vehicle_images = [{ image_url: coverImageUrl, is_cover: true }];
-        }
+        const images: { image_url: string; is_cover: boolean }[] = [];
+        if (coverImageUrl) images.push({ image_url: coverImageUrl, is_cover: true });
+        if (frontImageUrl) images.push({ image_url: frontImageUrl, is_cover: false });
+        if (rearImageUrl) images.push({ image_url: rearImageUrl, is_cover: false });
+        if (interiorImageUrl) images.push({ image_url: interiorImageUrl, is_cover: false });
+        dataToSave.vehicle_images = images;
 
         try {
             if (selectedVehicle) {
@@ -146,6 +154,37 @@ export default function AdminVehicles() {
         }
     };
 
+    const getVehicleCover = (v: Vehicle) => {
+        const imgs = v.vehicle_images || [];
+        return imgs.find(i => i.is_cover)?.image_url || imgs[0]?.image_url || '';
+    };
+
+    const getImageCount = (v: Vehicle) => (v.vehicle_images || []).length;
+
+    // Reusable image field component
+    const ImageField = ({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder: string }) => (
+        <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">{label}</label>
+            <input type="text" value={value} onChange={e => onChange(e.target.value)} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" placeholder={placeholder} />
+            {value ? (
+                <div className="mt-1 p-2 border border-slate-100 rounded-xl bg-white flex items-center gap-3">
+                    <img src={value} alt={label} className="h-16 w-24 object-contain rounded-lg bg-slate-50" onError={(e) => { (e.target as HTMLImageElement).src = '/images/cars/default.png'; }} />
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs text-slate-400 truncate">{value}</p>
+                    </div>
+                    <button type="button" onClick={() => onChange('')} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Supprimer cette image">
+                        <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                </div>
+            ) : (
+                <div className="mt-1 p-4 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 text-center">
+                    <ImagePlus className="w-5 h-5 text-slate-300 mx-auto mb-1" />
+                    <p className="text-xs text-slate-400">Collez l'URL de l'image</p>
+                </div>
+            )}
+        </div>
+    );
+
     return (
         <div className="space-y-6 animate-[fadeIn_0.5s_ease-out]">
             <Toaster position="top-right" />
@@ -173,6 +212,7 @@ export default function AdminVehicles() {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Vehicle Info Fields */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-4 md:col-span-2">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -249,21 +289,32 @@ export default function AdminVehicles() {
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Image Principale (URL)</label>
-                            <input type="text" value={coverImageUrl} onChange={e => setCoverImageUrl(e.target.value)} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" placeholder="ex: /images/cars/dacia_logan_blanc.png" />
-                            {coverImageUrl && (
-                                <div className="mt-3 p-2 border border-slate-100 rounded-lg inline-block bg-white">
-                                    <img src={coverImageUrl} alt="Aperçu" className="h-20 object-contain" />
-                                </div>
-                            )}
+                        {/* ====== IMAGES SECTION — CRUD COMPLET ====== */}
+                        <div className="space-y-4 pt-4 border-t border-slate-100">
+                            <div className="flex items-center gap-2">
+                                <ImagePlus className="w-5 h-5 text-[#3A9AFF]" />
+                                <h3 className="text-sm font-bold text-[#1C0770]">Galerie Photos du Véhicule</h3>
+                                <span className="text-xs text-slate-400 ml-auto">
+                                    {[coverImageUrl, frontImageUrl, rearImageUrl, interiorImageUrl].filter(Boolean).length} / 4 photos
+                                </span>
+                            </div>
+                            <p className="text-xs text-slate-400">Ajoutez jusqu'à 4 photos : Couverture (principale), Vue Avant, Vue Arrière et Intérieur. Collez le chemin ou l'URL de chaque image.</p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <ImageField label="📷 Photo Couverture (principale)" value={coverImageUrl} onChange={setCoverImageUrl} placeholder="/images/cars/voiture_cover.png" />
+                                <ImageField label="🚗 Vue Avant" value={frontImageUrl} onChange={setFrontImageUrl} placeholder="/images/cars/voiture_front.png" />
+                                <ImageField label="🔙 Vue Arrière" value={rearImageUrl} onChange={setRearImageUrl} placeholder="/images/cars/voiture_rear.png" />
+                                <ImageField label="🪑 Intérieur" value={interiorImageUrl} onChange={setInteriorImageUrl} placeholder="/images/cars/voiture_interior.png" />
+                            </div>
                         </div>
 
+                        {/* Description */}
                         <div>
                             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Description</label>
                             <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} rows={3} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" placeholder="Description du véhicule..." />
                         </div>
 
+                        {/* Submit */}
                         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                             <button type="button" onClick={() => setShowForm(false)} className="px-6 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">Annuler</button>
                             <button type="submit" disabled={isSaving} className="px-8 py-2.5 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-white text-sm font-bold rounded-xl hover:shadow-lg transition-all flex items-center gap-2">
@@ -319,8 +370,7 @@ export default function AdminVehicles() {
                                             <th className="p-4">Véhicule</th>
                                             <th className="p-4">Plaque</th>
                                             <th className="p-4">Couleur</th>
-                                            <th className="p-4">Carburant</th>
-                                            <th className="p-4">Transmission</th>
+                                            <th className="p-4">Photos</th>
                                             <th className="p-4">Prix/Jour</th>
                                             <th className="p-4">Statut</th>
                                             <th className="p-4 text-right">Actions</th>
@@ -331,25 +381,29 @@ export default function AdminVehicles() {
                                             <tr key={v.id} className="hover:bg-[#F8FAFF] transition-colors border-b border-slate-50 group">
                                                 <td className="p-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-14 h-10 bg-gradient-to-br from-slate-100 to-slate-50 rounded-lg overflow-hidden flex items-center justify-center p-1 border border-slate-100 group-hover:shadow-md transition-shadow">
-                                                            {v.vehicle_images && v.vehicle_images.length > 0 && v.vehicle_images.some(img => img.is_cover) ? (
-                                                                <img src={v.vehicle_images.find(img => img.is_cover)?.image_url} alt="" className="w-full h-full object-contain mix-blend-multiply" />
-                                                            ) : v.vehicle_images && v.vehicle_images.length > 0 ? (
-                                                                <img src={v.vehicle_images[0].image_url} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                                                        <div className="w-16 h-11 bg-gradient-to-br from-slate-100 to-slate-50 rounded-lg overflow-hidden flex items-center justify-center p-1 border border-slate-100 group-hover:shadow-md transition-shadow">
+                                                            {getVehicleCover(v) ? (
+                                                                <img src={getVehicleCover(v)} alt="" className="w-full h-full object-contain" />
                                                             ) : (
                                                                 <Car className="w-6 h-6 text-slate-400" />
                                                             )}
                                                         </div>
                                                         <div>
                                                             <p className="font-bold text-slate-800">{v.brand} {v.model}</p>
-                                                            <p className="text-xs text-slate-400">{v.year}</p>
+                                                            <p className="text-xs text-slate-400">{v.year} · {v.transmission}</p>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="p-4 font-mono text-xs text-[#261CC1] font-bold">{v.plate_number}</td>
                                                 <td className="p-4 text-slate-600">{v.color}</td>
-                                                <td className="p-4 text-slate-600">{v.fuel_type}</td>
-                                                <td className="p-4 text-slate-600">{v.transmission}</td>
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Eye className="w-3.5 h-3.5 text-slate-400" />
+                                                        <span className={`text-xs font-bold ${getImageCount(v) >= 4 ? 'text-emerald-600' : getImageCount(v) > 0 ? 'text-amber-600' : 'text-red-400'}`}>
+                                                            {getImageCount(v)} / 4
+                                                        </span>
+                                                    </div>
+                                                </td>
                                                 <td className="p-4 font-black text-[#1C0770]">{v.price_per_day} MAD</td>
                                                 <td className="p-4">
                                                     <span className={`${getStatusStyle(v.status)} px-3 py-1.5 rounded-full text-xs font-bold border whitespace-nowrap`}>
@@ -380,4 +434,3 @@ export default function AdminVehicles() {
         </div>
     );
 }
-
