@@ -435,8 +435,7 @@ export const adminsApi = {
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
-            .in('role', ['admin', 'super_admin', 'assistant', 'client']) // Get potential admin candidates too or all profiles
-            .filter('role', 'neq', 'client') // we only want staff
+            .in('role', ['admin', 'super_admin', 'gestionnaire', 'assistant'])
             .order('created_at', { ascending: true });
         if (error) throw error;
         return data as AdminUser[];

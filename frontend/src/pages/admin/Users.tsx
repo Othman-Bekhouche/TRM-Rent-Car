@@ -5,7 +5,8 @@ import toast, { Toaster } from 'react-hot-toast';
 
 const ROLES_INFO = [
     { name: 'super_admin', label: 'Super Admin', permissions: 'Accès complet — Toutes les fonctionnalités', color: 'bg-purple-50 text-purple-700 border-purple-200' },
-    { name: 'admin', label: 'Gestionnaire', permissions: 'Véhicules, Suivi GPS, Maintenance', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+    { name: 'admin', label: 'Admin', permissions: 'Véhicules, Réservations, Comptes', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+    { name: 'gestionnaire', label: 'Gestionnaire', permissions: 'Véhicules, Suivi GPS, Maintenance', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
     { name: 'assistant', label: 'Assistant(e)', permissions: 'Réservations, Clients, Infractions', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
 ];
 
@@ -97,7 +98,8 @@ export default function Users() {
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Rôle</label>
                                 <select value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800">
-                                    <option value="admin">Gestionnaire</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="gestionnaire">Gestionnaire</option>
                                     <option value="assistant">Assistant(e)</option>
                                     <option value="super_admin">Super Admin</option>
                                 </select>
