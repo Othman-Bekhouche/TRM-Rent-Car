@@ -9,13 +9,69 @@ DELETE FROM public.reservations;
 DELETE FROM public.vehicles;
 DELETE FROM public.profiles;
 
--- 1. Insertion des comptes administrateurs
-INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
+-- 1. Insertion des comptes administrateurs (TOUTES les colonnes requises par GoTrue)
+DELETE FROM auth.identities;
+DELETE FROM auth.users;
+
+INSERT INTO auth.users (
+    id, instance_id, aud, role, email, encrypted_password,
+    email_confirmed_at, confirmation_sent_at, confirmation_token,
+    recovery_token, email_change_token_new, email_change_token_current,
+    email_change, phone, phone_change, phone_change_token,
+    reauthentication_token, is_sso_user,
+    raw_app_meta_data, raw_user_meta_data,
+    created_at, updated_at
+)
 VALUES 
-('d5d4d3d2-d1d0-4a9b-8c8d-7e6f5d4c3b2a', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@trmrentcar.ma', crypt('AdminTRM2026!', gen_salt('bf')), NOW(), NOW(), NOW()),
-('a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'ahmed.t@trmrentcar.ma', crypt('AhmedTRM2026!', gen_salt('bf')), NOW(), NOW(), NOW()),
-('b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sara.b@trmrentcar.ma', crypt('SaraTRM2026!', gen_salt('bf')), NOW(), NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+(
+    'd5d4d3d2-d1d0-4a9b-8c8d-7e6f5d4c3b2a', '00000000-0000-0000-0000-000000000000',
+    'authenticated', 'authenticated', 'admin@trmrentcar.ma',
+    crypt('AdminTRM2026!', gen_salt('bf')),
+    NOW(), NOW(), '', '', '', '', '', NULL, '', '', '', false,
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"Med Tahiri"}',
+    NOW(), NOW()
+),
+(
+    'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', '00000000-0000-0000-0000-000000000000',
+    'authenticated', 'authenticated', 'ahmed.t@trmrentcar.ma',
+    crypt('AhmedTRM2026!', gen_salt('bf')),
+    NOW(), NOW(), '', '', '', '', '', NULL, '', '', '', false,
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"Ahmed Tahiri"}',
+    NOW(), NOW()
+),
+(
+    'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e', '00000000-0000-0000-0000-000000000000',
+    'authenticated', 'authenticated', 'sara.b@trmrentcar.ma',
+    crypt('SaraTRM2026!', gen_salt('bf')),
+    NOW(), NOW(), '', '', '', '', '', NULL, '', '', '', false,
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"Sara Bennani"}',
+    NOW(), NOW()
+);
+
+-- Identités (obligatoire pour login GoTrue)
+INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+VALUES
+(
+    'd5d4d3d2-d1d0-4a9b-8c8d-7e6f5d4c3b2a',
+    'd5d4d3d2-d1d0-4a9b-8c8d-7e6f5d4c3b2a',
+    '{"sub":"d5d4d3d2-d1d0-4a9b-8c8d-7e6f5d4c3b2a","email":"admin@trmrentcar.ma","email_verified":true}',
+    'email', 'd5d4d3d2-d1d0-4a9b-8c8d-7e6f5d4c3b2a', NOW(), NOW(), NOW()
+),
+(
+    'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+    'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+    '{"sub":"a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d","email":"ahmed.t@trmrentcar.ma","email_verified":true}',
+    'email', 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', NOW(), NOW(), NOW()
+),
+(
+    'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+    'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+    '{"sub":"b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e","email":"sara.b@trmrentcar.ma","email_verified":true}',
+    'email', 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e', NOW(), NOW(), NOW()
+);
 
 INSERT INTO public.profiles (id, full_name, email, phone, role, created_at)
 VALUES 

@@ -26,8 +26,8 @@ export default function Login() {
             setTimeout(() => {
                 navigate('/admin');
             }, 1000);
-        } catch {
-            toast.error('Identifiants incorrects.', {
+        } catch (err: any) {
+            toast.error(err?.message || 'Identifiants incorrects.', {
                 style: {
                     background: '#1F2937',
                     color: '#fff',
