@@ -291,6 +291,25 @@ export const vehiclesApi = {
         const { error } = await supabase.from('vehicles').delete().eq('id', id);
         if (error) throw error;
     },
+    async uploadImage(file: File) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError, data } = await supabase.storage
+            .from('vehicles')
+            .upload(filePath, file);
+
+        if (uploadError) {
+            throw uploadError;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+            .from('vehicles')
+            .getPublicUrl(filePath);
+
+        return publicUrl;
+    }
 };
 
 // ===== CUSTOMERS =====

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, X, Loader2, AlertCircle, Check, Car, ImagePlus, Eye } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, Search, Edit, Trash2, X, Loader2, AlertCircle, Check, Car, ImagePlus, Eye, Upload } from 'lucide-react';
 import { vehiclesApi, type Vehicle } from '../../lib/api';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -162,30 +162,62 @@ export default function AdminVehicles() {
     };
 
     const getImageCount = (v: Vehicle) => (v.vehicle_images || []).length;
+    const [uploading, setUploading] = useState<string | null>(null);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, setter: (v: string) => void, slotName: string) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            setUploading(slotName);
+            const publicUrl = await vehiclesApi.uploadImage(file);
+            setter(publicUrl);
+            toast.success('Image téléchargée avec succès');
+        } catch (err: any) {
+            toast.error('Erreur lors du téléchargement : ' + err.message);
+        } finally {
+            setUploading(null);
+        }
+    };
 
     // Reusable image field component
-    const ImageField = ({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder: string }) => (
-        <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">{label}</label>
-            <input type="text" value={value} onChange={e => onChange(e.target.value)} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" placeholder={placeholder} />
-            {value ? (
-                <div className="mt-1 p-2 border border-slate-100 rounded-xl bg-white flex items-center gap-3">
-                    <img src={value} alt={label} className="h-16 w-24 object-contain rounded-lg bg-slate-50" onError={(e) => { (e.target as HTMLImageElement).src = '/images/cars/default.png'; }} />
-                    <div className="flex-1 min-w-0">
-                        <p className="text-xs text-slate-400 truncate">{value}</p>
-                    </div>
-                    <button type="button" onClick={() => onChange('')} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Supprimer cette image">
-                        <Trash2 className="w-3.5 h-3.5" />
+    const ImageField = ({ label, value, onChange, placeholder, slotName }: { label: string; value: string; onChange: (v: string) => void; placeholder: string; slotName: string }) => {
+        const fileInputRef = useRef<HTMLInputElement>(null);
+
+        return (
+            <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">{label}</label>
+                <div className="flex gap-2">
+                    <input type="text" value={value} onChange={e => onChange(e.target.value)} className="flex-1 bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" placeholder={placeholder} />
+                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, onChange, slotName)} />
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading === slotName}
+                        className="px-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-500 transition-colors flex items-center justify-center shrink-0"
+                    >
+                        {uploading === slotName ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                     </button>
                 </div>
-            ) : (
-                <div className="mt-1 p-4 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 text-center">
-                    <ImagePlus className="w-5 h-5 text-slate-300 mx-auto mb-1" />
-                    <p className="text-xs text-slate-400">Collez l'URL de l'image</p>
-                </div>
-            )}
-        </div>
-    );
+                {value ? (
+                    <div className="mt-1 p-2 border border-slate-100 rounded-xl bg-white flex items-center gap-3">
+                        <img src={value} alt={label} className="h-16 w-24 object-contain rounded-lg bg-slate-50" onError={(e) => { (e.target as HTMLImageElement).src = '/images/cars/default.png'; }} />
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs text-slate-400 truncate">{value}</p>
+                        </div>
+                        <button type="button" onClick={() => onChange('')} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Supprimer cette image">
+                            <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                ) : (
+                    <div className="mt-1 p-4 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 text-center">
+                        <ImagePlus className="w-5 h-5 text-slate-300 mx-auto mb-1" />
+                        <p className="text-xs text-slate-400">Collez une URL ou téléchargez une image</p>
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     return (
         <div className="space-y-6 animate-[fadeIn_0.5s_ease-out]">
@@ -300,10 +332,10 @@ export default function AdminVehicles() {
                             <p className="text-xs text-slate-400">Ajoutez jusqu'à 4 photos : Couverture (principale), Vue Avant, Vue Arrière et Intérieur. Collez le chemin ou l'URL de chaque image.</p>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <ImageField label="📷 Photo Couverture (principale)" value={coverImageUrl} onChange={setCoverImageUrl} placeholder="/images/cars/voiture_cover.png" />
-                                <ImageField label="🚗 Vue Avant" value={frontImageUrl} onChange={setFrontImageUrl} placeholder="/images/cars/voiture_front.png" />
-                                <ImageField label="🔙 Vue Arrière" value={rearImageUrl} onChange={setRearImageUrl} placeholder="/images/cars/voiture_rear.png" />
-                                <ImageField label="🪑 Intérieur" value={interiorImageUrl} onChange={setInteriorImageUrl} placeholder="/images/cars/voiture_interior.png" />
+                                <ImageField label="📷 Photo Couverture (principale)" value={coverImageUrl} onChange={setCoverImageUrl} placeholder="/images/cars/voiture_cover.png" slotName="cover" />
+                                <ImageField label="🚗 Vue Avant" value={frontImageUrl} onChange={setFrontImageUrl} placeholder="/images/cars/voiture_front.png" slotName="front" />
+                                <ImageField label="🔙 Vue Arrière" value={rearImageUrl} onChange={setRearImageUrl} placeholder="/images/cars/voiture_rear.png" slotName="rear" />
+                                <ImageField label="🪑 Intérieur" value={interiorImageUrl} onChange={setInteriorImageUrl} placeholder="/images/cars/voiture_interior.png" slotName="interior" />
                             </div>
                         </div>
 

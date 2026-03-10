@@ -31,7 +31,7 @@ export default function Navbar() {
                 <div className="flex justify-between h-24">
                     <div className="flex items-center">
                         <Link to="/" className="flex items-center">
-                            <img src="/trm-logo-pour-arriere-noir.png" alt="TRM Rent Car" className="h-20 md:h-24 w-auto object-contain" />
+                            <img src="/trm-logo-pour-arriere-noir.png" alt="TRM Rent Car" className="h-20 md:h-24 w-auto object-contain animate-slide-right opacity-0" />
                         </Link>
                     </div>
 
@@ -39,7 +39,6 @@ export default function Navbar() {
                     <div className="hidden md:flex items-center space-x-8">
                         <Link to="/" className="text-slate-300 hover:text-white transition-colors">Accueil</Link>
                         <Link to="/vehicles" className="text-slate-300 hover:text-white transition-colors">Flotte</Link>
-                        {user && <Link to="/my-reservations" className="text-slate-300 hover:text-white transition-colors">Mes Réservations</Link>}
                         <Link to="/about" className="text-slate-300 hover:text-white transition-colors">À Propos</Link>
                         <Link to="/contact" className="text-slate-300 hover:text-white transition-colors">Contact</Link>
 

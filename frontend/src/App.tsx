@@ -13,6 +13,9 @@ import Contact from './pages/public/Contact';
 import Login from './pages/public/auth/Login';
 import Register from './pages/public/auth/Register';
 import BookingCheckout from './pages/public/BookingCheckout';
+import Terms from './pages/public/Terms';
+import Privacy from './pages/public/Privacy';
+import CustomerProfile from './pages/public/CustomerProfile';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
@@ -50,7 +53,10 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={<CustomerProfile />} />
           <Route path="/booking/checkout/:vehicleId" element={<BookingCheckout />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
         </Route>
 
         {/* Admin Routes */}
