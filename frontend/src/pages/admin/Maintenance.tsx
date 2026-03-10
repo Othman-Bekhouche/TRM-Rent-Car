@@ -125,8 +125,8 @@ export default function Maintenance() {
             }
             setShowRecordForm(false);
             loadData();
-        } catch (err) {
-            toast.error('Erreur lors de l’enregistrement');
+        } catch (err: any) {
+            toast.error(err.message || 'Erreur lors de l’enregistrement');
         } finally {
             setIsSaving(false);
         }

@@ -1,157 +1,147 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { reservationsApi, contractsApi, settingsApi } from '../../../lib/api';
-import { Loader2, Printer, ArrowLeft } from 'lucide-react';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { reservationsApi, settingsApi } from '../../../lib/api';
+import { Loader2, Printer } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function ContractPrint() {
     const { id } = useParams();
     const [loading, setLoading] = useState(true);
     const [reservation, setReservation] = useState<any>(null);
-    const [contract, setContract] = useState<any>(null);
     const [settings, setSettings] = useState<any>(null);
+    const [searchParams] = useSearchParams();
+    const shouldPrint = searchParams.get('action') === 'print';
 
     useEffect(() => {
         const loadData = async () => {
             try {
                 if (!id) return;
-                const [resData, conData, set] = await Promise.all([
+                const [resData, set] = await Promise.all([
                     reservationsApi.getById(id),
-                    contractsApi.getByReservation(id),
                     settingsApi.get()
                 ]);
                 setReservation(resData);
-                setContract(conData);
                 setSettings(set);
+
+                if (shouldPrint) {
+                    setTimeout(() => {
+                        window.print();
+                    }, 800);
+                }
             } catch (err: any) {
                 console.error(err);
-                toast.error("Erreur de chargement du contrat");
+                toast.error("Erreur");
             } finally {
                 setLoading(false);
             }
         };
         loadData();
-    }, [id]);
+    }, [id, shouldPrint]);
 
     if (loading) return <div className="p-10 flex justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>;
-    if (!reservation) return <div className="p-10 text-center">Réservation introuvable</div>;
+    if (!reservation) return <div className="p-10 text-center">Introuvable</div>;
 
-    const days = Math.max(1, Math.ceil((new Date(reservation.end_date).getTime() - new Date(reservation.start_date).getTime()) / (1000 * 60 * 60 * 24)));
+    // Remove unused calculation
+    // const days = ...
 
     return (
-        <div className="bg-white text-black min-h-screen font-sans p-4 relative">
+        <div className="bg-[#f1f5f9] min-h-screen font-sans text-slate-900">
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @media print {
+                    @page { size: A4; margin: 5mm; }
+                    body { background: white !important; }
+                    .print\\:hidden { display: none !important; }
+                    .page-container { padding: 30px !important; margin: 0 !important; width: 100% !important; border: none !important; box-shadow: none !important; }
+                }
+            `}} />
             <Toaster />
-            {/* Action Bar (hidden in print) */}
-            <div className="print:hidden flex justify-between items-center mb-8 max-w-4xl mx-auto bg-slate-100 p-4 rounded-xl">
-                <Link to={`/admin/reservations/${id}`} className="flex items-center gap-2 text-slate-600 hover:text-black">
-                    <ArrowLeft className="w-4 h-4" /> Retour au dossier
-                </Link>
-                <div className="flex gap-3">
-                    <button
-                        onClick={() => window.print()}
-                        className="flex items-center gap-2 px-6 py-2 bg-[#261CC1] text-white rounded-lg font-bold hover:bg-[#1C0770] transition shadow-lg shadow-[#261CC1]/20"
-                    >
-                        <Printer className="w-4 h-4" /> Imprimer
-                    </button>
-                    {/* Pour le téléchargement, le comportement natif d'impression gère 'Enregistrer au format PDF' parfaitement aujourd'hui, on réutilise la fonction print avec un label différent pour l'UX */}
-                    <button
-                        onClick={() => window.print()}
-                        className="flex items-center gap-2 px-6 py-2 bg-white text-[#261CC1] border-2 border-[#261CC1] rounded-lg font-bold hover:bg-slate-50 transition"
-                    >
-                        Télécharger PDF
-                    </button>
-                </div>
+
+            <div className="print:hidden fixed top-6 right-6 flex gap-3 z-50">
+                <Link to={`/admin/reservations/${id}`} className="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold">Retour</Link>
+                <button onClick={() => window.print()} className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg">
+                    <Printer className="w-4 h-4" /> IMPRIMER
+                </button>
             </div>
 
-            {/* A4 Container */}
-            <div className="max-w-4xl mx-auto bg-white p-10 border border-slate-200 shadow-sm print:shadow-none print:border-none print:p-0">
-                {/* Header */}
-                <div className="flex justify-between items-start border-b-2 border-slate-800 pb-6 mb-8">
+            <div className="max-w-[850px] mx-auto my-10 bg-white p-12 shadow-xl border border-slate-100 rounded-3xl page-container">
+                <div className="flex justify-between items-start mb-8 pb-6 border-b-2 border-slate-900">
                     <div>
-                        <img src="/trm-logo-pour-arriere-noir.png" alt="TRM Rent Car" className="h-16 mb-4 object-contain brightness-0" style={{ filter: 'grayscale(100%) brightness(0)' }} />
-                        <div className="text-sm space-y-1 text-slate-700">
-                            <p className="font-bold text-lg text-black">{settings?.company_name || 'TRM Rent Car'}</p>
-                            <p>{settings?.address || 'Appt Sabrine, 2ème Étage N°6 Bloc A, 65800 Taourirt'}</p>
-                            <p>Tél : {settings?.phone || '06 06 06 6426'}</p>
-                            <p>Email : {settings?.email || 'trm.rentcar@gmail.com'}</p>
+                        <img src="/trm-logo-pour-arriere-blanc.png" alt="Logo" className="h-14 mb-3" />
+                        <div className="text-[11px] text-slate-600">
+                            <p className="font-black text-slate-900 uppercase text-lg leading-tight">{settings?.company_name}</p>
+                            <p>{settings?.address}</p>
+                            <p className="font-bold">Tél: {settings?.phone}</p>
                         </div>
                     </div>
                     <div className="text-right">
-                        <h1 className="text-3xl font-black uppercase tracking-widest text-slate-800 mb-2">Contrat de Location</h1>
-                        <p className="text-lg font-medium text-slate-600">N° {contract?.contract_number || `CTR-${reservation.id.slice(0, 8).toUpperCase()}`}</p>
-                        <p className="text-sm text-slate-500 mt-2">Fait le : {new Date().toLocaleDateString('fr-FR')}</p>
+                        <h1 className="text-2xl font-black uppercase tracking-tighter text-slate-900">CONTRAT DE LOCATION</h1>
+                        <p className="text-sm font-bold text-slate-400 mt-1">DOSSIER N° {id?.slice(0, 10).toUpperCase()}</p>
                     </div>
                 </div>
 
-                {/* Info blocks */}
-                <div className="grid grid-cols-2 gap-8 mb-8">
-                    {/* Customer */}
-                    <div className="border border-slate-300 rounded-lg p-5">
-                        <h2 className="text-sm font-bold uppercase text-slate-500 mb-4 tracking-wider border-b border-slate-200 pb-2">Informations Locataire</h2>
-                        <div className="space-y-2 text-sm">
-                            <p><span className="font-medium inline-block w-32">Nom / Prénom :</span> {reservation.customers?.full_name}</p>
-                            <p><span className="font-medium inline-block w-32">Tél :</span> {reservation.customers?.phone}</p>
-                            <p><span className="font-medium inline-block w-32">Email :</span> {reservation.customers?.email}</p>
-                            <p><span className="font-medium inline-block w-32">CIN / Passeport :</span> {reservation.customers?.cin || reservation.customers?.passport || 'N/A'}</p>
-                            <p><span className="font-medium inline-block w-32">Adresse :</span> {reservation.customers?.address || 'N/A'}, {reservation.customers?.city}</p>
-                        </div>
+                <div className="grid grid-cols-2 gap-6 mb-8">
+                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Locataire</p>
+                        <p className="font-black text-lg text-slate-900 uppercase leading-none">{reservation.customers?.full_name}</p>
+                        <p className="text-[11px] font-medium text-slate-500 mt-2">CIN/PASS: {reservation.customers?.cin || reservation.customers?.passport}</p>
+                        <p className="text-[11px] font-medium text-slate-500">Tél: {reservation.customers?.phone}</p>
                     </div>
-
-                    {/* Vehicle */}
-                    <div className="border border-slate-300 rounded-lg p-5">
-                        <h2 className="text-sm font-bold uppercase text-slate-500 mb-4 tracking-wider border-b border-slate-200 pb-2">Détails Véhicule</h2>
-                        <div className="space-y-2 text-sm">
-                            <p><span className="font-medium inline-block w-32">Marque / Modèle :</span> {reservation.vehicles?.brand} {reservation.vehicles?.model}</p>
-                            <p><span className="font-medium inline-block w-32">Immatriculation :</span> {reservation.vehicles?.plate_number}</p>
-                            <p><span className="font-medium inline-block w-32">Carburant :</span> {reservation.vehicles?.fuel_type}</p>
-                            <p><span className="font-medium inline-block w-32">KM Départ :</span> {contract?.departure_mileage || reservation.vehicles?.mileage || '______'} km</p>
-                            <p><span className="font-medium inline-block w-32">Niveau Carburant :</span> {contract?.fuel_level_departure || '______'}</p>
+                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 text-right">Véhicule</p>
+                        <div className="text-right">
+                            <p className="font-black text-lg text-slate-900 uppercase leading-none">{reservation.vehicles?.brand} {reservation.vehicles?.model}</p>
+                            <p className="font-black text-xl text-slate-900 mt-1">{reservation.vehicles?.plate_number}</p>
                         </div>
                     </div>
                 </div>
 
-                {/* Rental Details */}
-                <div className="border border-slate-300 rounded-lg p-5 mb-8">
-                    <h2 className="text-sm font-bold uppercase text-slate-500 mb-4 tracking-wider border-b border-slate-200 pb-2">Période de Location & Paiement</h2>
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
-                        <p><span className="font-medium inline-block w-32">Retrait le :</span> {new Date(reservation.start_date).toLocaleDateString('fr-FR')}</p>
-                        <p><span className="font-medium inline-block w-32">Retour le :</span> {new Date(reservation.end_date).toLocaleDateString('fr-FR')}</p>
-                        <p><span className="font-medium inline-block w-32">Lieu retrait :</span> {reservation.pickup_location}</p>
-                        <p><span className="font-medium inline-block w-32">Lieu retour :</span> {reservation.dropoff_location || reservation.pickup_location}</p>
-                        <p><span className="font-medium inline-block w-32">Durée :</span> {days} jours</p>
-                        <p><span className="font-medium inline-block w-32">Prix par jour :</span> {reservation.vehicles?.price_per_day} MAD</p>
-                        <p><span className="font-medium inline-block w-32">Total Location :</span> <span className="font-bold">{reservation.total_price} MAD</span></p>
-                        <p className="col-span-2"><span className="font-medium inline-block w-32">Statut Paiement :</span> {reservation.payment_status === 'paid' ? 'Payé' : 'En attente'}</p>
+                <div className="border border-slate-900 rounded-2xl overflow-hidden mb-8">
+                    <div className="grid grid-cols-3 divide-x divide-slate-900 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest text-center py-1.5">
+                        <div>Départ</div>
+                        <div>Retour</div>
+                        <div>Total</div>
+                    </div>
+                    <div className="grid grid-cols-3 divide-x divide-slate-900 text-center items-center py-3">
+                        <div className="font-bold text-sm">{new Date(reservation.start_date).toLocaleDateString('fr-FR')}</div>
+                        <div className="font-bold text-sm">{new Date(reservation.end_date).toLocaleDateString('fr-FR')}</div>
+                        <div className="font-black text-sm">{reservation.total_price.toLocaleString()} MAD</div>
                     </div>
                 </div>
 
-                {/* Condition Notes */}
-                <div className="border border-slate-300 rounded-lg p-5 mb-8">
-                    <h2 className="text-sm font-bold uppercase text-slate-500 mb-4 tracking-wider border-b border-slate-200 pb-2">État du Véhicule au Départ</h2>
-                    <div className="min-h-[80px] bg-slate-50 rounded p-3 text-sm">
-                        {contract?.vehicle_condition_departure || 'Aucun dommage signalé. Le véhicule est remis en parfait état de fonctionnement et de propreté.'}
+                {/* Compact Conditions Section */}
+                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 mb-8">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 text-center border-b pb-1">Conditions Simplifiées</p>
+                    <div className="grid grid-cols-2 gap-x-8 text-[8px] leading-tight text-slate-600">
+                        <ul className="list-disc pl-3 space-y-1">
+                            <li>Usage personnel uniquement. Pas de sous-location.</li>
+                            <li>Véhicule remis propre et avec le plein de carburant.</li>
+                            <li>Locataire responsable des amendes et infractions.</li>
+                        </ul>
+                        <ul className="list-disc pl-3 space-y-1">
+                            <li>Déclarer tout accident (constat) sous 24h.</li>
+                            <li>Franchise applicable selon les conditions d'assurance.</li>
+                            <li>Restituer le véhicule au lieu indiqué au contrat.</li>
+                        </ul>
                     </div>
                 </div>
 
-                {/* Terms */}
-                <div className="mb-12 text-xs text-justify text-slate-600 space-y-2">
-                    <h3 className="font-bold uppercase text-slate-800">Conditions Générales (Extrait)</h3>
-                    <p>1. Le locataire reconnaît avoir reçu le véhicule décrit ci-dessus en bon état de marche et de propreté, avec les accessoires normaux (roue de secours, cric, etc.).</p>
-                    <p>2. Le locataire s'engage à restituer le véhicule à la date, heure et lieu convenus, dans le même état qu'à la livraison.</p>
-                    <p>3. En cas d'infraction au code de la route, le locataire est seul responsable des amendes et poursuites pendant la durée de la location.</p>
-                    <p>4. L'usage du véhicule est strictement interdit hors des voies carrossables, pour des sous-locations ou pour le transport de passagers à titre onéreux.</p>
+                <div className="grid grid-cols-2 gap-10 mt-12 mb-4">
+                    <div className="text-center group">
+                        <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] mb-16">Signature Locataire</p>
+                        <div className="h-px w-20 bg-slate-100 mx-auto"></div>
+                        <p className="text-[7px] text-slate-400 mt-1 uppercase tracking-tighter italic">Lu et approuvé</p>
+                    </div>
+                    <div className="text-center">
+                        <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] mb-16">Cachet Agence</p>
+                        <div className="h-px w-20 bg-slate-100 mx-auto"></div>
+                    </div>
                 </div>
 
-                {/* Signatures */}
-                <div className="grid grid-cols-2 gap-8 text-center pt-8 mt-auto">
-                    <div>
-                        <p className="font-bold text-sm uppercase mb-16">Signature de l'Agence</p>
-                        <div className="border-t border-slate-300 pt-2 text-xs text-slate-400 w-48 mx-auto">Cachet et Signature</div>
-                    </div>
-                    <div>
-                        <p className="font-bold text-sm uppercase mb-16">Signature du Locataire</p>
-                        <div className="border-t border-slate-300 pt-2 text-xs text-slate-400 w-48 mx-auto">(Lu et approuvé)</div>
-                    </div>
+                <div className="text-center opacity-30 mt-8 pt-4 border-t border-slate-50">
+                    <p className="text-[7px] font-black text-slate-900 uppercase tracking-[0.5em] leading-none">
+                        {settings?.company_name} • RC: 123456 • IF: 12345678 • ICE: 123456789012345
+                    </p>
                 </div>
             </div>
         </div>

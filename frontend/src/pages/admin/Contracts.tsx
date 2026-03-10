@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, Search, Printer, Eye, Loader2 } from 'lucide-react';
+import { FileText, Search, Printer, Eye, Loader2, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { contractsApi } from '../../lib/api';
 
@@ -100,11 +100,14 @@ export default function Contracts() {
                                                     <p className="text-xs text-slate-500">Signé le {new Date(contract.created_at).toLocaleDateString('fr-FR')}</p>
                                                 </td>
                                                 <td className="p-4 flex items-center justify-end gap-2">
-                                                    <Link to={`/admin/reservations/${res.id}`} className="p-2 bg-white text-slate-400 hover:text-[#3A9AFF] border border-transparent hover:border-[#3A9AFF]/20 rounded-lg transition-all" title="Ouvrir">
+                                                    <Link to={`/admin/reservations/${res.id}/print/contract`} className="p-2 bg-white text-slate-400 hover:text-[#3A9AFF] border border-transparent hover:border-[#3A9AFF]/20 rounded-lg transition-all" title="Voir le contrat">
                                                         <Eye className="w-4 h-4" />
                                                     </Link>
-                                                    <Link to={`/admin/reservations/${res.id}/contract-print`} target="_blank" className="p-2 bg-white text-slate-400 hover:text-emerald-500 border border-transparent hover:border-emerald-500/20 rounded-lg transition-all" title="Imprimer Contrat">
+                                                    <Link to={`/admin/reservations/${res.id}/print/contract?action=print`} target="_blank" className="p-2 bg-white text-slate-400 hover:text-[#261CC1] border border-transparent hover:border-[#261CC1]/20 rounded-lg transition-all" title="Imprimer Contrat">
                                                         <Printer className="w-4 h-4" />
+                                                    </Link>
+                                                    <Link to={`/admin/reservations/${res.id}/print/contract?action=download`} target="_blank" className="p-2 bg-white text-slate-400 hover:text-emerald-500 border border-transparent hover:border-emerald-500/20 rounded-lg transition-all" title="Télécharger PDF">
+                                                        <Download className="w-4 h-4" />
                                                     </Link>
                                                 </td>
                                             </tr>

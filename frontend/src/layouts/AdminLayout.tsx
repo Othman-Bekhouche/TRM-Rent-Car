@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, Car, Users, CalendarDays, Settings,
-    LogOut, MapPin, Calculator, Wrench, Bell, UserCog, Menu, X, ChevronRight, ChevronDown, AlertTriangle, Loader2, Mail, Shield
+    LogOut, MapPin, Calculator, Wrench, Bell, UserCog, Menu, X, ChevronRight, ChevronDown, AlertTriangle, Loader2, Mail, Shield, Archive
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
@@ -74,34 +74,43 @@ export default function AdminLayout() {
     };
 
     const fullMenuItems = [
-        { path: '/admin', icon: LayoutDashboard, label: 'Tableau de bord', roles: ['super_admin'] },
-        { path: '/admin/messages', icon: Mail, label: 'Boîte Mail', roles: ['super_admin', 'assistant'] },
-        { path: '/admin/reservations', icon: CalendarDays, label: 'Réservations', roles: ['super_admin', 'assistant'] },
+        { path: '/admin', icon: LayoutDashboard, label: 'Tableau de bord', roles: ['super_admin', 'admin'] },
+        { path: '/admin/messages', icon: Mail, label: 'Boîte Mail', roles: ['super_admin', 'admin', 'assistant'] },
+        { path: '/admin/reservations', icon: CalendarDays, label: 'Réservations', roles: ['super_admin', 'admin', 'assistant'] },
         {
             label: 'Véhicules', icon: Car, roles: ['super_admin', 'admin', 'assistant'],
             children: [
                 { path: '/admin/vehicles', label: 'Flotte globale', roles: ['super_admin', 'admin'] },
                 { path: '/admin/rented-vehicles', label: 'Véhicules Loués', roles: ['super_admin', 'admin', 'assistant'] },
+                { path: '/admin/maintenance', label: 'Maintenance & Entretien', roles: ['super_admin', 'admin'] },
             ]
         },
         {
-            label: 'Clients & Ventes', icon: Users, roles: ['super_admin', 'assistant'],
+            label: 'Clients & Ventes', icon: Users, roles: ['super_admin', 'admin', 'assistant'],
             children: [
-                { path: '/admin/customers', label: 'Annuaire Clients', roles: ['super_admin', 'assistant'] },
-                { path: '/admin/contracts', label: 'Contrats de Location', roles: ['super_admin', 'assistant'] },
-                { path: '/admin/invoices', label: 'Facturation', roles: ['super_admin', 'assistant'] },
+                { path: '/admin/customers', label: 'Annuaire Clients', roles: ['super_admin', 'admin', 'assistant'] },
+                { path: '/admin/quotes', label: 'Devis & Propositions', roles: ['super_admin', 'admin', 'assistant'] },
+                { path: '/admin/contracts', label: 'Contrats de Location', roles: ['super_admin', 'admin', 'assistant'] },
+                { path: '/admin/invoices', label: 'Facturation', roles: ['super_admin', 'admin', 'assistant'] },
             ]
         },
-        { path: '/admin/infractions', icon: AlertTriangle, label: 'Infractions', roles: ['super_admin', 'assistant'] },
+        { path: '/admin/infractions', icon: AlertTriangle, label: 'Infractions', roles: ['super_admin', 'admin', 'assistant'] },
         { path: '/admin/gps', icon: MapPin, label: 'Suivi GPS', roles: ['super_admin', 'admin'] },
-        { path: '/admin/maintenance', icon: Wrench, label: 'Maintenance', roles: ['super_admin', 'admin'] },
-        { path: '/admin/accounting', icon: Calculator, label: 'Comptabilité', roles: ['super_admin'] },
+        { path: '/admin/accounting', icon: Calculator, label: 'Comptabilité', roles: ['super_admin', 'admin'] },
+        { path: '/admin/history', icon: Archive, label: 'Historique', roles: ['super_admin', 'admin', 'assistant'] },
         { path: '/admin/users', icon: UserCog, label: 'Administrateurs', roles: ['super_admin'] },
+        { path: '/admin/settings', icon: Settings, label: 'Paramètres', roles: ['super_admin'] },
     ];
 
     const menuItems = fullMenuItems.filter(item =>
         profile && (item.roles.includes(profile.role))
     );
+
+    const isPathActive = (path?: string) => {
+        if (!path) return false;
+        if (path === '/admin') return location.pathname === '/admin';
+        return location.pathname.startsWith(path);
+    };
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
@@ -140,7 +149,9 @@ export default function AdminLayout() {
                             />
                             <div className="flex flex-col">
                                 <span className="text-white font-black text-sm tracking-[0.2em] uppercase leading-none">Admin</span>
-                                <span className="text-[#3A9AFF] text-[10px] font-bold tracking-widest uppercase">Panel</span>
+                                <span className="text-[#3A9AFF] text-[10px] font-bold tracking-widest uppercase flex items-center gap-1">
+                                    Panel <span className="px-1 bg-white/10 rounded-sm text-[8px]">v2.0</span>
+                                </span>
                             </div>
                         </Link>
                         <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-white/60 hover:text-white">
@@ -157,7 +168,7 @@ export default function AdminLayout() {
                                 const allowedChildren = item.children.filter(child => profile && child.roles.includes(profile.role));
                                 if (allowedChildren.length === 0) return null;
 
-                                const isChildActive = allowedChildren.some(child => location.pathname === child.path);
+                                const isChildActive = allowedChildren.some(child => isPathActive(child.path));
 
                                 return (
                                     <div key={item.label} className="space-y-1">
@@ -181,7 +192,7 @@ export default function AdminLayout() {
                                                         key={child.path}
                                                         to={child.path}
                                                         onClick={() => setSidebarOpen(false)}
-                                                        className={`block px-4 py-2 rounded-lg transition-all duration-300 text-xs font-semibold ${isActive
+                                                        className={`block px-4 py-2 rounded-lg transition-all duration-300 text-xs font-semibold ${isPathActive(child.path)
                                                             ? 'bg-[#3A9AFF] text-white shadow-[0_4px_20px_rgba(58,154,255,0.4)]'
                                                             : 'text-white/50 hover:text-white hover:bg-white/5'
                                                             }`}
@@ -202,14 +213,14 @@ export default function AdminLayout() {
                                     key={item.path}
                                     to={item.path!}
                                     onClick={() => setSidebarOpen(false)}
-                                    className={`group flex items-center px-4 py-3 rounded-xl transition-all duration-300 text-sm font-semibold ${isActive
+                                    className={`group flex items-center px-4 py-3 rounded-xl transition-all duration-300 text-sm font-semibold ${isPathActive(item.path)
                                         ? 'bg-[#3A9AFF] text-white shadow-[0_4px_20px_rgba(58,154,255,0.4)]'
                                         : 'text-white/60 hover:text-white hover:bg-white/5'
                                         }`}
                                 >
                                     <Icon className={`w-5 h-5 mr-3 transition-transform duration-300 ${isActive ? '' : 'group-hover:scale-110'}`} />
                                     {item.label}
-                                    {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
+                                    {isPathActive(item.path) && <ChevronRight className="w-4 h-4 ml-auto" />}
                                 </Link>
                             );
                         })}

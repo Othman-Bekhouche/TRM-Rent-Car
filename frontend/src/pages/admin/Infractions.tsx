@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, CheckCircle, Clock, XCircle, Send, Car, FileText, X, Loader2, Edit, Trash2, Check } from 'lucide-react';
-import { infractionsApi, vehiclesApi, reservationsApi, type Infraction, type Vehicle, type Reservation } from '../../lib/api';
+import { Plus, Search, CheckCircle, Clock, XCircle, Send, Car, FileText, X, Loader2, Edit, Trash2, Check, AlertCircle, RefreshCw } from 'lucide-react';
+import { infractionsApi, vehiclesApi, reservationsApi, customersApi, type Infraction, type Vehicle, type Reservation } from '../../lib/api';
 import toast, { Toaster } from 'react-hot-toast';
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
@@ -11,10 +11,20 @@ const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = 
     unmatched: { label: 'Non identifié', color: 'bg-red-50 text-red-600 border-red-200', icon: XCircle },
 };
 
+const TYPE_LABELS: Record<string, string> = {
+    exces_vitesse: 'Excès de vitesse',
+    radar_fixe: 'Radar fixe',
+    stationnement_interdit: 'Stationnement',
+    feu_rouge: 'Feu rouge',
+    controle_routier: 'Contrôle routier',
+    autre: 'Autre'
+};
+
 export default function Infractions() {
     const [infractions, setInfractions] = useState<any[]>([]);
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [customers, setCustomers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
@@ -25,9 +35,10 @@ export default function Infractions() {
     // Form state
     const [formData, setFormData] = useState<Partial<Infraction>>({
         vehicle_id: '',
-        infraction_type: 'Excès de vitesse',
-        infraction_date: new Date().toISOString().split('T')[0],
-        infraction_time: '12:00',
+        customer_id: '',
+        infraction_type: 'exces_vitesse',
+        infraction_date: new Date().toLocaleDateString('en-CA'),
+        infraction_time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
         city: '',
         location: '',
         authority_name: 'Radar fixe',
@@ -44,14 +55,16 @@ export default function Infractions() {
     const loadData = async () => {
         try {
             setLoading(true);
-            const [infData, vehData, resData] = await Promise.all([
+            const [infData, vehData, resData, custData] = await Promise.all([
                 infractionsApi.getAll(),
                 vehiclesApi.getAll(),
-                reservationsApi.getAll()
+                reservationsApi.getAll(),
+                customersApi.getAll()
             ]);
             setInfractions(infData);
             setVehicles(vehData);
             setReservations(resData);
+            setCustomers(custData);
         } catch (err: any) {
             toast.error("Erreur chargement données");
         } finally {
@@ -59,20 +72,63 @@ export default function Infractions() {
         }
     };
 
-    const findMatchingReservation = (vehicleId: string, dateStr: string) => {
-        const date = new Date(dateStr);
-        return reservations.find(r =>
-            r.vehicle_id === vehicleId &&
-            new Date(r.start_date) <= date &&
-            new Date(r.end_date) >= date
-        );
+    const findMatchingReservation = (vehicleId: string, dateStr: string, timeStr?: string) => {
+        if (!vehicleId || !dateStr) return null;
+
+        // Construct a full timestamp for precise matching if time is available
+        const infractionTS = timeStr ? new Date(`${dateStr}T${timeStr}`) : null;
+        const searchDate = new Date(`${dateStr}T12:00:00`); // Midday local is safe for date only
+
+        // Find all potential matches
+        const potentials = reservations.filter(r => {
+            if (r.vehicle_id !== vehicleId) return false;
+            if (['cancelled', 'rejected'].includes(r.status)) return false;
+
+            // 1. If we have precise handover times, use them
+            const handover = r.handover?.[0]; // Supabase joins return array
+            if (infractionTS && handover?.handover_date) {
+                const startTS = new Date(handover.handover_date);
+                const endTS = handover.return_date ? new Date(handover.return_date) : new Date(); // assume till now if not returned
+
+                if (infractionTS >= startTS && infractionTS <= endTS) return true;
+                // If it doesn't match handover but we HAVE handover data, it might belong to next/prev contract
+                // So we stick to precise match here
+            }
+
+            // 2. Fallback to Date-range comparison (inclusive)
+            const startStr = r.start_date.split('T')[0];
+            const endStr = r.end_date.split('T')[0];
+            const start = new Date(startStr + 'T00:00:00');
+            const end = new Date(endStr + 'T23:59:59');
+
+            return searchDate >= start && searchDate <= end;
+        });
+
+        if (potentials.length === 0) return null;
+
+        // If we have precise matches via handover, they'll be in potentials if they matched specifically.
+        // We still prioritize by status and overlap logic.
+        const statusPriority: Record<string, number> = {
+            rented: 0,
+            returned: 1,
+            completed: 2,
+            confirmed: 3,
+            pending: 4
+        };
+
+        return potentials.sort((a, b) => {
+            const prioA = statusPriority[a.status] ?? 10;
+            const prioB = statusPriority[b.status] ?? 10;
+            if (prioA !== prioB) return prioA - prioB;
+            return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
+        })[0];
     };
 
     const handleAdd = () => {
         setSelectedInfraction(null);
         setFormData({
             vehicle_id: '',
-            infraction_type: 'Excès de vitesse',
+            infraction_type: 'exces_vitesse',
             infraction_date: new Date().toISOString().split('T')[0],
             infraction_time: '12:00',
             city: '',
@@ -106,17 +162,84 @@ export default function Infractions() {
         }
     };
 
+    useEffect(() => {
+        if (formData.vehicle_id && formData.infraction_date && !selectedInfraction) {
+            autoMatch();
+        }
+    }, [formData.vehicle_id, formData.infraction_date, formData.infraction_time, selectedInfraction]);
+
+    const autoMatch = () => {
+        const match = findMatchingReservation(formData.vehicle_id!, formData.infraction_date!, formData.infraction_time);
+        if (match) {
+            setFormData(prev => ({
+                ...prev,
+                customer_id: match.customer_id,
+                reservation_id: match.id
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, customer_id: '', reservation_id: undefined }));
+        }
+    };
+
+    const handleManualRefreshMatch = () => {
+        if (!formData.vehicle_id || !formData.infraction_date) {
+            toast.error("Veuillez sélectionner un véhicule et une date");
+            return;
+        }
+
+        const match = findMatchingReservation(formData.vehicle_id, formData.infraction_date, formData.infraction_time);
+        if (match) {
+            setFormData(prev => ({
+                ...prev,
+                customer_id: match.customer_id,
+                reservation_id: match.id
+            }));
+            toast.success("Client trouvé pour cette période", { id: 'match_success' });
+        } else {
+            setFormData(prev => ({ ...prev, customer_id: '', reservation_id: undefined }));
+            toast.error("Aucun client trouvé pour cette période", { id: 'match_fail' });
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
         try {
-            // Auto-match
-            const match = findMatchingReservation(formData.vehicle_id!, formData.infraction_date!);
-            const finalData = {
-                ...formData,
-                reservation_id: match?.id || null,
-                customer_id: match?.customer_id || null,
-                status: match ? 'matched' : (formData.status || 'pending')
+            // Remove ANY joined properties or extra objects from formData before sending to the DB
+            const baseData = { ...formData } as any;
+            Object.keys(baseData).forEach(k => {
+                if (typeof baseData[k] === 'object' && baseData[k] !== null) {
+                    delete baseData[k];
+                }
+            });
+
+            // Also specifically delete potential join keys just in case
+            delete baseData.customer;
+            delete baseData.customers;
+            delete baseData.vehicle;
+            delete baseData.vehicles;
+            delete baseData.reservation;
+            delete baseData.reservations;
+
+            // Clean up data for database (avoid empty string UUIDs)
+            const cleanData = {
+                ...baseData,
+                vehicle_id: baseData.vehicle_id || null,
+                reservation_id: baseData.reservation_id || null,
+                customer_id: baseData.customer_id || null,
+                fine_amount: Number(baseData.fine_amount) || 0
+            };
+
+            if (!cleanData.vehicle_id) {
+                toast.error('Sélectionnez un véhicule');
+                setIsSaving(false);
+                return;
+            }
+
+            // Status logic: if we have a customer_id, it is 'matched'
+            const finalData: Partial<Infraction> = {
+                ...cleanData,
+                status: cleanData.customer_id ? 'matched' : (cleanData.status || 'pending')
             };
 
             if (selectedInfraction) {
@@ -140,10 +263,11 @@ export default function Infractions() {
 
     const filteredInfractions = infractions.filter(i => {
         const matchesStatus = filterStatus === 'all' || i.status === filterStatus;
+        const vehicleInfo = (i.vehicle?.brand || '') + ' ' + (i.vehicle?.model || '') + ' ' + (i.vehicle?.plate_number || '');
         const matchesSearch =
-            (i.vehicles?.brand + ' ' + i.vehicles?.model).toLowerCase().includes(searchTerm.toLowerCase()) ||
-            i.reference_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            i.customers?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
+            vehicleInfo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (i.reference_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (i.customer?.full_name || '').toLowerCase().includes(searchTerm.toLowerCase());
         return matchesStatus && matchesSearch;
     });
 
@@ -180,6 +304,13 @@ export default function Infractions() {
                                         {vehicles.map(v => <option key={v.id} value={v.id}>{v.brand} {v.model} - {v.plate_number}</option>)}
                                     </select>
                                 </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Client Responsable (Auto-matché)</label>
+                                    <select value={formData.customer_id || ''} onChange={e => setFormData({ ...formData, customer_id: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800">
+                                        <option value="">Non identifié</option>
+                                        {customers.map(c => <option key={c.id} value={c.id}>{c.full_name} ({c.phone})</option>)}
+                                    </select>
+                                </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Date *</label>
@@ -205,11 +336,12 @@ export default function Infractions() {
                                     <div className="grid grid-cols-2 gap-2">
                                         <input type="text" placeholder="Autorité (Gendarmerie...)" value={formData.authority_name} onChange={e => setFormData({ ...formData, authority_name: e.target.value })} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800" />
                                         <select value={formData.infraction_type} onChange={e => setFormData({ ...formData, infraction_type: e.target.value })} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800">
-                                            <option>Excès de vitesse</option>
-                                            <option>Radar fixe</option>
-                                            <option>Stationnement</option>
-                                            <option>Feu rouge</option>
-                                            <option>Autre</option>
+                                            <option value="exces_vitesse">Excès de vitesse</option>
+                                            <option value="radar_fixe">Radar fixe</option>
+                                            <option value="stationnement_interdit">Stationnement</option>
+                                            <option value="feu_rouge">Feu rouge</option>
+                                            <option value="controle_routier">Contrôle routier</option>
+                                            <option value="autre">Autre</option>
                                         </select>
                                     </div>
                                 </div>
@@ -223,10 +355,60 @@ export default function Infractions() {
                                         <input required type="number" value={formData.fine_amount} onChange={e => setFormData({ ...formData, fine_amount: parseFloat(e.target.value) })} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-rose-600 text-slate-800" />
                                     </div>
                                 </div>
+
                                 <div>
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Notes administratives</label>
                                     <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} rows={2} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800" />
                                 </div>
+
+                                {formData.vehicle_id && formData.infraction_date && (
+                                    <div className="bg-rose-50 border border-rose-100 p-4 rounded-xl mt-4">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Aperçu du Match Client</p>
+                                                <button type="button" onClick={handleManualRefreshMatch} className="p-1 hover:bg-rose-100 rounded-lg transition-colors text-rose-500" title="Actualiser la recherche">
+                                                    <RefreshCw className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                            {(() => {
+                                                const infDateSafe = formData.infraction_date!.split('T')[0];
+                                                const potentials = reservations.filter(r => {
+                                                    if (r.vehicle_id !== formData.vehicle_id || ['cancelled', 'rejected'].includes(r.status)) return false;
+                                                    const startStr = r.start_date.split('T')[0];
+                                                    const endStr = r.end_date.split('T')[0];
+                                                    return new Date(infDateSafe + 'T12:00:00') >= new Date(startStr + 'T00:00:00') &&
+                                                        new Date(infDateSafe + 'T12:00:00') <= new Date(endStr + 'T23:59:59');
+                                                });
+                                                return potentials.length > 1 && (
+                                                    <span className="flex items-center gap-1 text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                                                        <AlertCircle className="w-3 h-3" /> multi-match
+                                                    </span>
+                                                );
+                                            })()}
+                                        </div>
+                                        {(() => {
+                                            const match = findMatchingReservation(formData.vehicle_id!, formData.infraction_date!, formData.infraction_time);
+                                            const isPrecise = match?.handover?.[0]?.handover_date && formData.infraction_time;
+
+                                            return match ? (
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-rose-600 font-bold shadow-sm">{match.customers?.full_name?.[0] || '?'}</div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-700">{match.customers?.full_name}</p>
+                                                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">
+                                                            {isPrecise ? 'Match précis (Livraison)' : 'Match via dates contrat'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-3 text-slate-400">
+                                                    <Clock className="w-5 h-5" />
+                                                    <p className="text-xs font-bold uppercase tracking-widest">Aucun client trouvé pour cette date</p>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -263,12 +445,12 @@ export default function Infractions() {
                                 <table className="w-full text-left border-collapse">
                                     <thead>
                                         <tr className="bg-[#FFF1F2] text-rose-400 text-[10px] uppercase tracking-widest font-bold">
-                                            <th className="p-4">Référence</th>
-                                            <th className="p-4">Véhicule</th>
-                                            <th className="p-4">Date & Lieu</th>
-                                            <th className="p-4">Client Matché</th>
-                                            <th className="p-4">Montant</th>
-                                            <th className="p-4">Statut</th>
+                                            <th className="p-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Référence</th>
+                                            <th className="p-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Date & Heure</th>
+                                            <th className="p-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Véhicule</th>
+                                            <th className="p-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Client Responsable</th>
+                                            <th className="p-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Montant</th>
+                                            <th className="p-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Statut</th>
                                             <th className="p-4 text-right">Actions</th>
                                         </tr>
                                     </thead>
@@ -276,35 +458,51 @@ export default function Infractions() {
                                         {filteredInfractions.map(inf => {
                                             const st = STATUS_MAP[inf.status] || STATUS_MAP.pending;
                                             const Icon = st.icon;
+                                            const isMatched = !!inf.customer_id;
                                             return (
                                                 <tr key={inf.id} className="hover:bg-rose-50/30 transition-colors border-b border-slate-50 font-medium">
-                                                    <td className="p-4 text-rose-600 font-mono text-xs">{inf.reference_number || 'N/A'}</td>
+                                                    <td className="p-4 text-rose-600 font-mono text-xs">
+                                                        <p className="font-bold underline decoration-rose-200">#{inf.reference_number || 'SANS-REF'}</p>
+                                                        <p className="text-[10px] text-slate-400 mt-0.5 uppercase tracking-tighter">{TYPE_LABELS[inf.infraction_type] || inf.infraction_type}</p>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <p className="text-slate-700 font-bold">{new Date(inf.infraction_date).toLocaleDateString()}</p>
+                                                        <p className="text-[10px] text-slate-400 flex items-center gap-1">
+                                                            <Clock className="w-3 h-3" /> {inf.infraction_time || '--:--'}
+                                                        </p>
+                                                    </td>
                                                     <td className="p-4">
                                                         <div className="flex items-center gap-2">
-                                                            <Car className="w-4 h-4 text-slate-400" />
+                                                            <div className="w-7 h-7 bg-slate-100 rounded-lg flex items-center justify-center">
+                                                                <Car className="w-4 h-4 text-slate-500" />
+                                                            </div>
                                                             <div>
-                                                                <p className="text-slate-700">{inf.vehicles?.brand} {inf.vehicles?.model}</p>
-                                                                <p className="text-[10px] text-slate-400">{inf.vehicles?.plate_number}</p>
+                                                                <p className="text-slate-700 text-xs font-bold">{inf.vehicle?.brand} {inf.vehicle?.model}</p>
+                                                                <p className="text-[10px] text-slate-400 font-mono">{inf.vehicle?.plate_number}</p>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td className="p-4">
-                                                        <p className="text-slate-600 font-bold">{new Date(inf.infraction_date).toLocaleDateString()}</p>
-                                                        <p className="text-[10px] text-slate-400">{inf.city}, {inf.location}</p>
-                                                    </td>
-                                                    <td className="p-4">
-                                                        {inf.customers ? (
+                                                        {inf.customer ? (
                                                             <div className="flex items-center gap-2">
-                                                                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-[10px] text-blue-600 font-black">{inf.customers.full_name[0]}</div>
-                                                                <p className="text-slate-700 text-xs">{inf.customers.full_name}</p>
+                                                                <div className="w-7 h-7 bg-blue-50 rounded-full flex items-center justify-center text-[10px] text-blue-600 font-black border border-blue-100">
+                                                                    {inf.customer?.full_name ? inf.customer.full_name[0] : '?'}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-slate-700 text-xs font-bold">{inf.customer?.full_name}</p>
+                                                                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">CIN: {inf.customer?.cin || 'N/A'}</p>
+                                                                </div>
                                                             </div>
                                                         ) : (
-                                                            <p className="text-slate-300 italic text-xs">Non identifié</p>
+                                                            <div className="flex items-center gap-2 text-slate-300">
+                                                                <XCircle className="w-4 h-4" />
+                                                                <p className="italic text-[10px]">Non identifié</p>
+                                                            </div>
                                                         )}
                                                     </td>
                                                     <td className="p-4 text-rose-600 font-black">{inf.fine_amount} MAD</td>
                                                     <td className="p-4">
-                                                        <span className={`${st.color} px-2.5 py-1 rounded-full text-[10px] font-bold border inline-flex items-center gap-1`}>
+                                                        <span className={`${st.color} px-2.5 py-1 rounded-full text-[10px] font-bold border inline-flex items-center gap-1`} title={isMatched ? "Infraction associée à un client" : "Client non identifié"}>
                                                             <Icon className="w-3 h-3" /> {st.label}
                                                         </span>
                                                     </td>
@@ -325,7 +523,8 @@ export default function Infractions() {
                         </div>
                     </div>
                 </>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }

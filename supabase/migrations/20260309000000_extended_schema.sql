@@ -153,21 +153,42 @@ CREATE OR REPLACE FUNCTION match_infraction_to_reservation()
 RETURNS TRIGGER AS $$
 DECLARE
     matched_reservation RECORD;
+    infraction_ts TIMESTAMPTZ;
 BEGIN
-    -- Search for reservation matching vehicle + date
-    SELECT r.id AS reservation_id, r.customer_id
-    INTO matched_reservation
-    FROM public.reservations r
-    WHERE r.vehicle_id = NEW.vehicle_id
-      AND r.start_date <= NEW.infraction_date
-      AND r.end_date >= NEW.infraction_date
-      AND r.status IN ('confirmed', 'completed')
-    ORDER BY r.start_date DESC
-    LIMIT 1;
+    -- Construct full timestamp precisely
+    IF NEW.infraction_time IS NOT NULL THEN
+        infraction_ts := (NEW.infraction_date + NEW.infraction_time)::TIMESTAMPTZ;
+    END IF;
 
-    IF FOUND THEN
+    -- 1. TRY HANDOVER RECORDS (PRECISE MODE)
+    -- This matches the exact moment the client had the car
+    IF infraction_ts IS NOT NULL THEN
+        SELECT h.reservation_id, h.customer_id
+        INTO matched_reservation
+        FROM public.rental_handover_records h
+        WHERE h.vehicle_id = NEW.vehicle_id
+          AND h.handover_date <= infraction_ts
+          AND (h.return_date >= infraction_ts OR h.return_date IS NULL)
+        LIMIT 1;
+    END IF;
+
+    -- 2. FALLBACK TO RESERVATIONS (DATE MODE)
+    -- Used if infraction_time is missing or no handover record exists
+    IF matched_reservation IS NULL THEN
+        SELECT r.id AS reservation_id, r.customer_id
+        INTO matched_reservation
+        FROM public.reservations r
+        WHERE r.vehicle_id = NEW.vehicle_id
+          AND r.start_date <= NEW.infraction_date
+          AND r.end_date >= NEW.infraction_date
+          AND r.status IN ('confirmed', 'completed', 'rented', 'returned')
+        ORDER BY r.start_date DESC
+        LIMIT 1;
+    END IF;
+
+    IF matched_reservation IS NOT NULL THEN
         NEW.reservation_id := matched_reservation.reservation_id;
-        -- Try to find customer_id from profiles linked to reservation
+        NEW.customer_id := matched_reservation.customer_id;
         NEW.status := 'matched';
     ELSE
         NEW.status := 'unmatched';

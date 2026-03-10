@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Printer, Receipt, Loader2, Eye } from 'lucide-react';
+import { Search, Printer, Receipt, Loader2, Eye, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { invoicesApi } from '../../lib/api';
 
@@ -103,11 +103,14 @@ export default function Invoices() {
                                                     </span>
                                                 </td>
                                                 <td className="p-4 flex items-center justify-end gap-2">
-                                                    <Link to={`/admin/reservations/${res.id}`} className="p-2 bg-white text-slate-400 hover:text-[#3A9AFF] border border-transparent hover:border-[#3A9AFF]/20 rounded-lg transition-all" title="Ouvrir">
+                                                    <Link to={`/admin/reservations/${res.id}/print/invoice`} className="p-2 bg-white text-slate-400 hover:text-[#3A9AFF] border border-transparent hover:border-[#3A9AFF]/20 rounded-lg transition-all" title="Voir la facture">
                                                         <Eye className="w-4 h-4" />
                                                     </Link>
-                                                    <Link to={`/admin/reservations/${res.id}/invoice-print`} target="_blank" className="p-2 bg-white text-slate-400 hover:text-emerald-500 border border-transparent hover:border-emerald-500/20 rounded-lg transition-all" title="Imprimer Facture">
+                                                    <Link to={`/admin/reservations/${res.id}/print/invoice?action=print`} target="_blank" className="p-2 bg-white text-slate-400 hover:text-[#261CC1] border border-transparent hover:border-[#261CC1]/20 rounded-lg transition-all" title="Imprimer Facture">
                                                         <Printer className="w-4 h-4" />
+                                                    </Link>
+                                                    <Link to={`/admin/reservations/${res.id}/print/invoice?action=download`} target="_blank" className="p-2 bg-white text-slate-400 hover:text-emerald-500 border border-transparent hover:border-emerald-500/20 rounded-lg transition-all" title="Télécharger PDF">
+                                                        <Download className="w-4 h-4" />
                                                     </Link>
                                                 </td>
                                             </tr>

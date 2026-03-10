@@ -1,24 +1,60 @@
-import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, Download, ArrowUpRight, CreditCard, Banknote, Receipt, CarFront, MapPin, Loader2 } from 'lucide-react';
-import { transactionsApi, reservationsApi, vehiclesApi, type Transaction, type Reservation, type Vehicle } from '../../lib/api';
+import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import {
+    DollarSign,
+    TrendingUp,
+    Download,
+    ArrowUpRight,
+    Banknote,
+    Receipt,
+    Loader2,
+    BarChart3,
+    Activity,
+    PieChart,
+    ChevronRight,
+    Search
+} from 'lucide-react';
+import {
+    transactionsApi,
+    reservationsApi,
+    type Transaction,
+    type Reservation
+} from '../../lib/api';
+import {
+    format,
+    startOfDay,
+    endOfDay,
+    isWithinInterval,
+    startOfWeek,
+    startOfMonth,
+    parseISO,
+    eachDayOfInterval,
+    eachMonthOfInterval,
+    subMonths,
+    isSameDay,
+    isSameMonth
+} from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+type Period = 'today' | 'week' | 'month' | 'year' | 'all';
 
 export default function Accounting() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [reservations, setReservations] = useState<Reservation[]>([]);
-    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [loading, setLoading] = useState(true);
+    const [period, setPeriod] = useState<Period>('month');
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [txs, resas, vehs] = await Promise.all([
+                setLoading(true);
+                const [txs, resas] = await Promise.all([
                     transactionsApi.getAll(),
-                    reservationsApi.getAll(),
-                    vehiclesApi.getAll()
+                    reservationsApi.getAll()
                 ]);
                 setTransactions(txs);
                 setReservations(resas);
-                setVehicles(vehs);
             } catch (error) {
                 console.error("Error loading accounting data:", error);
             } finally {
@@ -28,271 +64,332 @@ export default function Accounting() {
         fetchData();
     }, []);
 
+    const dataAnalysis = useMemo(() => {
+        const now = new Date();
+        let start: Date;
+        let end: Date = endOfDay(now);
+
+        switch (period) {
+            case 'today': start = startOfDay(now); break;
+            case 'week': start = startOfWeek(now, { weekStartsOn: 1 }); break;
+            case 'month': start = startOfMonth(now); break;
+            case 'year': start = startOfMonth(subMonths(now, 11)); break;
+            case 'all': default: start = subMonths(now, 120); break;
+        }
+
+        const filteredTxs = transactions.filter(t => {
+            const d = parseISO(t.transaction_date || t.created_at);
+            return isWithinInterval(d, { start, end });
+        });
+
+        const filteredResas = reservations.filter(r => {
+            const d = parseISO(r.start_date);
+            return isWithinInterval(d, { start, end });
+        });
+
+        const totalRevenue = filteredTxs
+            .filter(t => t.transaction_type === 'encaissement' && t.status === 'Payé')
+            .reduce((acc, t) => acc + Number(t.amount || 0), 0);
+
+        const pendingRevenue = filteredTxs
+            .filter(t => t.status === 'En attente' || t.status === 'Impayé')
+            .reduce((acc, t) => acc + Number(t.amount || 0), 0);
+
+        // Chart Data Generation
+        let chartPoints: any[] = [];
+        if (period === 'today' || period === 'week') {
+            const days = eachDayOfInterval({ start: period === 'today' ? start : startOfWeek(now, { weekStartsOn: 1 }), end });
+            chartPoints = days.map(day => {
+                const dayTxs = transactions.filter(t => isSameDay(parseISO(t.transaction_date || t.created_at), day));
+                return {
+                    label: format(day, 'EEE', { locale: fr }),
+                    revenue: dayTxs.filter(t => t.transaction_type === 'encaissement' && t.status === 'Payé').reduce((acc, t) => acc + Number(t.amount), 0)
+                };
+            });
+        } else {
+            const months = eachMonthOfInterval({ start: startOfMonth(subMonths(now, 5)), end });
+            chartPoints = months.map(month => {
+                const monthTxs = transactions.filter(t => isSameMonth(parseISO(t.transaction_date || t.created_at), month));
+                return {
+                    label: format(month, 'MMM', { locale: fr }),
+                    revenue: monthTxs.filter(t => t.transaction_type === 'encaissement' && t.status === 'Payé').reduce((acc, t) => acc + Number(t.amount), 0)
+                };
+            });
+        }
+
+        return {
+            transactions: filteredTxs,
+            reservations: filteredResas,
+            totalRevenue,
+            pendingRevenue,
+            chartPoints,
+            maxChartVal: Math.max(...chartPoints.map(p => p.revenue), 1)
+        };
+    }, [transactions, reservations, period]);
+
+    const filteredTransactions = dataAnalysis.transactions.filter(t =>
+        t.customer?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.id.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <Loader2 className="w-10 h-10 text-[#3A9AFF] animate-spin" />
-                <p className="text-slate-400 text-sm font-medium">Chargement des données financières...</p>
+                <Loader2 className="w-10 h-10 text-[#261CC1] animate-spin" />
+                <p className="text-slate-400 text-xs font-black uppercase tracking-[0.3em] animate-pulse">Analyse financière TRM...</p>
             </div>
         );
     }
 
-    // --- 1. Filtrage sur 4 Mois (Décembre 2025 -> Mars 2026) ---
-    const dec25 = transactions.filter(t => t.transaction_date.startsWith('2025-12'));
-    const jan26 = transactions.filter(t => t.transaction_date.startsWith('2026-01'));
-    const feb26 = transactions.filter(t => t.transaction_date.startsWith('2026-02'));
-    const mar26 = transactions.filter(t => t.transaction_date.startsWith('2026-03'));
-
-    const calcRevenue = (txArray: Transaction[]) =>
-        txArray.filter(t => t.transaction_type === 'encaissement' && t.status === 'Payé')
-            .reduce((acc, curr) => acc + Number(curr.amount), 0);
-
-    const calcExpenses = (txArray: Transaction[]) => 28000 + (txArray.length * 100); // Fausse dépense calculée logiquement
-
-    const MONTHLY_REVENUE = [
-        { month: 'Décembre 2025', revenue: calcRevenue(dec25), expenses: calcExpenses(dec25), label: 'Fin d\'année' },
-        { month: 'Janvier 2026', revenue: calcRevenue(jan26), expenses: calcExpenses(jan26), label: 'Basse saison' },
-        { month: 'Février 2026', revenue: calcRevenue(feb26), expenses: calcExpenses(feb26), label: 'Hausse' },
-        { month: 'Mars 2026', revenue: calcRevenue(mar26), expenses: calcExpenses(mar26), label: 'En cours' },
-    ];
-
-    const maxRevenue = Math.max(...MONTHLY_REVENUE.map(m => m.revenue), 1);
-
-    // Total Trimestre 2026 (Jan, Fev, Mars)
-    const t1Revenue = calcRevenue([...jan26, ...feb26, ...mar26]);
-    const t1Expenses = calcExpenses(jan26) + calcExpenses(feb26) + calcExpenses(mar26);
-    const totalBenefit = t1Revenue - t1Expenses;
-
-    const impayes = transactions.filter(t => t.status === 'Impayé').reduce((acc, curr) => acc + Number(curr.amount), 0);
-
-    // --- 2. Répartition par Catégorie de véhicule (basé sur la flotte)---
-    const totalVehicles = vehicles.length || 1;
-    const countCategory = (searchText: string) => vehicles.filter(v => v.model.toLowerCase().includes(searchText)).length;
-
-    const citadines = countCategory('citadine') + countCategory('208') + countCategory('sandero');
-    const berlines = countCategory('berline') + countCategory('logan');
-    const suvs = countCategory('suv') + countCategory('tucson') + countCategory('evoque');
-    const utilitaires = countCategory('utilitaire') + countCategory('kangoo');
-
-    const CAR_SIZES = [
-        { category: 'Citadines', percentage: Math.round((citadines / totalVehicles) * 100), count: citadines, color: 'from-[#261CC1] to-[#3A9AFF]', text: 'text-[#3A9AFF]' },
-        { category: 'Berlines', percentage: Math.round((berlines / totalVehicles) * 100), count: berlines, color: 'from-purple-600 to-indigo-500', text: 'text-purple-500' },
-        { category: 'SUV', percentage: Math.round((suvs / totalVehicles) * 100), count: suvs, color: 'from-emerald-500 to-teal-400', text: 'text-emerald-500' },
-        { category: 'Utilitaires', percentage: Math.round((utilitaires / totalVehicles) * 100), count: utilitaires, color: 'from-amber-500 to-orange-400', text: 'text-amber-500' },
-    ].sort((a, b) => b.percentage - a.percentage);
-
-    // --- 3. Répartition Géographique (Basé sur les réservations de 2026) ---
-    const totalRes2026 = reservations.filter(r => r.start_date.startsWith('2026')).length || 1;
-    const countCity = (cityRegex: RegExp) => reservations.filter(r => r.start_date.startsWith('2026') && cityRegex.test(r.pickup_location.toLowerCase())).length;
-
-    const oujda = countCity(/oujda/);
-    const fes = countCity(/fès|fes/);
-    const nador = countCity(/nador/);
-    const berkane_taourirt = countCity(/berkane|taourirt/);
-
-    const REGIONAL_DISTRIBUTION = [
-        { region: 'Oujda (Ville & Aéroport)', count: oujda, percentage: Math.round((oujda / totalRes2026) * 100) },
-        { region: 'Fès (Aéroport & Ville)', count: fes, percentage: Math.round((fes / totalRes2026) * 100) },
-        { region: 'Taourirt & Berkane', count: berkane_taourirt, percentage: Math.round((berkane_taourirt / totalRes2026) * 100) },
-        { region: 'Nador (El Aroui)', count: nador, percentage: Math.round((nador / totalRes2026) * 100) },
-    ].sort((a, b) => b.percentage - a.percentage);
-
-    // Filter missing/corrupted Transactions and format
-    const formatAmount = (val: number, type: string) => {
-        const sign = type === 'remboursement' ? '-' : '';
-        return `${sign} ${new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD' }).format(val).replace('MAD', 'MAD')}`;
-    };
-
     return (
-        <div className="space-y-6 animate-[fadeIn_0.5s_ease-out] pb-10">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-black text-[#1C0770] tracking-tight">Comptabilité & Analytique</h1>
-                    <p className="text-slate-500 text-sm mt-1">Analyse financière et flotte dynamique (Données Réelles)</p>
+        <div className="space-y-6 animate-[fadeIn_0.5s_ease-out] pb-20">
+            {/* Contextual Header */}
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-[#261CC1] rounded-[1.5rem] flex items-center justify-center text-white shadow-xl shadow-[#261CC1]/20">
+                        <TrendingUp className="w-7 h-7" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-black text-[#1C0770] tracking-tighter uppercase leading-none">Comptabilité</h1>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2">Analytique & Flux de trésorerie</p>
+                    </div>
                 </div>
-                <div className="flex gap-3">
-                    <button className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-sm font-bold text-slate-600 rounded-xl hover:shadow-md transition-all">
-                        <Download className="w-4 h-4" /> Bilan T1 2026 (PDF)
-                    </button>
+
+                <div className="flex flex-wrap items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200/50">
+                    {['today', 'week', 'month', 'year', 'all'].map((p) => (
+                        <button
+                            key={p}
+                            onClick={() => setPeriod(p as Period)}
+                            className={`px-5 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${period === p
+                                ? 'bg-white text-[#261CC1] shadow-lg shadow-slate-200 ring-1 ring-slate-100'
+                                : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                        >
+                            {p === 'today' ? 'Jour' : p === 'week' ? 'Semaine' : p === 'month' ? 'Mois' : p === 'year' ? 'Année' : 'Global'}
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            {/* KPIs TRIMESTRIELS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-[0_8px_30px_rgba(38,28,193,0.15)] relative overflow-hidden">
-                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl"></div>
-                    <div className="flex items-center justify-between mb-3 relative z-10">
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">CA T1 2026</p>
-                        <div className="p-2 bg-gradient-to-br from-[#261CC1] to-[#3A9AFF] rounded-xl text-white"><DollarSign className="w-4 h-4" /></div>
+            {/* Main KPI Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-[#1C0770] p-8 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
+                    <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/5 rounded-full blur-3xl transition-transform group-hover:scale-150"></div>
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="p-3 bg-white/10 rounded-2xl"><DollarSign className="w-6 h-6 text-indigo-300" /></div>
+                        <ArrowUpRight className="w-5 h-5 text-emerald-400" />
                     </div>
-                    <p className="text-2xl font-black text-[#1C0770] relative z-10">{new Intl.NumberFormat('fr-FR').format(t1Revenue)} MAD</p>
-                    <div className="flex items-center mt-2 text-[10px] font-bold text-emerald-600 relative z-10"><ArrowUpRight className="w-3 h-3 mr-1" /> Données 100% connectées</div>
+                    <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-1">Chiffre d'Affaires</p>
+                    <p className="text-3xl font-black tracking-tighter">{dataAnalysis.totalRevenue.toLocaleString()} <span className="text-xs text-indigo-400 ml-1">MAD</span></p>
+                    <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between text-[9px] font-black uppercase tracking-widest text-indigo-300/60">
+                        <span>{dataAnalysis.transactions.length} Transactions</span>
+                        <span className="text-emerald-400">Stable</span>
+                    </div>
                 </div>
-                <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Bénéfice Net T1</p>
-                        <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600"><Banknote className="w-4 h-4" /></div>
+
+                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-xl group">
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600"><Banknote className="w-6 h-6" /></div>
+                        <div className="px-2 py-1 bg-emerald-50 text-[8px] font-black text-emerald-600 rounded-lg">CALCULÉ</div>
                     </div>
-                    <p className="text-2xl font-black text-emerald-600">{new Intl.NumberFormat('fr-FR').format(totalBenefit)} MAD</p>
-                    <p className="text-[10px] text-slate-400 mt-2">Dépenses est. déduites ({new Intl.NumberFormat('fr-FR').format(t1Expenses)} MAD)</p>
-                </div>
-                <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Moy. Panier</p>
-                        <div className="p-2 bg-purple-50 rounded-xl text-purple-600"><CreditCard className="w-4 h-4" /></div>
-                    </div>
-                    <p className="text-2xl font-black text-purple-600">
-                        {totalRes2026 > 0 ? new Intl.NumberFormat('fr-FR').format(Math.round(t1Revenue / totalRes2026)) : 0} MAD
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Panier Moyen</p>
+                    <p className="text-3xl font-black text-[#1C0770] tracking-tighter">
+                        {dataAnalysis.reservations.length > 0 ? Math.round(dataAnalysis.totalRevenue / dataAnalysis.reservations.length).toLocaleString() : 0} <span className="text-xs text-slate-300 ml-1">MAD</span>
                     </p>
-                    <p className="text-[10px] text-slate-400 mt-2">Volume locatif trimestriel</p>
-                </div>
-                <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Créances Impayées</p>
-                        <div className="p-2 bg-red-50 rounded-xl text-red-500"><Receipt className="w-4 h-4" /></div>
+                    <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        <span>Sur {dataAnalysis.reservations.length} départs</span>
                     </div>
-                    <p className="text-2xl font-black text-red-500">{new Intl.NumberFormat('fr-FR').format(impayes)} MAD</p>
-                    <p className="text-[10px] text-slate-400 mt-2">Clients à relancer immédiatement</p>
+                </div>
+
+                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-xl group">
+                    <div className="flex justify-between items-start mb-6 text-amber-500">
+                        <div className="p-3 bg-amber-50 rounded-2xl"><Activity className="w-6 h-6" /></div>
+                    </div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Encours / Créances</p>
+                    <p className="text-3xl font-black text-amber-500 tracking-tighter">{dataAnalysis.pendingRevenue.toLocaleString()} <span className="text-xs text-slate-200 ml-1">MAD</span></p>
+                    <div className="mt-4 pt-4 border-t border-slate-50 text-[9px] font-black uppercase tracking-widest text-amber-600/60 underline underline-offset-4 cursor-pointer hover:text-amber-600 transition-colors">
+                        Relancer les impayés
+                    </div>
+                </div>
+
+                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-xl group">
+                    <div className="flex justify-between items-start mb-6 text-purple-600">
+                        <div className="p-3 bg-purple-50 rounded-2xl"><Receipt className="w-6 h-6" /></div>
+                    </div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Facturation</p>
+                    <p className="text-3xl font-black text-[#1C0770] tracking-tighter">{dataAnalysis.transactions.filter(t => t.transaction_type === 'encaissement').length} <span className="text-xs text-slate-300 ml-1">Docs</span></p>
+                    <div className="mt-4 pt-4 border-t border-slate-50 text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        Émissions sur la période
+                    </div>
                 </div>
             </div>
 
-            {/* GRAPHIQUES */}
+            {/* Dynamic Charts & Regional Analytics */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                {/* 1. EVOLUTION CA */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
-                    <div className="p-5 border-b border-slate-100">
-                        <h2 className="font-bold text-[#1C0770] flex items-center gap-2 text-sm"><TrendingUp className="w-4 h-4 text-[#3A9AFF]" /> Évolution CA (4 Derniers Mois)</h2>
-                    </div>
-                    <div className="p-6 flex-1 flex flex-col justify-end">
-                        <div className="flex items-end gap-4 h-40">
-                            {MONTHLY_REVENUE.map((m, i) => (
-                                <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
-                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] py-1 px-2 rounded-md absolute -mt-8 pointer-events-none whitespace-nowrap z-50">
-                                        CA: {m.revenue} | Dép: {m.expenses}
-                                    </div>
-                                    <p className="text-[10px] font-bold text-[#1C0770]">{m.revenue > 0 ? (m.revenue / 1000).toFixed(1) + 'k' : '0'}</p>
-                                    <div className="w-full relative flex items-end justify-center h-full">
-                                        <div
-                                            className="absolute bottom-0 w-full bg-slate-200 rounded-t-sm z-0"
-                                            style={{ height: `${Math.min((m.expenses / maxRevenue) * 100, 100)}%` }}
-                                        />
-                                        <div
-                                            className="w-full bg-gradient-to-t from-[#261CC1] to-[#3A9AFF] rounded-t-md transition-all duration-300 group-hover:from-[#1C0770] group-hover:to-[#261CC1] relative z-10 opacity-90"
-                                            style={{ height: `${(m.revenue / maxRevenue) * 100}%` }}
-                                        />
-                                    </div>
-                                    <span className="text-[10px] text-slate-500 font-bold whitespace-nowrap">{m.month.split(' ')[0]}</span>
-                                </div>
-                            ))}
+                {/* Evolution Chart */}
+                <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-between">
+                    <div className="flex justify-between items-start mb-8">
+                        <div>
+                            <h2 className="text-lg font-black text-[#1C0770] uppercase">Évolution des Flux</h2>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Variation du CA sur la période sélectionnée</p>
                         </div>
-                        <div className="flex justify-center gap-4 mt-4 pt-4 border-t border-slate-50">
-                            <span className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium"><div className="w-2 h-2 rounded-sm bg-[#3A9AFF]"></div> Chiffre d'Affaires</span>
-                            <span className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium"><div className="w-2 h-2 rounded-sm bg-slate-200"></div> Charges Sim.</span>
+                        <BarChart3 className="w-5 h-5 text-slate-200" />
+                    </div>
+
+                    <div className="relative h-56 mb-10 group/chart">
+                        <div className="absolute inset-0 flex items-end justify-between gap-1 px-2">
+                            {dataAnalysis.chartPoints.map((point: any, i: number) => {
+                                const height = (point.revenue / (dataAnalysis.maxChartVal || 1)) * 100;
+                                return (
+                                    <div key={i} className="flex-1 h-full flex flex-col justify-end items-center group/point relative">
+                                        {/* Activity Dot */}
+                                        <div
+                                            className="absolute w-2.5 h-2.5 bg-[#261CC1] rounded-full z-20 shadow-[0_0_12px_rgba(38,28,193,0.4)] transition-all duration-300 group-hover/point:scale-150 ring-2 ring-white"
+                                            style={{ bottom: `${height}%`, transform: 'translateY(50%)' }}
+                                        />
+                                        {/* Smooth Area/Vertical Projection */}
+                                        <div
+                                            className="w-full bg-gradient-to-t from-[#F0F4FF] to-[#261CC1]/10 rounded-t-xl transition-all duration-700 group-hover/point:from-[#261CC1]/5 group-hover/point:to-[#261CC1]/20"
+                                            style={{ height: `${height}%` }}
+                                        />
+
+                                        {/* Detailed Tooltip */}
+                                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-[#1C0770] text-white text-[9px] font-black px-4 py-2 rounded-2xl opacity-0 group-hover/point:opacity-100 transition-all scale-75 group-hover/point:scale-100 whitespace-nowrap shadow-2xl z-40">
+                                            {point.revenue.toLocaleString()} MAD
+                                            <div className="absolute bottom-[-4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1C0770] rotate-45"></div>
+                                        </div>
+
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mt-4 group-hover/point:text-[#1C0770] transition-colors">
+                                            {point.label}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    <div className="pt-6 border-t border-slate-50 flex items-center gap-6">
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-[#261CC1]"></div>
+                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Chiffre d'Affaires Réel</span>
                         </div>
                     </div>
                 </div>
 
-                {/* 2. REPARTITION PAR TAILLE */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
-                    <div className="p-5 border-b border-slate-100">
-                        <h2 className="font-bold text-[#1C0770] flex items-center gap-2 text-sm"><CarFront className="w-4 h-4 text-purple-500" /> Profil de Flotte TRM</h2>
+                {/* Regional Sector Analytics */}
+                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 className="text-lg font-black text-[#1C0770] uppercase">Répartition Géo.</h2>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Zones de départs locatifs</p>
+                        </div>
+                        <PieChart className="w-5 h-5 text-slate-200" />
                     </div>
-                    <div className="p-5 flex-1 flex flex-col justify-center space-y-4">
-                        {CAR_SIZES.map((size, index) => Math.round(size.percentage) > 0 && (
-                            <div key={index}>
-                                <div className="flex justify-between items-end mb-1.5">
-                                    <span className="text-xs font-bold text-slate-700">{size.category}</span>
-                                    <div className="text-right">
-                                        <span className={`text-sm font-black ${size.text}`}>{size.percentage}%</span>
-                                        <span className="text-[10px] text-slate-400 ml-2">({size.count} vp)</span>
+                    <div className="space-y-6">
+                        {Object.entries(dataAnalysis.reservations.reduce((acc: any, curr) => {
+                            const loc = curr.pickup_location || 'Agence';
+                            acc[loc] = (acc[loc] || 0) + 1;
+                            return acc;
+                        }, {})).sort((a: any, b: any) => b[1] - a[1]).slice(0, 4).map(([name, count]: any, i) => {
+                            const pct = Math.round((count / (dataAnalysis.reservations.length || 1)) * 100);
+                            return (
+                                <div key={i} className="group">
+                                    <div className="flex justify-between items-end mb-2">
+                                        <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">{name}</span>
+                                        <span className="text-xs font-black text-[#261CC1]">{pct}%</span>
+                                    </div>
+                                    <div className="w-full h-1.5 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
+                                        <div className="h-full bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] rounded-full transition-all duration-1000" style={{ width: `${pct}%` }}></div>
                                     </div>
                                 </div>
-                                <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full rounded-full bg-gradient-to-r ${size.color}`}
-                                        style={{ width: `${size.percentage}%` }}
-                                    />
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
+                    </div>
+                    <div className="mt-10 pt-6 border-t border-slate-50 text-center">
+                        <Link to="/admin/gps" className="text-[10px] font-black text-[#3A9AFF] uppercase tracking-widest hover:underline flex items-center justify-center gap-1">
+                            Analyse de mouvement complète <ChevronRight className="w-3 h-3" />
+                        </Link>
                     </div>
                 </div>
-
-                {/* 3. REPARTITION GEOGRAPHIQUE */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
-                    <div className="p-5 border-b border-slate-100">
-                        <h2 className="font-bold text-[#1C0770] flex items-center gap-2 text-sm"><MapPin className="w-4 h-4 text-emerald-500" /> Départs Locatifs Géographiques</h2>
-                    </div>
-                    <div className="p-5 flex-1 flex flex-col justify-center space-y-4">
-                        {REGIONAL_DISTRIBUTION.map((reg, index) => reg.count > 0 && (
-                            <div key={index} className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center font-black text-slate-400 text-xs shrink-0 border border-slate-100">
-                                    {reg.percentage}%
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-[11px] font-bold text-slate-700 truncate">{reg.region}</h3>
-                                    <div className="w-full h-1.5 bg-slate-100 rounded-full mt-1.5 overflow-hidden">
-                                        <div
-                                            className="h-full rounded-full bg-emerald-400"
-                                            style={{ width: `${reg.percentage}%` }}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="text-[10px] text-slate-400 shrink-0 font-medium">
-                                    {reg.count} résas.
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
             </div>
 
-            {/* TABLEAU DES TRANSACTIONS DYNAMIQUES */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="p-5 border-b border-slate-100 flex justify-between items-center">
-                    <h2 className="font-bold text-[#1C0770]">Dernières Transactions (Base de données en direct)</h2>
+            {/* Registry Section (Transactions) */}
+            <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+                <div className="p-10 border-b border-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div>
+                        <h2 className="text-xl font-black text-[#1C0770] uppercase">Registre des Flux</h2>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Transaction synchronisées en direct avec la base Supabase</p>
+                    </div>
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                        <div className="relative flex-1 md:w-64">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Rechercher flux..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 pl-11 pr-4 text-xs font-bold outline-none focus:ring-2 ring-[#261CC1]/10 focus:bg-white transition-all"
+                            />
+                        </div>
+                        <button className="p-3 bg-slate-900 text-white rounded-xl shadow-xl shadow-slate-900/10 hover:bg-black transition-all">
+                            <Download className="w-4 h-4" />
+                        </button>
+                    </div>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto px-6 pb-6 pt-2">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-[#F0F4FF] text-slate-400 text-[10px] uppercase tracking-[0.1em] font-bold">
-                                <th className="p-4">Réf. Réservation</th>
-                                <th className="p-4">Date Flux</th>
-                                <th className="p-4">Client</th>
-                                <th className="p-4">Type</th>
-                                <th className="p-4">Méthode</th>
-                                <th className="p-4 min-w-[100px]">Statut</th>
-                                <th className="p-4 text-right">Montant</th>
+                            <tr className="text-slate-400 text-[9px] uppercase font-black tracking-[0.2em] border-b border-slate-50">
+                                <th className="px-6 py-4">ID Flux</th>
+                                <th className="px-6 py-4">Date & Heure</th>
+                                <th className="px-6 py-4">Partenaire / Client</th>
+                                <th className="px-6 py-4">Type</th>
+                                <th className="px-6 py-4">Méthode</th>
+                                <th className="px-6 py-4 text-right">Statut</th>
+                                <th className="px-6 py-4 text-right">Montant</th>
                             </tr>
                         </thead>
-                        <tbody className="text-sm">
-                            {transactions.slice(0, 15).map((t) => (
-                                <tr key={t.id} className="hover:bg-[#F8FAFF] transition-colors border-b border-slate-50">
-                                    <td className="p-4 font-mono text-[10px] text-[#261CC1] font-bold">
-                                        {t.reservation_id ? t.reservation_id.split('-')[0].toUpperCase() : 'N/A'}
+                        <tbody className="divide-y divide-slate-50">
+                            {filteredTransactions.map((t) => (
+                                <tr key={t.id} className="hover:bg-slate-50/50 transition-colors group">
+                                    <td className="px-6 py-5 font-mono text-[9px] font-bold text-[#261CC1]">#TX-{t.id.slice(0, 6).toUpperCase()}</td>
+                                    <td className="px-6 py-5">
+                                        <p className="text-[11px] font-bold text-slate-800">{format(parseISO(t.transaction_date || t.created_at), 'dd/MM/yyyy', { locale: fr })}</p>
+                                        <p className="text-[9px] text-slate-400 font-medium">{format(parseISO(t.transaction_date || t.created_at), 'HH:mm')}</p>
                                     </td>
-                                    <td className="p-4 text-slate-500 text-xs">{new Date(t.transaction_date).toLocaleDateString('fr-FR')}</td>
-                                    <td className="p-4">
-                                        <p className="font-bold text-slate-800 text-xs">{t.customer?.full_name || 'Inconnu'}</p>
+                                    <td className="px-6 py-5">
+                                        <p className="text-[11px] font-black text-[#1C0770] uppercase leading-none">{t.customer?.full_name || 'Passager'}</p>
+                                        <p className="text-[9px] text-slate-400 font-bold mt-1 tracking-widest">{t.customer?.phone || 'ANONYME'}</p>
                                     </td>
-                                    <td className="p-4 text-slate-600 text-xs font-medium uppercase tracking-tight">{t.transaction_type}</td>
-                                    <td className="p-4 text-slate-500 text-xs">{t.payment_method}</td>
-                                    <td className="p-4">
-                                        <span className={`px-2.5 py-1 rounded-md text-[10px] uppercase font-black tracking-wider border ${t.status === 'Payé' || t.status === 'Encaissé' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                t.status === 'En attente' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                    t.status === 'Remboursé' ? 'bg-slate-50 text-slate-500 border-slate-200' :
-                                                        'bg-rose-50 text-rose-600 border-rose-100'
-                                            }`}>{t.status}</span>
+                                    <td className="px-6 py-5">
+                                        <span className={`px-2.5 py-1 rounded-md text-[8px] font-black uppercase tracking-widest ${t.transaction_type === 'encaissement' ? 'bg-indigo-50 text-[#261CC1]' : 'bg-red-50 text-red-600'}`}>
+                                            {t.transaction_type}
+                                        </span>
                                     </td>
-                                    <td className={`p-4 text-right font-black text-sm whitespace-nowrap ${t.amount < 0 || t.transaction_type === 'remboursement' ? 'text-slate-400' : t.status === 'Impayé' ? 'text-rose-600' : 'text-[#1C0770]'}`}>
-                                        {formatAmount(Number(t.amount), t.transaction_type)}
+                                    <td className="px-6 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{t.payment_method}</td>
+                                    <td className="px-6 py-5 text-right">
+                                        <span className={`px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${t.status === 'Payé' || t.status === 'Encaissé' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                            t.status === 'Impayé' || t.status === 'En attente' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                'bg-slate-50 text-slate-400 border-slate-200'
+                                            }`}>
+                                            {t.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-5 text-right">
+                                        <p className={`text-sm font-black tracking-tighter ${t.transaction_type === 'encaissement' ? 'text-[#1C0770]' : 'text-red-500'}`}>
+                                            {t.amount.toLocaleString()} <span className="text-[9px] text-slate-300">MAD</span>
+                                        </p>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+                    {filteredTransactions.length === 0 && (
+                        <div className="py-20 text-center animate-[fadeIn_0.3s]">
+                            <Search className="w-10 h-10 text-slate-100 mx-auto mb-4" />
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aucune donnée trouvée sur cette sélection</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

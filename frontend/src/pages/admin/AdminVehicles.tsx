@@ -138,7 +138,8 @@ export default function AdminVehicles() {
         switch (status) {
             case 'available': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
             case 'booked': return 'bg-blue-50 text-blue-700 border-blue-200';
-            case 'maintenance': return 'bg-orange-50 text-orange-700 border-orange-200';
+            case 'rented': return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+            case 'maintenance': return 'bg-rose-50 text-rose-700 border-rose-200';
             case 'inactive': return 'bg-slate-50 text-slate-500 border-slate-200';
             default: return 'bg-slate-50 text-slate-500 border-slate-200';
         }
@@ -147,7 +148,8 @@ export default function AdminVehicles() {
     const getStatusLabel = (status: string) => {
         switch (status) {
             case 'available': return 'Disponible';
-            case 'booked': return 'Loué';
+            case 'booked': return 'Réservé';
+            case 'rented': return 'Loué';
             case 'maintenance': return 'Maintenance';
             case 'inactive': return 'Inactif';
             default: return status;
@@ -262,7 +264,8 @@ export default function AdminVehicles() {
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Statut</label>
                                         <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value as any })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800">
                                             <option value="available">Disponible</option>
-                                            <option value="booked">Loué</option>
+                                            <option value="booked">Réservé</option>
+                                            <option value="rented">Loué</option>
                                             <option value="maintenance">Maintenance</option>
                                             <option value="inactive">Inactif</option>
                                         </select>

@@ -65,6 +65,7 @@ export interface Reservation {
     // Joined
     customers?: Customer;
     vehicles?: Vehicle;
+    handover?: HandoverRecord[]; // Supabase joins return array for HAS_ONE/HAS_MANY
 }
 
 export interface Infraction {
@@ -219,6 +220,28 @@ export interface HandoverRecord {
     updated_at: string;
 }
 
+export interface Quote {
+    id: string;
+    quote_number: string;
+    customer_id: string;
+    vehicle_id: string;
+    start_date: string;
+    end_date: string;
+    pickup_location: string;
+    dropoff_location: string;
+    daily_rate: number;
+    total_days: number;
+    total_amount: number;
+    status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+    valid_until: string;
+    notes: string;
+    created_at: string;
+    updated_at: string;
+    // Joined
+    customers?: Customer;
+    vehicles?: Vehicle;
+}
+
 // ===== VEHICLES =====
 export const vehiclesApi = {
     async getAll() {
@@ -303,18 +326,18 @@ export const reservationsApi = {
     async getAll() {
         const { data, error } = await supabase
             .from('reservations')
-            .select('*, customers:customers(*), vehicles:vehicles(*)')
+            .select('*, customers(*), vehicles(*), handover:rental_handover_records(*)')
             .order('created_at', { ascending: false });
         if (error) throw error;
-        return data as Reservation[];
+        return data as (Reservation & { customers: Customer; vehicles: Vehicle })[];
     },
     async getById(id: string) {
         const { data, error } = await supabase
             .from('reservations')
-            .select('*, customers:customers(*), vehicles:vehicles(*)')
+            .select('*, customers(*), vehicles(*), handover:rental_handover_records(*)')
             .eq('id', id).single();
         if (error) throw error;
-        return data as Reservation;
+        return data as (Reservation & { customers: Customer; vehicles: Vehicle });
     },
     async create(reservation: Partial<Reservation>) {
         const { data, error } = await supabase.from('reservations').insert(reservation).select().single();
@@ -347,7 +370,7 @@ export const infractionsApi = {
     async getAll() {
         const { data, error } = await supabase
             .from('infractions')
-            .select('*, customers:customers(*), vehicles:vehicles(*)')
+            .select('*, customer:customers(*), vehicle:vehicles(*)')
             .order('created_at', { ascending: false });
         if (error) throw error;
         return data as Infraction[];
@@ -355,7 +378,7 @@ export const infractionsApi = {
     async getById(id: string) {
         const { data, error } = await supabase
             .from('infractions')
-            .select('*, customers:customers(*), vehicles:vehicles(*), reservations:reservations(*)')
+            .select('*, customer:customers(*), vehicle:vehicles(*), reservation:reservations(*)')
             .eq('id', id).single();
         if (error) throw error;
         return data as Infraction;
@@ -377,6 +400,44 @@ export const infractionsApi = {
 };
 
 // ===== MAINTENANCE (New Version) =====
+// Internal mapping to bridge Frontend naming with Backend naming
+const mapToDB = (record: Partial<MaintenanceRecord>) => {
+    // Labels mapping for enum
+    const statusMap: Record<string, string> = {
+        'Planifié': 'planned',
+        'En cours': 'in_progress',
+        'Terminé': 'completed',
+        'Annulé': 'cancelled'
+    };
+
+    // Create DB object
+    const { last_service_date, last_service_mileage, status, vehicle, ...rest } = record;
+    return {
+        ...rest,
+        maintenance_date: last_service_date || undefined,
+        mileage_at_maintenance: last_service_mileage || undefined,
+        status: status ? (statusMap[status] || 'planned') : undefined,
+        next_service_date: record.next_service_date || null,
+        next_maintenance_date: record.next_service_date || null // use same for both in DB if needed
+    };
+};
+
+const mapFromDB = (data: any): MaintenanceRecord => {
+    const statusMapRev: Record<string, string> = {
+        'planned': 'Planifié',
+        'in_progress': 'En cours',
+        'completed': 'Terminé',
+        'cancelled': 'Annulé'
+    };
+
+    return {
+        ...data,
+        last_service_date: data.maintenance_date || data.last_service_date,
+        last_service_mileage: data.mileage_at_maintenance || data.last_service_mileage,
+        status: statusMapRev[data.status] || data.status || 'Planifié'
+    } as MaintenanceRecord;
+};
+
 export const maintenanceApi = {
     async getAll() {
         const { data, error } = await supabase
@@ -384,7 +445,7 @@ export const maintenanceApi = {
             .select('*, vehicle:vehicles(*)')
             .order('created_at', { ascending: false });
         if (error) throw error;
-        return data as MaintenanceRecord[];
+        return (data || []).map(mapFromDB);
     },
     async getByVehicleId(vId: string) {
         const { data, error } = await supabase
@@ -393,17 +454,19 @@ export const maintenanceApi = {
             .eq('vehicle_id', vId)
             .order('created_at', { ascending: false });
         if (error) throw error;
-        return data as MaintenanceRecord[];
+        return (data || []).map(mapFromDB);
     },
     async create(record: Partial<MaintenanceRecord>) {
-        const { data, error } = await supabase.from('vehicle_maintenance_records').insert(record).select().single();
+        const dbData = mapToDB(record);
+        const { data, error } = await supabase.from('vehicle_maintenance_records').insert(dbData).select().single();
         if (error) throw error;
-        return data as MaintenanceRecord;
+        return mapFromDB(data);
     },
     async update(id: string, updates: Partial<MaintenanceRecord>) {
-        const { data, error } = await supabase.from('vehicle_maintenance_records').update(updates).eq('id', id).select().single();
+        const dbData = mapToDB(updates);
+        const { data, error } = await supabase.from('vehicle_maintenance_records').update(dbData).eq('id', id).select().single();
         if (error) throw error;
-        return data as MaintenanceRecord;
+        return mapFromDB(data);
     },
     async delete(id: string) {
         const { error } = await supabase.from('vehicle_maintenance_records').delete().eq('id', id);
@@ -482,7 +545,7 @@ export const gpsApi = {
     async getLatestPositions() {
         const { data, error } = await supabase
             .from('gps_tracking')
-            .select('*, vehicles:vehicles(*)')
+            .select('*, vehicle:vehicles(*)')
             .order('recorded_at', { ascending: false });
         if (error) throw error;
         return data;
@@ -654,5 +717,45 @@ export const handoversApi = {
         const { data, error } = await supabase.from('rental_handover_records').update(updates).eq('id', id).select().single();
         if (error) throw error;
         return data as HandoverRecord;
+    }
+};
+
+export const quotesApi = {
+    async getAll() {
+        const { data, error } = await supabase.from('quotes')
+            .select(`
+                *,
+                customers(*),
+                vehicles(*)
+            `)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data as Quote[];
+    },
+    async getById(id: string) {
+        const { data, error } = await supabase.from('quotes')
+            .select(`
+                *,
+                customers(*),
+                vehicles(*)
+            `)
+            .eq('id', id)
+            .single();
+        if (error) throw error;
+        return data as Quote;
+    },
+    async create(quote: Partial<Quote>) {
+        const { data, error } = await supabase.from('quotes').insert(quote).select().single();
+        if (error) throw error;
+        return data as Quote;
+    },
+    async update(id: string, updates: Partial<Quote>) {
+        const { data, error } = await supabase.from('quotes').update(updates).eq('id', id).select().single();
+        if (error) throw error;
+        return data as Quote;
+    },
+    async delete(id: string) {
+        const { error } = await supabase.from('quotes').delete().eq('id', id);
+        if (error) throw error;
     }
 };

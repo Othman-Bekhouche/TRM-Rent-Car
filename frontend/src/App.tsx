@@ -20,13 +20,16 @@ import Reservations from './pages/admin/Reservations';
 import ReservationDetails from './pages/admin/reservations/ReservationDetails';
 import ContractPrint from './pages/admin/reservations/ContractPrint';
 import InvoicePrint from './pages/admin/reservations/InvoicePrint';
+import QuotePrint from './pages/admin/reservations/QuotePrint';
 import AdminVehicles from './pages/admin/AdminVehicles';
 import AdminRentedVehicles from './pages/admin/AdminRentedVehicles';
 import Customers from './pages/admin/Customers';
+import Quotes from './pages/admin/Quotes';
 import Contracts from './pages/admin/Contracts';
 import Invoices from './pages/admin/Invoices';
 import GPS from './pages/admin/GPS';
 import Accounting from './pages/admin/Accounting';
+import History from './pages/admin/History';
 import Maintenance from './pages/admin/Maintenance';
 import Settings from './pages/admin/Settings';
 import Users from './pages/admin/Users';
@@ -58,11 +61,13 @@ function App() {
           <Route path="vehicles" element={<AdminVehicles />} />
           <Route path="rented-vehicles" element={<AdminRentedVehicles />} />
           <Route path="customers" element={<Customers />} />
+          <Route path="quotes" element={<Quotes />} />
           <Route path="contracts" element={<Contracts />} />
           <Route path="invoices" element={<Invoices />} />
           <Route path="infractions" element={<Infractions />} />
           <Route path="gps" element={<GPS />} />
           <Route path="accounting" element={<Accounting />} />
+          <Route path="history" element={<History />} />
           <Route path="maintenance" element={<Maintenance />} />
           <Route path="settings" element={<Settings />} />
           <Route path="users" element={<Users />} />
@@ -70,9 +75,10 @@ function App() {
           <Route path="profile" element={<Profile />} />
         </Route>
 
-        {/* Standalone Admin Document Routes (No Navbar/Layout) */}
-        <Route path="/admin/reservations/:id/contract-print" element={<ContractPrint />} />
-        <Route path="/admin/reservations/:id/invoice-print" element={<InvoicePrint />} />
+        {/* Print Routes - Outside Layout for Full Screen */}
+        <Route path="/admin/reservations/:id/print/contract" element={<ContractPrint />} />
+        <Route path="/admin/reservations/:id/print/invoice" element={<InvoicePrint />} />
+        <Route path="/admin/quotes/:id/print" element={<QuotePrint />} />
       </Routes>
     </BrowserRouter>
   );

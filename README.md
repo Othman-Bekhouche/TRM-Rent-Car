@@ -14,4 +14,4 @@ Il comprend :
 - **Backend / Database :** Supabase (PostgreSQL, Auth, Storage)
 - **Déploiement :** Docker (local) vers VPS.
 
-Consultez le fichier `PROJECT_PLAN.md` pour le détail de l'architecture et des phases de déploiement.
+Consultez le dossier `docs/` pour le détail de l'architecture, des phases de déploiement et des **[fonctionnalités implémentées](docs/features/06_all_functionalities.md)**.

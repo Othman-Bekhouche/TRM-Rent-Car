@@ -105,12 +105,30 @@ export default function Reservations() {
         try {
             if (selectedReservation) {
                 const updated = await reservationsApi.update(selectedReservation.id, formData);
+
+                // Update Vehicle Status if reservation status changed to specific values
+                if (formData.status === 'confirmed') {
+                    await vehiclesApi.update(formData.vehicle_id!, { status: 'booked' });
+                } else if (formData.status === 'rented') {
+                    await vehiclesApi.update(formData.vehicle_id!, { status: 'rented' });
+                } else if (['cancelled', 'returned', 'completed'].includes(formData.status!)) {
+                    await vehiclesApi.update(formData.vehicle_id!, { status: 'available' });
+                }
+
                 // Refresh list to get joined data
                 const freshData = await reservationsApi.getById(selectedReservation.id);
                 setReservations(prev => prev.map(r => r.id === updated.id ? freshData : r));
                 toast.success('Réservation mise à jour');
             } else {
                 const created = await reservationsApi.create(formData);
+
+                // If creating as confirmed or rented
+                if (formData.status === 'confirmed') {
+                    await vehiclesApi.update(formData.vehicle_id!, { status: 'booked' });
+                } else if (formData.status === 'rented') {
+                    await vehiclesApi.update(formData.vehicle_id!, { status: 'rented' });
+                }
+
                 const freshData = await reservationsApi.getById(created.id);
                 setReservations(prev => [freshData, ...prev]);
                 toast.success('Réservation ajoutée');
