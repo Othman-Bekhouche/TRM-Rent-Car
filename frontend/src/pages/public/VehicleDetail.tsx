@@ -183,7 +183,7 @@ export default function VehicleDetail() {
                                 </div>
                                 <div className="mt-5 flex items-center text-xs text-slate-300 bg-[var(--color-background)] border border-[var(--color-primary)]/30 p-4 rounded-xl font-medium">
                                     <Shield className="w-5 h-5 mr-3 text-[var(--color-primary)]" />
-                                    Assurance tous risques incluse (sans caution)
+                                    Assurance tous risques incluse
                                 </div>
                             </div>
 

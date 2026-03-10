@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, CheckCircle, Clock, XCircle, Edit, Trash2, X, Check, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, Search, CheckCircle, Clock, XCircle, Edit, Trash2, X, Check, Loader2, AlertCircle, FileText } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { reservationsApi, vehiclesApi, customersApi, type Reservation, type Vehicle, type Customer } from '../../lib/api';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -7,6 +8,8 @@ const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = 
     pending: { label: 'En attente', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: Clock },
     confirmed: { label: 'Confirmé', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: CheckCircle },
     active: { label: 'En cours', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle },
+    rented: { label: 'Loué', color: 'bg-purple-50 text-purple-700 border-purple-200', icon: CheckCircle },
+    returned: { label: 'Retourné', color: 'bg-teal-50 text-teal-700 border-teal-200', icon: CheckCircle },
     completed: { label: 'Terminé', color: 'bg-slate-100 text-slate-500 border-slate-200', icon: CheckCircle },
     cancelled: { label: 'Annulé', color: 'bg-red-50 text-red-600 border-red-200', icon: XCircle },
 };
@@ -206,7 +209,8 @@ export default function Reservations() {
                                         <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value as any })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800">
                                             <option value="pending">En attente</option>
                                             <option value="confirmed">Confirmé</option>
-                                            <option value="active">En cours</option>
+                                            <option value="rented">Loué</option>
+                                            <option value="returned">Retourné</option>
                                             <option value="completed">Terminé</option>
                                             <option value="cancelled">Annulé</option>
                                         </select>
@@ -263,7 +267,8 @@ export default function Reservations() {
                                     { key: 'all', label: 'Toutes' },
                                     { key: 'pending', label: 'En attente' },
                                     { key: 'confirmed', label: 'Confirmé' },
-                                    { key: 'active', label: 'En cours' },
+                                    { key: 'rented', label: 'Loué' },
+                                    { key: 'returned', label: 'Retourné' },
                                     { key: 'completed', label: 'Terminé' },
                                 ].map(f => (
                                     <button
@@ -333,6 +338,7 @@ export default function Reservations() {
                                                     <td className="p-4 font-black text-[#1C0770]">{r.total_price} MAD</td>
                                                     <td className="p-4 text-right">
                                                         <div className="flex items-center justify-end gap-1">
+                                                            <Link to={`/admin/reservations/${r.id}`} className="p-2 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors" title="Ouvrir le dossier"><FileText className="w-4 h-4" /></Link>
                                                             <button onClick={() => handleEdit(r)} className="p-2 text-slate-400 hover:text-[#261CC1] hover:bg-[#261CC1]/10 rounded-lg transition-colors"><Edit className="w-4 h-4" /></button>
                                                             <button onClick={() => handleDelete(r.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
                                                         </div>

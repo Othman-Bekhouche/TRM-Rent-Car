@@ -17,8 +17,14 @@ import BookingCheckout from './pages/public/BookingCheckout';
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
 import Reservations from './pages/admin/Reservations';
+import ReservationDetails from './pages/admin/reservations/ReservationDetails';
+import ContractPrint from './pages/admin/reservations/ContractPrint';
+import InvoicePrint from './pages/admin/reservations/InvoicePrint';
 import AdminVehicles from './pages/admin/AdminVehicles';
+import AdminRentedVehicles from './pages/admin/AdminRentedVehicles';
 import Customers from './pages/admin/Customers';
+import Contracts from './pages/admin/Contracts';
+import Invoices from './pages/admin/Invoices';
 import GPS from './pages/admin/GPS';
 import Accounting from './pages/admin/Accounting';
 import Maintenance from './pages/admin/Maintenance';
@@ -48,8 +54,12 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="reservations" element={<Reservations />} />
+          <Route path="reservations/:id" element={<ReservationDetails />} />
           <Route path="vehicles" element={<AdminVehicles />} />
+          <Route path="rented-vehicles" element={<AdminRentedVehicles />} />
           <Route path="customers" element={<Customers />} />
+          <Route path="contracts" element={<Contracts />} />
+          <Route path="invoices" element={<Invoices />} />
           <Route path="infractions" element={<Infractions />} />
           <Route path="gps" element={<GPS />} />
           <Route path="accounting" element={<Accounting />} />
@@ -59,6 +69,10 @@ function App() {
           <Route path="messages" element={<Messages />} />
           <Route path="profile" element={<Profile />} />
         </Route>
+
+        {/* Standalone Admin Document Routes (No Navbar/Layout) */}
+        <Route path="/admin/reservations/:id/contract-print" element={<ContractPrint />} />
+        <Route path="/admin/reservations/:id/invoice-print" element={<InvoicePrint />} />
       </Routes>
     </BrowserRouter>
   );

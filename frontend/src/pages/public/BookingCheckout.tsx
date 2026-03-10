@@ -49,7 +49,8 @@ export default function BookingCheckout() {
                         .from('vehicles')
                         .select('*, vehicle_images(*)')
                         .eq('id', vehicleId)
-                        .single();
+                        .limit(1)
+                        .maybeSingle();
 
                     if (error) throw error;
 
@@ -88,6 +89,7 @@ export default function BookingCheckout() {
                         .from('customers')
                         .select('*')
                         .eq('email', session.user.email)
+                        .limit(1)
                         .maybeSingle();
 
                     if (customer) {
@@ -127,44 +129,36 @@ export default function BookingCheckout() {
     const handleSubmitBooking = async () => {
         setLoading(true);
         try {
-            // 1. Create or Update customer record (avoid upsert on non-unique column)
-            let customerId = null;
-            if (client.email) {
-                const { data: existingCust } = await supabase.from('customers').select('id').eq('email', client.email).maybeSingle();
-                if (existingCust) {
-                    const { data: updatedCust, error: updateErr } = await supabase.from('customers').update({
-                        full_name: `${client.firstName} ${client.lastName}`,
-                        phone: client.phone,
-                        cin: client.cin || null,
-                        address: client.address || null,
-                        city: client.city || null,
-                        status: isLoggedIn ? 'Actif' : 'Nouveau',
-                    }).eq('id', existingCust.id).select().single();
-                    if (updateErr) throw updateErr;
-                    customerId = updatedCust.id;
-                }
+            // 1. Create or Update customer record via Secure RPC (bypasses RLS reading limits for public users)
+            const { data: generatedCustomerId, error: custErr } = await supabase.rpc('handle_checkout_customer', {
+                p_first_name: client.firstName,
+                p_last_name: client.lastName,
+                p_email: client.email || null,
+                p_phone: client.phone,
+                p_cin: client.cin || null,
+                p_address: client.address || null,
+                p_city: client.city || null,
+                p_status: isLoggedIn ? 'Actif' : 'Nouveau'
+            });
+
+            if (custErr || !generatedCustomerId) {
+                console.error("RPC Error:", custErr);
+                throw new Error("Erreur: Impossible d'enregistrer le profil client.");
             }
 
-            if (!customerId) {
-                const { data: newCust, error: insertErr } = await supabase.from('customers').insert({
-                    full_name: `${client.firstName} ${client.lastName}`,
-                    email: client.email || null,
-                    phone: client.phone,
-                    cin: client.cin || null,
-                    address: client.address || null,
-                    city: client.city || null,
-                    status: isLoggedIn ? 'Actif' : 'Nouveau',
-                }).select().single();
-                if (insertErr) throw insertErr;
-                customerId = newCust.id;
-            }
+            const customerId = generatedCustomerId;
 
             // 2. Find the vehicle by plate/name
             const { data: vehicleData } = await supabase
                 .from('vehicles')
                 .select('id')
                 .eq('plate_number', booking.plate)
-                .single();
+                .limit(1)
+                .maybeSingle();
+
+            if (!vehicleData?.id) {
+                throw new Error("Erreur: Le véhicule sélectionné n'est plus disponible.");
+            }
 
             // 3. Create reservation
             const { error: resErr } = await supabase
@@ -594,10 +588,7 @@ export default function BookingCheckout() {
                                             <span className="text-white">{childSeatTotal} MAD</span>
                                         </div>
                                     )}
-                                    <div className="flex justify-between text-sm text-slate-400">
-                                        <span>Caution (récupérable)</span>
-                                        <span className="text-white">{booking.deposit} MAD</span>
-                                    </div>
+
                                     <div className="flex justify-between font-black text-lg pt-3 border-t border-[var(--color-border)]">
                                         <span className="text-white">Total</span>
                                         <span className="text-[var(--color-primary)]">{totalPrice} MAD</span>

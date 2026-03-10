@@ -111,11 +111,7 @@ export default function Settings() {
                             <h2 className="font-bold text-[#1C0770]">Tarification</h2>
                         </div>
                         <div className="p-6 space-y-5">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Caution Min. (MAD)</label>
-                                    <input type="number" value={settings.base_deposit || 0} onChange={e => setSettings({ ...settings, base_deposit: Number(e.target.value) })} className="w-full bg-[#F0F4FF] border border-slate-200 text-slate-800 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" />
-                                </div>
+                            <div className="grid grid-cols-1 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Frais Livraison (MAD)</label>
                                     <input type="number" value={settings.delivery_fee || 0} onChange={e => setSettings({ ...settings, delivery_fee: Number(e.target.value) })} className="w-full bg-[#F0F4FF] border border-slate-200 text-slate-800 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" />
@@ -152,6 +148,6 @@ export default function Settings() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

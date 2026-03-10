@@ -3,6 +3,22 @@ import { Car, Users, Calendar, DollarSign, ArrowUpRight, ArrowDownRight, Trendin
 import { Link } from 'react-router-dom';
 import { dashboardApi, reservationsApi, vehiclesApi, type Reservation, type Vehicle } from '../../lib/api';
 
+const translateStatus = (s: string) => {
+    switch (s) {
+        case 'available': return 'Disponible';
+        case 'booked': return 'Réservé';
+        case 'rented': return 'Loué';
+        case 'maintenance': return 'En panne / Maintenance';
+        case 'inactive': return 'Inactif';
+        case 'pending': return 'En attente';
+        case 'confirmed': return 'Confirmé';
+        case 'returned': return 'Retourné';
+        case 'completed': return 'Terminé';
+        case 'cancelled': return 'Annulé';
+        default: return s;
+    }
+};
+
 export default function Dashboard() {
     const [stats, setStats] = useState<any>(null);
     const [recentBookings, setRecentBookings] = useState<Reservation[]>([]);
@@ -103,7 +119,7 @@ export default function Dashboard() {
                     <div className="p-6">
                         <div className="flex items-end gap-3 h-48">
                             {[35, 50, 42, 68, 55, 72, 60, 80, 45].map((h, i) => (
-                                <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                                <div key={i} className="flex-1 flex flex-col justify-end items-center gap-2 h-full">
                                     <div
                                         className="w-full bg-gradient-to-t from-[#261CC1] to-[#3A9AFF] rounded-t-lg transition-all duration-500 hover:from-[#1C0770] hover:to-[#261CC1] cursor-pointer relative group"
                                         style={{ height: `${h}%` }}
@@ -133,9 +149,9 @@ export default function Dashboard() {
                                     <p className="text-xs text-slate-400 font-mono">{v.plate_number}</p>
                                 </div>
                                 <span className={`text-[10px] uppercase font-black px-2.5 py-1 rounded-full border ${v.status === 'available' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                                        v.status === 'booked' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                                            'bg-rose-50 text-rose-700 border-rose-100'
-                                    }`}>{v.status}</span>
+                                    v.status === 'booked' || v.status === 'rented' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                                        'bg-rose-50 text-rose-700 border-rose-100'
+                                    }`}>{translateStatus(v.status)}</span>
                             </div>
                         ))}
                     </div>
@@ -173,10 +189,10 @@ export default function Dashboard() {
                                     <td className="p-4 text-slate-600">{b.vehicles?.brand} {b.vehicles?.model}</td>
                                     <td className="p-4 text-slate-400">{new Date(b.start_date).toLocaleDateString()} – {new Date(b.end_date).toLocaleDateString()}</td>
                                     <td className="p-4">
-                                        <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase border ${b.status === 'confirmed' || b.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                                                b.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                                                    'bg-rose-50 text-rose-700 border-rose-100'
-                                            }`}>{b.status}</span>
+                                        <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase border ${b.status === 'confirmed' || b.status === 'rented' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                            b.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                                                'bg-rose-50 text-rose-700 border-rose-100'
+                                            }`}>{translateStatus(b.status)}</span>
                                     </td>
                                     <td className="p-4 text-right font-bold text-[#1C0770]">{b.total_price} MAD</td>
                                 </tr>

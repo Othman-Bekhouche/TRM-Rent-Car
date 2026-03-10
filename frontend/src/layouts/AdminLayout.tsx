@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, Car, Users, CalendarDays, Settings,
-    LogOut, MapPin, Calculator, Wrench, Bell, UserCog, Menu, X, ChevronRight, AlertTriangle, Loader2, Mail, Shield
+    LogOut, MapPin, Calculator, Wrench, Bell, UserCog, Menu, X, ChevronRight, ChevronDown, AlertTriangle, Loader2, Mail, Shield
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
@@ -17,6 +17,7 @@ export default function AdminLayout() {
     const [loading, setLoading] = useState(true);
     const [notifications, setNotifications] = useState<any[]>([]);
     const [showNotifications, setShowNotifications] = useState(false);
+    const [openSubMenus, setOpenSubMenus] = useState<string[]>(['Véhicules']);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -76,8 +77,21 @@ export default function AdminLayout() {
         { path: '/admin', icon: LayoutDashboard, label: 'Tableau de bord', roles: ['super_admin'] },
         { path: '/admin/messages', icon: Mail, label: 'Boîte Mail', roles: ['super_admin', 'assistant'] },
         { path: '/admin/reservations', icon: CalendarDays, label: 'Réservations', roles: ['super_admin', 'assistant'] },
-        { path: '/admin/vehicles', icon: Car, label: 'Véhicules', roles: ['super_admin', 'admin'] },
-        { path: '/admin/customers', icon: Users, label: 'Clients', roles: ['super_admin', 'assistant'] },
+        {
+            label: 'Véhicules', icon: Car, roles: ['super_admin', 'admin', 'assistant'],
+            children: [
+                { path: '/admin/vehicles', label: 'Flotte globale', roles: ['super_admin', 'admin'] },
+                { path: '/admin/rented-vehicles', label: 'Véhicules Loués', roles: ['super_admin', 'admin', 'assistant'] },
+            ]
+        },
+        {
+            label: 'Clients & Ventes', icon: Users, roles: ['super_admin', 'assistant'],
+            children: [
+                { path: '/admin/customers', label: 'Annuaire Clients', roles: ['super_admin', 'assistant'] },
+                { path: '/admin/contracts', label: 'Contrats de Location', roles: ['super_admin', 'assistant'] },
+                { path: '/admin/invoices', label: 'Facturation', roles: ['super_admin', 'assistant'] },
+            ]
+        },
         { path: '/admin/infractions', icon: AlertTriangle, label: 'Infractions', roles: ['super_admin', 'assistant'] },
         { path: '/admin/gps', icon: MapPin, label: 'Suivi GPS', roles: ['super_admin', 'admin'] },
         { path: '/admin/maintenance', icon: Wrench, label: 'Maintenance', roles: ['super_admin', 'admin'] },
@@ -135,19 +149,62 @@ export default function AdminLayout() {
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+                    <nav className="flex-1 overflow-y-auto custom-scrollbar py-6 px-4 space-y-1">
                         <div className="text-[10px] font-bold tracking-[0.25em] text-[#3A9AFF]/60 uppercase px-3 mb-4">Navigation</div>
                         {menuItems.map((item) => {
+                            if (item.children) {
+                                const isOpen = openSubMenus.includes(item.label);
+                                const allowedChildren = item.children.filter(child => profile && child.roles.includes(profile.role));
+                                if (allowedChildren.length === 0) return null;
+
+                                const isChildActive = allowedChildren.some(child => location.pathname === child.path);
+
+                                return (
+                                    <div key={item.label} className="space-y-1">
+                                        <button
+                                            onClick={() => setOpenSubMenus(prev => isOpen ? prev.filter(l => l !== item.label) : [...prev, item.label])}
+                                            className={`w-full group flex items-center px-4 py-3 rounded-xl transition-all duration-300 text-sm font-semibold ${isChildActive && !isOpen
+                                                ? 'bg-[#3A9AFF]/20 text-white shadow-sm'
+                                                : 'text-white/60 hover:text-white hover:bg-white/5'
+                                                }`}
+                                        >
+                                            <item.icon className="w-5 h-5 mr-3 transition-transform duration-300 group-hover:scale-110" />
+                                            {item.label}
+                                            <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                        </button>
+
+                                        <div className={`pl-11 pr-2 space-y-1 overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-40 opacity-100 mb-2 mt-1' : 'max-h-0 opacity-0'}`}>
+                                            {allowedChildren.map(child => {
+                                                const isActive = location.pathname === child.path;
+                                                return (
+                                                    <Link
+                                                        key={child.path}
+                                                        to={child.path}
+                                                        onClick={() => setSidebarOpen(false)}
+                                                        className={`block px-4 py-2 rounded-lg transition-all duration-300 text-xs font-semibold ${isActive
+                                                            ? 'bg-[#3A9AFF] text-white shadow-[0_4px_20px_rgba(58,154,255,0.4)]'
+                                                            : 'text-white/50 hover:text-white hover:bg-white/5'
+                                                            }`}
+                                                    >
+                                                        {child.label}
+                                                    </Link>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            }
+
                             const Icon = item.icon;
                             const isActive = location.pathname === item.path;
                             return (
                                 <Link
                                     key={item.path}
-                                    to={item.path}
+                                    to={item.path!}
                                     onClick={() => setSidebarOpen(false)}
                                     className={`group flex items-center px-4 py-3 rounded-xl transition-all duration-300 text-sm font-semibold ${isActive
                                         ? 'bg-[#3A9AFF] text-white shadow-[0_4px_20px_rgba(58,154,255,0.4)]'
-                                        : 'text-white/60 hover:text-white hover:bg-white/8'
+                                        : 'text-white/60 hover:text-white hover:bg-white/5'
                                         }`}
                                 >
                                     <Icon className={`w-5 h-5 mr-3 transition-transform duration-300 ${isActive ? '' : 'group-hover:scale-110'}`} />
@@ -222,7 +279,7 @@ export default function AdminLayout() {
                                                 </button>
                                             )}
                                         </div>
-                                        <div className="flex-1 overflow-y-auto w-full">
+                                        <div className="flex-1 overflow-y-auto custom-scrollbar w-full">
                                             {notifications.length === 0 ? (
                                                 <div className="px-4 py-8 text-center text-slate-400 text-sm">
                                                     Aucune notification

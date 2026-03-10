@@ -16,7 +16,7 @@ export interface Vehicle {
     price_per_day: number;
     deposit_amount: number;
     mileage: number;
-    status: 'available' | 'booked' | 'maintenance' | 'inactive';
+    status: 'available' | 'booked' | 'maintenance' | 'inactive' | 'rented';
     description: string;
     created_at: string;
     updated_at: string;
@@ -56,7 +56,7 @@ export interface Reservation {
     pickup_location: string;
     dropoff_location: string;
     total_price: number;
-    status: 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled' | 'rejected';
+    status: 'pending' | 'confirmed' | 'rented' | 'returned' | 'completed' | 'cancelled' | 'rejected';
     payment_method: 'Espèces' | 'Carte' | 'Virement';
     payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
     notes: string;
@@ -155,6 +155,66 @@ export interface AdminUser {
     email: string;
     phone: string;
     role: string;
+    created_at: string;
+    updated_at: string;
+}
+
+// ===== RENTAL OPERATIONS TYPES =====
+export interface Invoice {
+    id: string;
+    reservation_id: string;
+    invoice_number: string;
+    invoice_date: string;
+    subtotal: number;
+    deposit_amount: number;
+    extras_amount: number;
+    total_amount: number;
+    payment_status: string;
+    pdf_url: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface RentalContract {
+    id: string;
+    reservation_id: string;
+    contract_number: string;
+    contract_date: string;
+    customer_id: string;
+    vehicle_id: string;
+    departure_mileage: number;
+    return_mileage: number;
+    fuel_level_departure: string;
+    fuel_level_return: string;
+    vehicle_condition_departure: string;
+    vehicle_condition_return: string;
+    total_amount: number;
+    deposit_amount: number;
+    contract_status: string;
+    pdf_url: string;
+    signed_at: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface HandoverRecord {
+    id: string;
+    reservation_id: string;
+    vehicle_id: string;
+    customer_id: string;
+    handover_date: string;
+    departure_mileage: number;
+    departure_fuel_level: string;
+    departure_condition_notes: string;
+    return_date: string;
+    return_mileage: number;
+    return_fuel_level: string;
+    return_condition_notes: string;
+    accessories_checklist: any;
+    deposit_collected: boolean;
+    payment_collected: boolean;
+    extra_charges: number;
+    admin_notes: string;
     created_at: string;
     updated_at: string;
 }
@@ -521,5 +581,78 @@ export const notificationsApi = {
     async markAllAsRead() {
         const { error } = await supabase.from('system_notifications').update({ is_read: true }).eq('is_read', false);
         if (error) throw error;
+    }
+};
+
+// ===== RENTAL OPERATIONS APIs =====
+export const invoicesApi = {
+    async getAll() {
+        const { data, error } = await supabase.from('reservations')
+            .select(`
+                *,
+                customers(*),
+                vehicles(*),
+                invoices(*)
+            `)
+            .not('invoices', 'is', null)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data.filter(r => r.invoices && Object.keys(r.invoices).length > 0);
+    },
+    async getByReservation(reservationId: string) {
+        const { data, error } = await supabase.from('invoices').select('*').eq('reservation_id', reservationId).maybeSingle();
+        if (error) throw error;
+        return data as Invoice | null;
+    },
+    async create(invoice: Partial<Invoice>) {
+        const { data, error } = await supabase.from('invoices').insert(invoice).select().single();
+        if (error) throw error;
+        return data as Invoice;
+    }
+};
+
+export const contractsApi = {
+    async getAll() {
+        // Fetch all reservations and their related contracts, so we have customer/vehicle details
+        const { data, error } = await supabase.from('reservations')
+            .select(`
+                *,
+                customers(*),
+                vehicles(*),
+                rental_contracts(*)
+            `)
+            .not('rental_contracts', 'is', null)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        // Filter out reservations that have no contract attached in the DB
+        return data.filter(r => r.rental_contracts && Object.keys(r.rental_contracts).length > 0);
+    },
+    async getByReservation(reservationId: string) {
+        const { data, error } = await supabase.from('rental_contracts').select('*').eq('reservation_id', reservationId).maybeSingle();
+        if (error) throw error;
+        return data as RentalContract | null;
+    },
+    async create(contract: Partial<RentalContract>) {
+        const { data, error } = await supabase.from('rental_contracts').insert(contract).select().single();
+        if (error) throw error;
+        return data as RentalContract;
+    }
+};
+
+export const handoversApi = {
+    async getByReservation(reservationId: string) {
+        const { data, error } = await supabase.from('rental_handover_records').select('*').eq('reservation_id', reservationId).maybeSingle();
+        if (error) throw error;
+        return data as HandoverRecord | null;
+    },
+    async create(handover: Partial<HandoverRecord>) {
+        const { data, error } = await supabase.from('rental_handover_records').insert(handover).select().single();
+        if (error) throw error;
+        return data as HandoverRecord;
+    },
+    async update(id: string, updates: Partial<HandoverRecord>) {
+        const { data, error } = await supabase.from('rental_handover_records').update(updates).eq('id', id).select().single();
+        if (error) throw error;
+        return data as HandoverRecord;
     }
 };
