@@ -97,11 +97,28 @@ export default function Dashboard() {
         const periodTxs = allTransactions.filter(t => isWithinInterval(parseISO(t.transaction_date || t.created_at), { start, end }));
         const periodResas = allReservations.filter(r => isWithinInterval(parseISO(r.start_date), { start, end }));
 
+        // Calculate 15 point chart data representing daily revenue over the last 15 days
+        const last15Days = Array.from({ length: 15 }).map((_, i) => subDays(now, 14 - i));
+        let chartDataRaw = last15Days.map(date => {
+            const dayTxs = allTransactions.filter(t =>
+                t.transaction_type === 'encaissement' &&
+                t.status === 'Payé' &&
+                isWithinInterval(parseISO(t.transaction_date || t.created_at), { start: startOfDay(date), end: endOfDay(date) })
+            );
+            return dayTxs.reduce((acc, t) => acc + Number(t.amount || 0), 0);
+        });
+
+        // Normalize to 0-100 for SVG
+        const maxVal = Math.max(...chartDataRaw, 1); // prevent division by zero
+        const chartDataPoints = chartDataRaw.map(v => Math.round((v / maxVal) * 100));
+
         return {
             revenue: periodTxs.filter(t => t.transaction_type === 'encaissement' && t.status === 'Payé').reduce((acc, t) => acc + Number(t.amount || 0), 0),
             resas: periodResas.length,
             newCustomers: periodResas.reduce((acc: string[], r) => r.customer_id && !acc.includes(r.customer_id) ? [...acc, r.customer_id] : acc, []).length,
-            occupation: Math.round(((fleetStatus.length - fleetStatus.filter(v => v.status === 'available').length) / fleetStatus.length) * 100) || 0
+            occupation: Math.round(((fleetStatus.length - fleetStatus.filter(v => v.status === 'available').length) / fleetStatus.length) * 100) || 0,
+            chartDataPoints,
+            chartDataRaw
         };
     }, [allReservations, allTransactions, fleetStatus, period, stats]);
 
@@ -215,11 +232,11 @@ export default function Dashboard() {
                                     </linearGradient>
                                 </defs>
                                 <path
-                                    d={`M 0,100 L ${[40, 60, 45, 75, 55, 90, 65, 80, 70, 85, 95, 100, 85, 75, 60].map((h, i) => `${(i * 100) / 14},${100 - h}`).join(' L ')} L 100,100 Z`}
+                                    d={`M 0,100 L ${(filteredStats?.chartDataPoints || []).map((h: number, i: number) => `${(i * 100) / 14},${100 - h}`).join(' L ')} L 100,100 Z`}
                                     fill="url(#dashboardGradient)"
                                 />
                                 <path
-                                    d={`M ${[40, 60, 45, 75, 55, 90, 65, 80, 70, 85, 95, 100, 85, 75, 60].map((h, i) => `${(i * 100) / 14},${100 - h}`).join(' L ')}`}
+                                    d={`M ${(filteredStats?.chartDataPoints || []).map((h: number, i: number) => `${(i * 100) / 14},${100 - h}`).join(' L ')}`}
                                     fill="none"
                                     stroke="white"
                                     strokeWidth="2"
@@ -227,14 +244,14 @@ export default function Dashboard() {
                                 />
                             </svg>
                             <div className="absolute inset-0 flex items-end justify-between px-2">
-                                {[40, 60, 45, 75, 55, 90, 65, 80, 70, 85, 95, 100, 85, 75, 60].map((h, i) => (
+                                {(filteredStats?.chartDataPoints || []).map((h: number, i: number) => (
                                     <div key={i} className="flex-1 h-full flex flex-col justify-end items-center group/point relative">
                                         <div
                                             className="w-1.5 h-1.5 rounded-full bg-white opacity-0 group-hover/point:opacity-100 transition-opacity absolute"
                                             style={{ bottom: `${h}%`, transform: 'translateY(50%)' }}
                                         />
                                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-slate-900 text-[9px] font-black px-2 py-1 rounded-lg opacity-0 group-hover/point:opacity-100 transition-all scale-75 group-hover/point:scale-100 whitespace-nowrap shadow-xl z-30">
-                                            {Math.round(h * 50)} MAD
+                                            {filteredStats?.chartDataRaw[i]} MAD
                                         </div>
                                     </div>
                                 ))}

@@ -231,7 +231,7 @@ npm run build           # Génère dist/
 - [x] API CRUD pour toutes les tables
 
 ### 🔲 Phase 2 — Intégration & Automatisation
-- [ ] Connexion pages admin au backend Supabase (données live)
+- [x] Connexion pages admin au backend Supabase (données live)
 - [ ] Paiement en ligne (Stripe ou CMI)
 - [ ] Upload documents (permis, CIN) via Supabase Storage
 - [ ] Notifications email (confirmation réservation)
