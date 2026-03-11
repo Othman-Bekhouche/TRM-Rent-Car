@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Phone, Mail, MapPin, Calendar, Clock, CreditCard, ChevronRight, Loader2, Package, LogOut, Settings, Bell } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, Clock, CreditCard, ChevronRight, Package, Bell, LogOut, Settings, FileText, FileCheck, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import toast, { Toaster } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
@@ -21,17 +21,22 @@ export default function CustomerProfile() {
                 }
                 setUser(authUser);
 
-                // Fetch customer record to get full info and reservations
-                const { data: customer } = await supabase
+                // Fetch customer record(s) to get full info and reservations (with all documents)
+                // Case-insensitive match for email. Select all in case of duplicates.
+                const { data: customers, error: custError } = await supabase
                     .from('customers')
-                    .select('*, reservations(*, vehicles(*, vehicle_images(*)))')
-                    .eq('email', authUser.email)
-                    .maybeSingle();
+                    .select('*, reservations(*, vehicles(*, vehicle_images(*)), contracts:rental_contracts(*), invoices(*))')
+                    .ilike('email', authUser.email || '');
 
-                if (customer && customer.reservations) {
+                if (custError) throw custError;
+
+                if (customers && customers.length > 0) {
+                    // Combine all reservations from all matching customer records (in case of duplicates)
+                    const allReservations = customers.flatMap(c => c.reservations || []);
+
                     // Sort reservations by date desc
-                    const sorted = [...customer.reservations].sort((a, b) =>
-                        new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
+                    const sorted = allReservations.sort((a, b) =>
+                        new Date(b.start_date || b.created_at).getTime() - new Date(a.start_date || a.created_at).getTime()
                     );
                     setReservations(sorted);
                 }
@@ -59,7 +64,7 @@ export default function CustomerProfile() {
     }
 
     const getStatusStyle = (status: string) => {
-        switch (status.toLowerCase()) {
+        switch (status?.toLowerCase()) {
             case 'confirmed': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
             case 'pending': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
             case 'completed': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
@@ -70,7 +75,7 @@ export default function CustomerProfile() {
     };
 
     const getStatusLabel = (status: string) => {
-        switch (status.toLowerCase()) {
+        switch (status?.toLowerCase()) {
             case 'confirmed': return 'Confirmée';
             case 'pending': return 'En attente';
             case 'completed': return 'Terminée';
@@ -201,9 +206,29 @@ export default function CustomerProfile() {
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div className="flex justify-end mt-6 border-t border-[#1F2A3D] pt-4">
-                                                            <button className="flex items-center text-xs font-black uppercase tracking-widest text-[#3A9AFF] hover:text-white transition-all group">
-                                                                Détails de la réservation <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                                                        <div className="flex flex-wrap gap-4 justify-between mt-6 border-t border-[#1F2A3D] pt-4">
+                                                            <div className="flex gap-4">
+                                                                {res.contracts && res.contracts.length > 0 && (
+                                                                    <Link
+                                                                        to={`/admin/reservations/${res.id}/print/contract?action=print`}
+                                                                        target="_blank"
+                                                                        className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#3A9AFF] hover:text-white transition-all bg-[#3A9AFF]/10 px-4 py-2 rounded-lg"
+                                                                    >
+                                                                        <FileCheck className="w-3.5 h-3.5" /> Contrat de location
+                                                                    </Link>
+                                                                )}
+                                                                {res.invoices && res.invoices.length > 0 && (
+                                                                    <Link
+                                                                        to={`/admin/reservations/${res.id}/print/invoice?action=print`}
+                                                                        target="_blank"
+                                                                        className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500 hover:text-emerald-400 transition-all bg-emerald-500/10 px-4 py-2 rounded-lg"
+                                                                    >
+                                                                        <FileText className="w-3.5 h-3.5" /> Facture
+                                                                    </Link>
+                                                                )}
+                                                            </div>
+                                                            <button className="flex items-center text-xs font-black uppercase tracking-widest text-slate-500 hover:text-white transition-all group">
+                                                                Détails <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                                                             </button>
                                                         </div>
                                                     </div>

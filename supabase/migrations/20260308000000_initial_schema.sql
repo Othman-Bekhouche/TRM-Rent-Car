@@ -92,8 +92,10 @@ CREATE POLICY "Admins can manage vehicle images." ON public.vehicle_images FOR A
     EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND profiles.role IN ('admin', 'super_admin'))
 );
 
--- Reservations: Customers see their own, admins see everything
-CREATE POLICY "Customers can view their own reservations." ON public.reservations FOR SELECT USING (auth.uid() = customer_id);
+-- Reservations: Customers see their own (via email matching in customers table), admins see everything
+CREATE POLICY "Customers can view their own reservations." ON public.reservations FOR SELECT USING (
+    customer_id IN (SELECT id FROM public.customers WHERE LOWER(email) = LOWER(auth.jwt()->>'email'))
+);
 CREATE POLICY "Customers can create reservations." ON public.reservations FOR INSERT WITH CHECK (auth.uid() = customer_id);
 CREATE POLICY "Admins can manage all reservations." ON public.reservations FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND profiles.role IN ('admin', 'super_admin'))

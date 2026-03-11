@@ -296,7 +296,7 @@ export const vehiclesApi = {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${fileName}`;
 
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
             .from('vehicles')
             .upload(filePath, file);
 
@@ -359,12 +359,14 @@ export const reservationsApi = {
         return data as (Reservation & { customers: Customer; vehicles: Vehicle });
     },
     async create(reservation: Partial<Reservation>) {
-        const { data, error } = await supabase.from('reservations').insert(reservation).select().single();
+        const { id, created_at, updated_at, customers, vehicles, handover, ...cleanData } = reservation as any;
+        const { data, error } = await supabase.from('reservations').insert(cleanData).select().single();
         if (error) throw error;
         return data as Reservation;
     },
     async update(id: string, updates: Partial<Reservation>) {
-        const { data, error } = await supabase.from('reservations').update(updates).eq('id', id).select().single();
+        const { id: _, created_at, updated_at, customers, vehicles, handover, ...cleanUpdates } = updates as any;
+        const { data, error } = await supabase.from('reservations').update(cleanUpdates).eq('id', id).select().single();
         if (error) throw error;
         return data as Reservation;
     },
@@ -403,12 +405,14 @@ export const infractionsApi = {
         return data as Infraction;
     },
     async create(infraction: Partial<Infraction>) {
-        const { data, error } = await supabase.from('infractions').insert(infraction).select().single();
+        const { id, created_at, updated_at, customer, vehicle, reservation, ...cleanData } = infraction as any;
+        const { data, error } = await supabase.from('infractions').insert(cleanData).select().single();
         if (error) throw error;
         return data as Infraction;
     },
     async update(id: string, updates: Partial<Infraction>) {
-        const { data, error } = await supabase.from('infractions').update(updates).eq('id', id).select().single();
+        const { id: _, created_at, updated_at, customer, vehicle, reservation, ...cleanUpdates } = updates as any;
+        const { data, error } = await supabase.from('infractions').update(cleanUpdates).eq('id', id).select().single();
         if (error) throw error;
         return data as Infraction;
     },
@@ -544,12 +548,14 @@ export const transactionsApi = {
         return data as Transaction[];
     },
     async create(transaction: Partial<Transaction>) {
-        const { data, error } = await supabase.from('transactions').insert(transaction).select().single();
+        const { id, created_at, customer, ...cleanData } = transaction as any;
+        const { data, error } = await supabase.from('transactions').insert(cleanData).select().single();
         if (error) throw error;
         return data as Transaction;
     },
     async update(id: string, updates: Partial<Transaction>) {
-        const { data, error } = await supabase.from('transactions').update(updates).eq('id', id).select().single();
+        const { id: _, created_at, customer, ...cleanUpdates } = updates as any;
+        const { data, error } = await supabase.from('transactions').update(cleanUpdates).eq('id', id).select().single();
         if (error) throw error;
         return data as Transaction;
     },
@@ -687,7 +693,8 @@ export const invoicesApi = {
         return data as Invoice | null;
     },
     async create(invoice: Partial<Invoice>) {
-        const { data, error } = await supabase.from('invoices').insert(invoice).select().single();
+        const { id, created_at, updated_at, ...cleanData } = invoice as any;
+        const { data, error } = await supabase.from('invoices').insert(cleanData).select().single();
         if (error) throw error;
         return data as Invoice;
     }
@@ -715,7 +722,8 @@ export const contractsApi = {
         return data as RentalContract | null;
     },
     async create(contract: Partial<RentalContract>) {
-        const { data, error } = await supabase.from('rental_contracts').insert(contract).select().single();
+        const { id, created_at, updated_at, ...cleanData } = contract as any;
+        const { data, error } = await supabase.from('rental_contracts').insert(cleanData).select().single();
         if (error) throw error;
         return data as RentalContract;
     }
@@ -728,12 +736,14 @@ export const handoversApi = {
         return data as HandoverRecord | null;
     },
     async create(handover: Partial<HandoverRecord>) {
-        const { data, error } = await supabase.from('rental_handover_records').insert(handover).select().single();
+        const { id, created_at, updated_at, ...cleanData } = handover as any;
+        const { data, error } = await supabase.from('rental_handover_records').insert(cleanData).select().single();
         if (error) throw error;
         return data as HandoverRecord;
     },
     async update(id: string, updates: Partial<HandoverRecord>) {
-        const { data, error } = await supabase.from('rental_handover_records').update(updates).eq('id', id).select().single();
+        const { id: _, created_at, updated_at, ...cleanUpdates } = updates as any;
+        const { data, error } = await supabase.from('rental_handover_records').update(cleanUpdates).eq('id', id).select().single();
         if (error) throw error;
         return data as HandoverRecord;
     }
@@ -764,12 +774,14 @@ export const quotesApi = {
         return data as Quote;
     },
     async create(quote: Partial<Quote>) {
-        const { data, error } = await supabase.from('quotes').insert(quote).select().single();
+        const { id, created_at, updated_at, customers, vehicles, ...cleanData } = quote as any;
+        const { data, error } = await supabase.from('quotes').insert(cleanData).select().single();
         if (error) throw error;
         return data as Quote;
     },
     async update(id: string, updates: Partial<Quote>) {
-        const { data, error } = await supabase.from('quotes').update(updates).eq('id', id).select().single();
+        const { id: _, created_at, updated_at, customers, vehicles, ...cleanUpdates } = updates as any;
+        const { data, error } = await supabase.from('quotes').update(cleanUpdates).eq('id', id).select().single();
         if (error) throw error;
         return data as Quote;
     },

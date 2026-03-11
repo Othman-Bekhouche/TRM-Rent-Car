@@ -8,8 +8,6 @@ import {
     Search,
     CreditCard,
     ChevronRight,
-    ChevronLeft,
-    Fuel,
     Users,
     ArrowRight
 } from 'lucide-react';
@@ -60,22 +58,12 @@ export default function Home() {
                 if (scrollLeft + clientWidth >= scrollWidth - 10) {
                     scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
                 } else {
-                    scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+                    scrollContainerRef.current.scrollBy({ left: 400, behavior: 'smooth' });
                 }
             }
-        }, 5000);
+        }, 6000);
         return () => clearInterval(interval);
     }, []);
-
-    const scroll = (direction: 'left' | 'right') => {
-        if (scrollContainerRef.current) {
-            const scrollAmount = 400;
-            scrollContainerRef.current.scrollBy({
-                left: direction === 'left' ? -scrollAmount : scrollAmount,
-                behavior: 'smooth'
-            });
-        }
-    };
 
     return (
         <div className="bg-[var(--color-background)]">
@@ -86,30 +74,37 @@ export default function Home() {
                     <img
                         src="/images/morocco_hero.png"
                         alt="Desert Road Morocco"
-                        className="w-full h-full object-cover opacity-30 mix-blend-luminosity brightness-110"
+                        className="w-full h-full object-cover opacity-20 mix-blend-luminosity brightness-110"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-background)] via-[var(--color-background)]/80 to-[#0F141D]/20" />
                 </div>
 
+                {/* Decorative Elements */}
+                <div className="absolute top-1/4 -left-20 w-96 h-96 bg-[var(--color-primary)]/5 rounded-full blur-[120px] pointer-events-none"></div>
+                <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-blue-500/5 rounded-full blur-[120px] pointer-events-none"></div>
+
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full pt-20">
                     <div className="max-w-3xl mb-12">
-                        <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight mb-4 text-white uppercase drop-shadow-2xl animate-slide-up opacity-0">
-                            Premium Car Rental <br />
-                            <span className="text-[var(--color-primary)]">in Morocco.</span>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 rounded-full text-[var(--color-primary)] text-[10px] font-black uppercase tracking-[0.2em] mb-6 animate-fade-in">
+                            <ShieldCheck className="w-3 h-3" /> No. 1 Premium Rental in Morocco
+                        </div>
+                        <h1 className="text-6xl lg:text-8xl font-black tracking-tighter mb-4 text-white uppercase leading-none drop-shadow-2xl animate-slide-up opacity-0">
+                            Voyagez avec <br />
+                            <span className="text-[var(--color-primary)]">Excellence.</span>
                         </h1>
-                        <p className="text-lg text-slate-300 max-w-xl font-light animate-slide-up opacity-0 delay-200">
-                            Drive your journey with confidence. Choose from our luxury and economy fleet with all-inclusive insurance and unlimited support.
+                        <p className="text-xl text-slate-400 max-w-xl font-light animate-slide-up opacity-0 delay-200 leading-relaxed">
+                            Découvrez le Maroc au volant de notre flotte premium. De la ville aux routes du désert, nous assurons votre confort et votre sécurité.
                         </p>
                     </div>
 
-                    {/* Booking Search Widget - Europcar/SaaS Style */}
-                    <div className="bg-[#141C2B]/90 backdrop-blur-xl border border-[var(--color-border)] p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-scale-in opacity-0 delay-400">
-                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                            <div className="md:col-span-1">
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Retrait</label>
+                    {/* Booking Search Widget */}
+                    <div className="bg-[#121826]/80 backdrop-blur-2xl border border-[#1F2A3D] p-6 rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.6)] animate-scale-in opacity-0 delay-400 group">
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                            <div className="md:col-span-1 group/input">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1 transition-colors group-hover/input:text-[var(--color-primary)]">Lieu de Retrait</label>
                                 <div className="relative">
-                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                                    <select className="w-full bg-[#0B0F19] border border-[var(--color-border)] text-white text-sm rounded-xl focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block pl-10 p-3.5 appearance-none">
+                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-hover/input:text-[var(--color-primary)] transition-colors" />
+                                    <select className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white text-sm rounded-2xl focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block pl-12 p-4 appearance-none font-bold transition-all hover:bg-[#1C2539]">
                                         <option>Agence Taourirt (Siège)</option>
                                         <option>Livraison Oujda</option>
                                         <option>Livraison Nador</option>
@@ -122,11 +117,11 @@ export default function Home() {
                                 </div>
                             </div>
 
-                            <div className="md:col-span-1">
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Retour</label>
+                            <div className="md:col-span-1 group/input">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1 transition-colors group-hover/input:text-[var(--color-primary)]">Lieu de Retour</label>
                                 <div className="relative">
-                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                                    <select className="w-full bg-[#0B0F19] border border-[var(--color-border)] text-white text-sm rounded-xl focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block pl-10 p-3.5 appearance-none">
+                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-hover/input:text-[var(--color-primary)] transition-colors" />
+                                    <select className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white text-sm rounded-2xl focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block pl-12 p-4 appearance-none font-bold transition-all hover:bg-[#1C2539]">
                                         <option>Identique au retrait</option>
                                         <option>Agence Taourirt (Siège)</option>
                                         <option>Livraison Oujda</option>
@@ -140,137 +135,196 @@ export default function Home() {
                                 </div>
                             </div>
 
-                            <div className="md:col-span-1">
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Date Départ</label>
+                            <div className="md:col-span-1 group/input">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1 transition-colors group-hover/input:text-[var(--color-primary)]">Date Retrait</label>
                                 <div className="relative">
-                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                                    <input type="date" className="w-full bg-[#0B0F19] border border-[var(--color-border)] text-white text-sm rounded-xl focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block pl-10 pr-3 p-3.5" />
+                                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-hover/input:text-[var(--color-primary)] transition-colors" />
+                                    <input type="date" className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white text-sm rounded-2xl focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block pl-12 p-4 font-bold transition-all hover:bg-[#1C2539]" />
                                 </div>
                             </div>
 
-                            <div className="md:col-span-1">
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Date Retour</label>
+                            <div className="md:col-span-1 group/input">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1 transition-colors group-hover/input:text-[var(--color-primary)]">Date Retour</label>
                                 <div className="relative">
-                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                                    <input type="date" className="w-full bg-[#0B0F19] border border-[var(--color-border)] text-white text-sm rounded-xl focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block pl-10 pr-3 p-3.5" />
+                                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-hover/input:text-[var(--color-primary)] transition-colors" />
+                                    <input type="date" className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white text-sm rounded-2xl focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] block pl-12 p-4 font-bold transition-all hover:bg-[#1C2539]" />
                                 </div>
                             </div>
 
                             <div className="md:col-span-1 flex items-end">
-                                <Link to="/vehicles" className="w-full flex items-center justify-center gap-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[#0B0F19] font-black text-sm uppercase tracking-widest rounded-xl p-3.5 transition-all shadow-lg hover:-translate-y-0.5">
-                                    <Search className="w-5 h-5" />
-                                    Rechercher
+                                <Link to="/vehicles" className="w-full group/btn relative overflow-hidden flex items-center justify-center gap-2 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl p-4.5 py-4 transition-all shadow-[0_10px_30px_rgba(58,154,255,0.3)] hover:scale-[1.02] active:scale-[0.98]">
+                                    <div className="absolute inset-0 bg-white/20 translate-y-[101%] group-hover/btn:translate-y-0 transition-transform duration-300"></div>
+                                    <Search className="relative w-5 h-5" />
+                                    <span className="relative">Rechercher</span>
                                 </Link>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Trust Badges */}
+                    <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 animate-fade-in opacity-0 delay-600">
+                        {[
+                            { icon: ShieldCheck, title: "Assurance", desc: "Tout inclus & Sérénité" },
+                            { icon: Clock, title: "Support 24/7", desc: "Assistance routière" },
+                            { icon: CreditCard, title: "Zéro Frais", desc: "Annulation gratuite" },
+                            { icon: MapPin, title: "Livraison", desc: "Dans tout le pays" }
+                        ].map((item, i) => (
+                            <div key={i} className="flex items-center gap-4">
+                                <div className="p-3 bg-white/5 border border-white/10 rounded-2xl text-[var(--color-primary)]">
+                                    <item.icon className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h4 className="text-white text-xs font-black uppercase tracking-widest leading-none mb-1">{item.title}</h4>
+                                    <p className="text-slate-500 text-[10px] font-medium uppercase tracking-tighter">{item.desc}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* How it Works Section */}
+            <section className="py-24 relative overflow-hidden">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl font-black text-white uppercase tracking-wider mb-2">Comment ça <span className="text-[var(--color-primary)]">marche ?</span></h2>
+                        <p className="text-slate-400 font-light">Réservez votre voiture en trois étapes simples.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                        {[
+                            { num: '01', title: 'Choisissez', desc: 'Parcourez notre catalogue et trouvez la voiture parfaite pour votre voyage.', icon: Search },
+                            { num: '02', title: 'Réservez', desc: 'Remplissez vos informations et recevez une confirmation immédiate.', icon: Calendar },
+                            { num: '03', title: 'Roulez', desc: 'Récupérez les clés à l\'agence ou faites-vous livrer à votre arrivée.', icon: Car }
+                        ].map((step, i) => (
+                            <div key={i} className="relative group text-center space-y-6">
+                                <div className="w-20 h-20 mx-auto bg-[#121826] border border-[#1F2A3D] rounded-3xl flex items-center justify-center text-[var(--color-primary)] group-hover:bg-[var(--color-primary)] group-hover:text-slate-900 transition-all duration-500 rotate-3 group-hover:rotate-0">
+                                    <step.icon className="w-8 h-8" />
+                                    <span className="absolute -top-4 -right-4 text-4xl font-black text-white/5 tracking-tighter group-hover:text-white/10 transition-colors uppercase">{step.num}</span>
+                                </div>
+                                <h3 className="text-xl font-black text-white uppercase tracking-tight">{step.title}</h3>
+                                <p className="text-slate-400 text-sm leading-relaxed max-w-[250px] mx-auto font-light">
+                                    {step.desc}
+                                </p>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
 
             {/* Popular Cars Section */}
-            <section className="py-24 relative z-10">
+            <section className="py-24 relative z-10 bg-gradient-to-b from-transparent to-[#0F141D]/20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-end mb-12 border-b border-[var(--color-border)] pb-6 animate-fade-in opacity-0">
+                    <div className="flex justify-between items-end mb-12 border-b border-[#1F2A3D] pb-6 animate-fade-in opacity-0">
                         <div>
-                            <h2 className="text-3xl font-black text-white uppercase tracking-wider mb-2">Notre Flotte Populaire</h2>
-                            <p className="text-slate-400 font-light">Les véhicules disponibles en temps réel dans notre base.</p>
+                            <h2 className="text-3xl font-black text-white uppercase tracking-tight mb-2">Véhicules <span className="text-[var(--color-primary)]">Favoris</span></h2>
+                            <p className="text-slate-500 font-light italic">Nos modèles les plus demandés cette semaine.</p>
                         </div>
-                        <Link to="/vehicles" className="text-[var(--color-primary)] text-sm font-bold uppercase tracking-wide flex items-center hover:text-white transition-colors">
-                            Voir tout le catalogue <ChevronRight className="w-4 h-4 ml-1" />
+                        <Link to="/vehicles" className="text-[var(--color-primary)] text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 hover:text-white transition-all group">
+                            Voir tout le catalogue <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </div>
 
                     {loading ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                             {[1, 2, 3, 4].map(i => (
-                                <div key={i} className="bg-[var(--color-surface)] h-[400px] rounded-2xl animate-pulse border border-[var(--color-border)]" />
+                                <div key={i} className="bg-[#121826] h-[450px] rounded-[2rem] animate-pulse border border-[#1F2A3D]" />
                             ))}
                         </div>
                     ) : (vehicles as any[]).length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                             {(vehicles as any[]).map((car) => (
-                                <div key={car.id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl overflow-hidden group hover:border-[var(--color-primary)]/50 hover:shadow-[0_10px_40px_rgba(212,175,55,0.1)] transition-all duration-300 animate-scale-in opacity-0">
-                                    <div className="h-48 relative bg-gradient-to-t from-[var(--color-surface)] to-[var(--color-background)] p-4 flex items-center justify-center overflow-hidden">
-                                        <img src={car.image_url || '/images/cars/default.png'} alt={car.model} className="w-full h-full object-contain mix-blend-screen group-hover:scale-110 transition-transform duration-700" />
+                                <div key={car.id} className="bg-[#121826] border border-[#1F2A3D] rounded-[2.5rem] overflow-hidden group hover:border-[var(--color-primary)]/50 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)] transition-all duration-500 animate-scale-in opacity-0">
+                                    <div className="h-56 relative bg-gradient-to-b from-[#1C2539] to-[#121826] p-6 flex items-center justify-center overflow-hidden">
+                                        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#121826] to-transparent z-0"></div>
+                                        <img src={car.image_url || '/images/cars/default.png'} alt={car.model} className="w-full h-full object-contain relative z-10 mix-blend-screen scale-110 group-hover:scale-125 transition-transform duration-700 drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)]" />
+                                        <div className="absolute top-6 left-6 z-20">
+                                            <span className="px-3 py-1 bg-[#3A9AFF]/10 border border-[#3A9AFF]/20 backdrop-blur-md rounded-lg text-[#3A9AFF] text-[9px] font-black uppercase tracking-[0.2em]">Exclusif</span>
+                                        </div>
                                     </div>
-                                    <div className="p-5 border-t border-[var(--color-border)]/50">
-                                        <div className="flex justify-between items-start mb-4">
+                                    <div className="p-8 space-y-6">
+                                        <div className="flex justify-between items-start">
                                             <div>
-                                                <h3 className="text-xl font-extrabold text-white leading-none">{car.brand}</h3>
-                                                <p className="text-[var(--color-primary)] font-medium mt-1 uppercase text-xs tracking-widest">{car.model}</p>
+                                                <h3 className="text-2xl font-black text-white leading-none uppercase tracking-tighter">{car.brand}</h3>
+                                                <p className="text-[var(--color-primary)] font-medium mt-1 uppercase text-[10px] tracking-[0.2em]">{car.model}</p>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-[var(--color-primary)] font-black text-xl">{car.price_per_day}</p>
-                                                <p className="text-[10px] text-slate-500 uppercase tracking-widest">MAD / Jour</p>
+                                                <p className="text-white font-black text-2xl tracking-tighter">{car.price_per_day}</p>
+                                                <p className="text-[9px] text-slate-500 uppercase font-black tracking-[0.2em]">MAD / Jour</p>
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-[10px] text-slate-400 font-black uppercase tracking-tighter mb-5">
-                                            <div className="flex items-center gap-1.5"><Car className="w-3.5 h-3.5 text-slate-500" /> {car.transmission}</div>
-                                            <div className="flex items-center gap-1.5"><Fuel className="w-3.5 h-3.5 text-slate-500" /> {car.fuel_type}</div>
-                                            <div className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-slate-500" /> {car.seats} Pl.</div>
-                                            <div className="flex items-center gap-1.5 border border-slate-700/50 rounded px-1 w-fit">{car.plate_number}</div>
+                                        <div className="flex items-center gap-4 text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] border-y border-[#1F2A3D] py-4">
+                                            <div className="flex items-center gap-2"><Car className="w-3.5 h-3.5 text-[var(--color-primary)]" /> {car.transmission}</div>
+                                            <div className="flex items-center gap-2"><Users className="w-3.5 h-3.5 text-[var(--color-primary)]" /> {car.seats} PL.</div>
                                         </div>
 
-                                        <Link to={`/vehicles/${car.id}`} className="flex items-center justify-center gap-2 w-full py-3 bg-[#0B0F19] border border-slate-800 text-white text-xs font-black uppercase tracking-widest rounded-xl group-hover:bg-[var(--color-primary)] group-hover:text-[#0B0F19] group-hover:border-[var(--color-primary)] transition-all">
-                                            Réserver <ArrowRight className="w-3 h-3" />
+                                        <Link to={`/vehicles/${car.id}`} className="flex items-center justify-center gap-3 w-full py-4 bg-[#0B0F19] border border-[#1F2A3D] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl group-hover:bg-gradient-to-r group-hover:from-[#261CC1] group-hover:to-[#3A9AFF] group-hover:border-transparent transition-all shadow-xl">
+                                            Détails <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                                         </Link>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-20 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl animate-fade-in">
-                            <Car className="w-12 h-12 text-slate-700 mx-auto mb-4" />
-                            <p className="text-slate-500 font-bold uppercase tracking-widest">Aucun véhicule disponible pour le moment.</p>
+                        <div className="text-center py-24 bg-[#121826] border border-[#1F2A3D] rounded-[3rem] animate-fade-in">
+                            <Car className="w-16 h-16 text-slate-800 mx-auto mb-6" />
+                            <p className="text-slate-500 font-black uppercase tracking-[0.2em]">Aucun véhicule disponible pour le moment.</p>
                         </div>
                     )}
                 </div>
             </section>
 
             {/* Delivery Zones */}
-            <section className="py-24 bg-[var(--color-surface)] border-y border-[var(--color-border)] relative overflow-hidden">
+            <section className="py-32 bg-[#0B0F19] border-y border-[#1F2A3D] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--color-primary)]/5 rounded-full blur-[150px] pointer-events-none -translate-x-1/2 -translate-y-1/2"></div>
+
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                    <div className="mb-16 text-center animate-fade-in opacity-0">
-                        <h2 className="text-4xl font-black text-white uppercase tracking-wider mb-4">Livraison dans tout le Maroc</h2>
-                        <p className="text-slate-400 max-w-2xl mx-auto text-lg font-light">
-                            Agence basée à <span className="text-[var(--color-primary)] font-bold">Taourirt</span>.
-                            Nous couvrons toute la région orientale et les grandes métropoles.
+                    <div className="mb-24 text-center animate-fade-in opacity-0">
+                        <div className="inline-block px-5 py-2 bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 rounded-full text-[var(--color-primary)] text-[10px] font-black uppercase tracking-[0.4em] mb-8">Partout au Maroc</div>
+                        <h2 className="text-6xl md:text-7xl font-black text-white uppercase tracking-tighter mb-8 leading-[0.85]">Liberté Sans <br /><span className="text-[var(--color-primary)]">Frontières.</span></h2>
+                        <p className="text-slate-500 max-w-xl mx-auto text-xl font-light leading-relaxed">
+                            Nous vous livrons l'excellence directement à votre porte, à l'aéroport ou à votre hôtel.
                         </p>
                     </div>
 
-                    <div className="relative group/scroll px-12">
-                        {/* Side Buttons */}
-                        <button
-                            onClick={() => scroll('left')}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full border border-slate-700 flex items-center justify-center text-white bg-[#0B0F19]/80 backdrop-blur-md z-30 hover:bg-[var(--color-primary)] hover:text-[#0B0F19] hover:border-[var(--color-primary)] transition-all shadow-2xl opacity-0 group-hover/scroll:opacity-100 -translate-x-4 group-hover/scroll:translate-x-0"
-                            aria-label="Précédent"
-                        >
-                            <ChevronLeft className="w-8 h-8" />
-                        </button>
-                        <button
-                            onClick={() => scroll('right')}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full border border-slate-700 flex items-center justify-center text-white bg-[#0B0F19]/80 backdrop-blur-md z-30 hover:bg-[var(--color-primary)] hover:text-[#0B0F19] hover:border-[var(--color-primary)] transition-all shadow-2xl opacity-0 group-hover/scroll:opacity-100 translate-x-4 group-hover/scroll:translate-x-0"
-                            aria-label="Suivant"
-                        >
-                            <ChevronRight className="w-8 h-8" />
-                        </button>
-
+                    <div className="relative group/scroll">
                         <div
                             ref={scrollContainerRef}
-                            className="flex overflow-x-auto gap-6 pb-12 snap-x scrollbar-hide scroll-smooth"
+                            className="flex gap-10 overflow-x-auto pb-16 pt-4 snap-x no-scrollbar"
+                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         >
-                            {DELIVERY_ZONES.map((city, idx) => (
-                                <div key={idx} className={`min-w-[300px] h-[400px] relative rounded-[2rem] overflow-hidden group snap-center cursor-pointer border transition-all duration-500 ${city.isMain ? 'border-[var(--color-primary)] ring-4 ring-[var(--color-primary)]/10' : 'border-slate-800 hover:border-[var(--color-primary)]/50 shadow-2xl'} animate-scale-in opacity-0`} style={{ animationDelay: `${idx * 100}ms` }}>
-                                    <img src={city.img} alt={city.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F19] via-[#0B0F19]/20 to-transparent" />
-                                    {city.isMain && <div className="absolute top-6 right-6 bg-[var(--color-primary)] text-[#0B0F19] text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-xl">Siège Social</div>}
-                                    <div className="absolute inset-0 p-8 flex flex-col justify-end transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                                        <div className="w-14 h-14 bg-[var(--color-primary)]/10 backdrop-blur-xl border border-[var(--color-primary)]/30 rounded-2xl flex items-center justify-center text-[var(--color-primary)] font-black text-xl mb-6 shadow-2xl">
-                                            {city.abbr}
+                            {DELIVERY_ZONES.map((zone, i) => (
+                                <div
+                                    key={i}
+                                    className="min-w-[340px] md:min-w-[400px] snap-center group/card"
+                                >
+                                    <div className="relative h-[520px] rounded-[3rem] overflow-hidden border border-[#1F2A3D] group-hover/card:border-[var(--color-primary)]/50 transition-all duration-1000 shadow-2xl">
+                                        <img
+                                            src={zone.img}
+                                            alt={zone.name}
+                                            className="w-full h-full object-cover grayscale group-hover/card:grayscale-0 transition-all duration-1000 group-hover/card:scale-110 ease-out"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F19] via-[#0B0F19]/40 to-transparent"></div>
+
+                                        <div className="absolute top-10 right-10">
+                                            <div className="w-16 h-16 rounded-[1.5rem] bg-white/5 backdrop-blur-2xl border border-white/10 flex items-center justify-center text-white text-xl font-black uppercase tracking-widest group-hover/card:bg-[var(--color-primary)] group-hover/card:text-slate-900 transition-colors duration-500">{zone.abbr}</div>
                                         </div>
-                                        <h3 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">{city.name}</h3>
-                                        <p className="text-sm text-slate-300 mt-3 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-500">{city.desc}</p>
+
+                                        <div className="absolute inset-x-0 bottom-0 p-12 space-y-6">
+                                            {zone.isMain && (
+                                                <span className="px-4 py-1.5 bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/30 backdrop-blur-md rounded-lg text-[var(--color-primary)] text-[9px] font-black uppercase tracking-[0.3em]">Siège Principal</span>
+                                            )}
+                                            <div className="space-y-2">
+                                                <h3 className="text-5xl font-black text-white uppercase tracking-tighter leading-none">{zone.name}</h3>
+                                                <p className="text-slate-400 text-sm font-medium leading-relaxed opacity-0 group-hover/card:opacity-100 translate-y-4 group-hover/card:translate-y-0 transition-all duration-700 delay-100">
+                                                    {zone.desc}
+                                                </p>
+                                            </div>
+                                            <div className="pt-2 opacity-0 group-hover/card:opacity-100 transition-all duration-1000 delay-300">
+                                                <div className="h-1 w-16 bg-[var(--color-primary)] rounded-full shadow-[0_0_15px_rgba(212,175,55,0.5)]"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ))}

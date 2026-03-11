@@ -94,37 +94,52 @@ export default function ReservationDetails() {
         }
     };
 
-    const handleAction = async (action: 'confirm' | 'cancel') => {
+    const handleAction = async (action: 'confirm' | 'cancel' | 'complete') => {
         if (!reservation) return;
         try {
-            const newStatus = action === 'confirm' ? 'confirmed' : 'cancelled';
-            await reservationsApi.update(reservation.id, { status: newStatus });
-
-            // Update Vehicle Status
-            const vStatus = action === 'confirm' ? 'booked' : 'available';
-            await vehiclesApi.update(reservation.vehicle_id, { status: vStatus });
-
-            if (action === 'confirm' && !contract) {
-                // Auto-generate contract draft only if one doesn't exist
-                const existing = await contractsApi.getByReservation(reservation.id);
-                if (!existing) {
-                    const ctr = await contractsApi.create({
+            if (action === 'complete') {
+                await reservationsApi.update(reservation.id, { status: 'completed' });
+                // Auto generate invoice if not exists
+                const existingInvoice = await invoicesApi.getByReservation(reservation.id);
+                if (!existingInvoice) {
+                    await invoicesApi.create({
                         reservation_id: reservation.id,
-                        contract_number: `CTR-${reservation.id.slice(0, 8).toUpperCase()}`,
-                        customer_id: reservation.customer_id,
-                        vehicle_id: reservation.vehicle_id,
-                        contract_status: 'draft',
+                        invoice_number: `FAC-${reservation.id.slice(0, 8).toUpperCase()}`,
+                        subtotal: reservation.total_price,
                         total_amount: reservation.total_price,
-                        deposit_amount: reservation.vehicles?.deposit_amount || 0,
-                        contract_date: new Date().toISOString()
+                        payment_status: reservation.payment_status
                     });
-                    setContract(ctr);
-                } else {
-                    setContract(existing);
                 }
-            }
+                toast.success("Dossier clôturé et facture générée !");
+            } else {
+                const newStatus = action === 'confirm' ? 'confirmed' : 'cancelled';
+                await reservationsApi.update(reservation.id, { status: newStatus });
 
-            toast.success(`Dossier ${action === 'confirm' ? 'confirmé' : 'annulé'} avec succès et véhicule mis à jour`);
+                // Update Vehicle Status
+                const vStatus = action === 'confirm' ? 'booked' : 'available';
+                await vehiclesApi.update(reservation.vehicle_id, { status: vStatus });
+
+                if (action === 'confirm' && !contract) {
+                    // Auto-generate contract draft only if one doesn't exist
+                    const existing = await contractsApi.getByReservation(reservation.id);
+                    if (!existing) {
+                        const ctr = await contractsApi.create({
+                            reservation_id: reservation.id,
+                            contract_number: `CTR-${reservation.id.slice(0, 8).toUpperCase()}`,
+                            customer_id: reservation.customer_id,
+                            vehicle_id: reservation.vehicle_id,
+                            contract_status: 'draft',
+                            total_amount: reservation.total_price,
+                            deposit_amount: reservation.vehicles?.deposit_amount || 0,
+                            contract_date: new Date().toISOString()
+                        });
+                        setContract(ctr);
+                    } else {
+                        setContract(existing);
+                    }
+                }
+                toast.success(`Dossier ${action === 'confirm' ? 'confirmé' : 'annulé'} avec succès et véhicule mis à jour`);
+            }
             await loadData();
         } catch (err) {
             toast.error("Erreur lors de la mise à jour");
@@ -283,7 +298,7 @@ export default function ReservationDetails() {
                         </button>
                     )}
                     {(reservation.status === 'returned' || reservation.status === 'completed') && (
-                        <button onClick={() => reservationsApi.update(reservation.id, { status: 'completed' })} disabled={reservation.status === 'completed'} className={`px-4 py-2 text-white font-bold rounded-xl text-sm shadow-lg flex items-center gap-2 ${reservation.status === 'completed' ? 'bg-slate-400 opacity-50 cursor-not-allowed' : 'bg-slate-800 hover:bg-black'}`}>
+                        <button onClick={() => handleAction('complete')} disabled={reservation.status === 'completed'} className={`px-4 py-2 text-white font-bold rounded-xl text-sm shadow-lg flex items-center gap-2 ${reservation.status === 'completed' ? 'bg-slate-400 opacity-50 cursor-not-allowed' : 'bg-slate-800 hover:bg-black'}`}>
                             {reservation.status === 'completed' ? 'Dossier Clôturé' : 'Clôturer le dossier'}
                         </button>
                     )}

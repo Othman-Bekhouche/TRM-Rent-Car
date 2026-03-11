@@ -26,12 +26,13 @@ export default function Navbar() {
     };
 
     return (
-        <nav className="bg-[var(--color-surface)] border-b border-[var(--color-border)] sticky top-0 z-50">
+        <nav className="bg-[#0B0F19]/80 backdrop-blur-xl border-b border-[#1F2A3D] sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-24">
+                <div className="flex justify-between h-20 md:h-24">
                     <div className="flex items-center">
-                        <Link to="/" className="flex items-center">
-                            <img src="/trm-logo-pour-arriere-noir.png" alt="TRM Rent Car" className="h-20 md:h-24 w-auto object-contain animate-slide-right opacity-0" />
+                        <Link to="/" className="flex items-center group relative">
+                            <div className="absolute inset-0 bg-[var(--color-primary)]/20 blur-2xl rounded-full scale-0 group-hover:scale-100 transition-transform duration-500"></div>
+                            <img src="/trm-logo-pour-arriere-noir.png" alt="TRM Rent Car" className="h-16 md:h-20 w-auto object-contain relative z-10 animate-slide-right transition-transform group-hover:scale-110 duration-500" />
                         </Link>
                     </div>
 

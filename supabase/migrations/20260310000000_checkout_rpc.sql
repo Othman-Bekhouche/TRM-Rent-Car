@@ -14,9 +14,9 @@ AS $$
 DECLARE
     v_customer_id uuid;
 BEGIN
-    -- Check if customer exists by email. If email is null, skip to insert?
+    -- Check if customer exists by email (case-insensitive)
     IF p_email IS NOT NULL AND p_email != '' THEN
-        SELECT id INTO v_customer_id FROM public.customers WHERE email = p_email LIMIT 1;
+        SELECT id INTO v_customer_id FROM public.customers WHERE LOWER(email) = LOWER(p_email) LIMIT 1;
     END IF;
     
     IF v_customer_id IS NOT NULL THEN
@@ -33,7 +33,7 @@ BEGIN
     ELSE
         -- Insert new customer
         INSERT INTO public.customers (full_name, email, phone, cin, address, city, status)
-        VALUES (p_first_name || ' ' || p_last_name, NULLIF(p_email, ''), p_phone, p_cin, p_address, p_city, p_status)
+        VALUES (p_first_name || ' ' || p_last_name, LOWER(NULLIF(p_email, '')), p_phone, p_cin, p_address, p_city, p_status)
         RETURNING id INTO v_customer_id;
     END IF;
     
