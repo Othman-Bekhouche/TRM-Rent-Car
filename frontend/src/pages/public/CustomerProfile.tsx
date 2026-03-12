@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 export default function CustomerProfile() {
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
+    const [profile, setProfile] = useState<any>(null);
     const [activeTab, setActiveTab] = useState('reservations');
     const [reservations, setReservations] = useState<any[]>([]);
     const [selectedRes, setSelectedRes] = useState<any>(null);
@@ -21,6 +22,14 @@ export default function CustomerProfile() {
                     return;
                 }
                 setUser(authUser);
+
+                // Fetch profile role
+                const { data: profileData } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', authUser.id)
+                    .single();
+                setProfile(profileData);
 
                 // Fetch customer record(s) to get full info and reservations (with all documents)
                 // Case-insensitive match for email. Select all in case of duplicates.
@@ -132,6 +141,16 @@ export default function CustomerProfile() {
                                 >
                                     <LogOut className="w-5 h-5" /> Déconnexion
                                 </button>
+                                {profile && ['super_admin', 'admin', 'assistant'].includes(profile.role) && (
+                                    <div className="mt-4 pt-4 border-t border-[#1F2A3D]">
+                                        <Link
+                                            to="/admin"
+                                            className="w-full flex items-center gap-3 px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20"
+                                        >
+                                            <ShieldCheck className="w-5 h-5" /> Administration
+                                        </Link>
+                                    </div>
+                                )}
                             </nav>
                         </div>
 

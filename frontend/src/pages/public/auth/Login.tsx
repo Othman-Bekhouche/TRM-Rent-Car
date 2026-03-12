@@ -10,23 +10,33 @@ export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
+    const [userName, setUserName] = useState('');
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            await authApi.signIn(email, password);
-            toast.success('Connexion réussie ! Redirection...', {
+            const { user } = await authApi.signIn(email, password);
+
+            // Get user name for welcome message
+            const name = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Utilisateur';
+            setUserName(name);
+            setSuccess(true);
+            setLoading(false);
+
+            toast.success(`Bienvenue, ${name} !`, {
                 style: {
                     background: '#1F2937',
                     color: '#fff',
                     border: '1px solid #3A9AFF'
                 }
             });
+
             setTimeout(() => {
                 redirectAfterLogin();
-            }, 1000);
+            }, 2000);
         } catch (err: any) {
             toast.error(err?.message || 'Identifiants incorrects.', {
                 style: {
@@ -42,6 +52,20 @@ export default function Login() {
     return (
         <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
             <Toaster position="top-center" />
+
+            {/* Success Loading Overlay */}
+            {success && (
+                <div className="fixed inset-0 z-[100] bg-[#0B0F19] flex flex-col items-center justify-center animate-[fadeIn_0.5s_ease-out]">
+                    <div className="relative mb-8">
+                        <div className="w-24 h-24 rounded-full border-4 border-[var(--color-primary)]/20 border-t-[var(--color-primary)] animate-spin"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <KeyRound className="w-8 h-8 text-[var(--color-primary)] animate-pulse" />
+                        </div>
+                    </div>
+                    <h2 className="text-3xl font-black text-white uppercase tracking-tight mb-2">Bienvenue, <span className="text-[var(--color-primary)]">{userName}</span></h2>
+                    <p className="text-slate-400 font-medium animate-pulse">Préparation de votre session...</p>
+                </div>
+            )}
             {/* Background Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-[var(--color-background)] to-[var(--color-surface)] z-0" />
             <div className="absolute top-0 right-0 -mr-48 -mt-48 w-96 h-96 bg-[var(--color-primary)] opacity-5 blur-[100px] rounded-full z-0 pointer-events-none" />

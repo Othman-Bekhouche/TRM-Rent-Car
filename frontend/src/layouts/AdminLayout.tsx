@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, Car, Users, CalendarDays, Settings,
-    LogOut, MapPin, Calculator, Wrench, Bell, UserCog, Menu, X, ChevronRight, ChevronDown, AlertTriangle, Loader2, Mail, Shield, Archive
+    LogOut, MapPin, Calculator, Bell, UserCog, Menu, X, ChevronRight, ChevronDown, AlertTriangle, Loader2, Mail, Shield, Archive
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
@@ -186,7 +186,6 @@ export default function AdminLayout() {
 
                                         <div className={`pl-11 pr-2 space-y-1 overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-40 opacity-100 mb-2 mt-1' : 'max-h-0 opacity-0'}`}>
                                             {allowedChildren.map(child => {
-                                                const isActive = location.pathname === child.path;
                                                 return (
                                                     <Link
                                                         key={child.path}
@@ -226,9 +225,22 @@ export default function AdminLayout() {
                         })}
                     </nav>
 
+                    {/* Logout Button — Dedicated & Clear */}
+                    <div className="px-4 py-4 border-t border-white/10">
+                        <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-3 px-4 py-3.5 text-rose-400 hover:text-white hover:bg-rose-500/20 rounded-2xl transition-all duration-300 font-black text-xs uppercase tracking-widest"
+                        >
+                            <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center group-hover:bg-rose-500/20 transition-colors">
+                                <LogOut className="w-4 h-4" />
+                            </div>
+                            Déconnexion
+                        </button>
+                    </div>
+
                     {/* Footer Info */}
-                    <div className="p-6 border-t border-white/10">
-                        <div className="flex items-center gap-3 text-white/40 text-[10px] font-black uppercase tracking-widest">
+                    <div className="p-6 pt-0 opacity-40">
+                        <div className="flex items-center gap-3 text-white text-[9px] font-black uppercase tracking-[0.2em] px-1">
                             <Shield className="w-3 h-3" />
                             <span>TRM Secure Access</span>
                         </div>
@@ -317,6 +329,15 @@ export default function AdminLayout() {
                                 </>
                             )}
                         </div>
+
+                        {/* Quick Logout Button */}
+                        <button
+                            onClick={handleLogout}
+                            className="p-2.5 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors hidden sm:flex"
+                            title="Déconnexion rapide"
+                        >
+                            <LogOut className="w-5 h-5" />
+                        </button>
 
                         <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-4 border-l border-slate-200">
                             <div className="text-right hidden sm:block">

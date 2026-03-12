@@ -6,15 +6,31 @@ import { supabase } from '../../lib/supabase';
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [user, setUser] = useState<any>(null);
+    const [profile, setProfile] = useState<any>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
+        const fetchProfile = async (sessionUser: any) => {
+            if (!sessionUser) {
+                setProfile(null);
+                return;
+            }
+            const { data } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', sessionUser.id)
+                .single();
+            setProfile(data);
+        };
+
         supabase.auth.getSession().then(({ data: { session } }) => {
             setUser(session?.user ?? null);
+            fetchProfile(session?.user);
         });
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user ?? null);
+            fetchProfile(session?.user);
         });
 
         return () => subscription.unsubscribe();
@@ -53,7 +69,15 @@ export default function Navbar() {
                                     >
                                         Déconnexion
                                     </button>
-                                    <Link to="/profile" className="p-2 bg-slate-800 rounded-full text-slate-300 hover:text-white transition-all">
+                                    {profile && ['super_admin', 'admin', 'assistant'].includes(profile.role) && (
+                                        <Link
+                                            to="/admin"
+                                            className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl text-sm font-black uppercase tracking-widest transition-all shadow-[0_4px_15px_rgba(244,63,94,0.3)]"
+                                        >
+                                            Administration
+                                        </Link>
+                                    )}
+                                    <Link to="/profile" className="p-2 bg-slate-800 rounded-full text-slate-300 hover:text-white transition-all" title="Mon Profil">
                                         <User className="w-5 h-5" />
                                     </Link>
                                 </div>
@@ -103,6 +127,11 @@ export default function Navbar() {
                             {user ? (
                                 <>
                                     <div className="px-4 py-2 text-slate-500 text-xs font-bold uppercase tracking-widest">{user.email}</div>
+                                    {profile && ['super_admin', 'admin', 'assistant'].includes(profile.role) && (
+                                        <Link to="/admin" onClick={() => setIsOpen(false)} className="flex items-center justify-center gap-2 py-3 bg-rose-500 text-white font-black rounded-xl active:scale-95 transition-all uppercase tracking-widest">
+                                            Administration
+                                        </Link>
+                                    )}
                                     <Link to="/profile" onClick={() => setIsOpen(false)} className="flex items-center justify-center gap-2 py-3 bg-slate-800 text-white font-bold rounded-xl active:scale-95 transition-all">
                                         <User className="w-4 h-4" /> Mon Profil
                                     </Link>
