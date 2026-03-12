@@ -88,7 +88,7 @@ export default function Home() {
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 rounded-full text-[var(--color-primary)] text-[10px] font-black uppercase tracking-[0.2em] mb-6 animate-fade-in">
                             <ShieldCheck className="w-3 h-3" /> No. 1 Premium Rental in Morocco
                         </div>
-                        <h1 className="text-6xl lg:text-8xl font-black tracking-tighter mb-4 text-white uppercase leading-none drop-shadow-2xl animate-slide-up opacity-0">
+                        <h1 className="text-4xl md:text-6xl lg:text-8xl font-black tracking-tighter mb-4 text-white uppercase leading-none drop-shadow-2xl animate-slide-up opacity-0">
                             Voyagez avec <br />
                             <span className="text-[var(--color-primary)]">Excellence.</span>
                         </h1>

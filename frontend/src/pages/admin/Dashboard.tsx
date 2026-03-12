@@ -179,36 +179,38 @@ export default function Dashboard() {
     return (
         <div className="space-y-8 animate-[fadeIn_0.5s_ease-out] pb-10">
             {/* Page Header */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center text-[#261CC1]">
-                        <LayoutDashboard className="w-6 h-6" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center text-[#261CC1]">
+                        <LayoutDashboard className="w-5 h-5 md:w-6 md:h-6" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-black text-[#1C0770] tracking-tighter uppercase leading-none">Tableau de Bord</h1>
-                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[9px] mt-1">Analyse et indicateurs de performance</p>
+                        <h1 className="text-xl md:text-3xl font-black text-[#1C0770] tracking-tighter uppercase leading-none">Tableau de Bord</h1>
+                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[8px] md:text-[9px] mt-1">Analyse et indicateurs de performance</p>
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm">
-                    {[
-                        { id: 'today', label: 'Jour' },
-                        { id: 'week', label: 'Sem.' },
-                        { id: 'month', label: 'Mois' },
-                        { id: 'year', label: 'An' },
-                        { id: 'all', label: 'Global' }
-                    ].map((btn) => (
-                        <button
-                            key={btn.id}
-                            onClick={() => setPeriod(btn.id as Period)}
-                            className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${period === btn.id
-                                ? 'bg-[#261CC1] text-white shadow-lg shadow-[#261CC1]/20'
-                                : 'text-slate-400 hover:bg-slate-50'
-                                }`}
-                        >
-                            {btn.label}
-                        </button>
-                    ))}
+                <div className="flex overflow-x-auto pb-2 xl:pb-0 scrollbar-hide">
+                    <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm min-w-max">
+                        {[
+                            { id: 'today', label: 'Jour' },
+                            { id: 'week', label: 'Sem.' },
+                            { id: 'month', label: 'Mois' },
+                            { id: 'year', label: 'An' },
+                            { id: 'all', label: 'Global' }
+                        ].map((btn) => (
+                            <button
+                                key={btn.id}
+                                onClick={() => setPeriod(btn.id as Period)}
+                                className={`px-4 py-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${period === btn.id
+                                    ? 'bg-[#261CC1] text-white shadow-lg shadow-[#261CC1]/20'
+                                    : 'text-slate-400 hover:bg-slate-50'
+                                    }`}
+                            >
+                                {btn.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 

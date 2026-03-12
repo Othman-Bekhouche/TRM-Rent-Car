@@ -247,32 +247,34 @@ export default function Maintenance() {
 
             {/* Tabs for detailed view */}
             <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl overflow-hidden min-h-[600px] flex flex-col">
-                <div className="p-4 bg-slate-50 border-b flex flex-wrap gap-2">
-                    <button
-                        onClick={() => setActiveTab('dashboard')}
-                        className={`px-6 py-2.5 rounded-2xl text-sm font-black transition-all flex items-center gap-2 ${activeTab === 'dashboard' ? 'bg-[#1C0770] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/50'}`}
-                    >
-                        <Car className="w-4 h-4" /> Flotte & Santé
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('alerts')}
-                        className={`px-6 py-2.5 rounded-2xl text-sm font-black transition-all flex items-center gap-2 ${activeTab === 'alerts' ? 'bg-[#1C0770] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/50'}`}
-                    >
-                        <Bell className="w-4 h-4" /> Alertes Actives
-                        {alerts.length > 0 && <span className="w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px]">{alerts.length}</span>}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('history')}
-                        className={`px-6 py-2.5 rounded-2xl text-sm font-black transition-all flex items-center gap-2 ${activeTab === 'history' ? 'bg-[#1C0770] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/50'}`}
-                    >
-                        <History className="w-4 h-4" /> Historique complet
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('mileage')}
-                        className={`px-6 py-2.5 rounded-2xl text-sm font-black transition-all flex items-center gap-2 ${activeTab === 'mileage' ? 'bg-[#1C0770] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/50'}`}
-                    >
-                        <Gauge className="w-4 h-4" /> Logs Kilométrage
-                    </button>
+                <div className="flex overflow-x-auto p-4 bg-slate-50 border-b scrollbar-hide">
+                    <div className="flex gap-2 min-w-max">
+                        <button
+                            onClick={() => setActiveTab('dashboard')}
+                            className={`px-6 py-2.5 rounded-2xl text-sm font-black transition-all flex items-center gap-2 ${activeTab === 'dashboard' ? 'bg-[#1C0770] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/50'}`}
+                        >
+                            <Car className="w-4 h-4" /> Flotte & Santé
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('alerts')}
+                            className={`px-6 py-2.5 rounded-2xl text-sm font-black transition-all flex items-center gap-2 ${activeTab === 'alerts' ? 'bg-[#1C0770] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/50'}`}
+                        >
+                            <Bell className="w-4 h-4" /> Alertes Actives
+                            {alerts.length > 0 && <span className="w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px]">{alerts.length}</span>}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('history')}
+                            className={`px-6 py-2.5 rounded-2xl text-sm font-black transition-all flex items-center gap-2 ${activeTab === 'history' ? 'bg-[#1C0770] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/50'}`}
+                        >
+                            <History className="w-4 h-4" /> Historique complet
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('mileage')}
+                            className={`px-6 py-2.5 rounded-2xl text-sm font-black transition-all flex items-center gap-2 ${activeTab === 'mileage' ? 'bg-[#1C0770] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/50'}`}
+                        >
+                            <Gauge className="w-4 h-4" /> Logs Kilométrage
+                        </button>
+                    </div>
                 </div>
 
                 <div className="flex-1 p-8">
@@ -376,10 +378,10 @@ export default function Maintenance() {
                                     <tr className="border-b-2 border-slate-50">
                                         <th className="pb-4 pt-0 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-3">Véhicule</th>
                                         <th className="pb-4 pt-0 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-3">Intervention</th>
-                                        <th className="pb-4 pt-0 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-3">Date</th>
-                                        <th className="pb-4 pt-0 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-3 text-right">Km</th>
+                                        <th className="pb-4 pt-0 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-3 hidden sm:table-cell">Date</th>
+                                        <th className="pb-4 pt-0 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-3 text-right hidden lg:table-cell">Km</th>
                                         <th className="pb-4 pt-0 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-3 text-right">Coût</th>
-                                        <th className="pb-4 pt-0 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-3">Statut</th>
+                                        <th className="pb-4 pt-0 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-3 hidden md:table-cell">Statut</th>
                                         <th className="pb-4 pt-0 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-3 text-right">Action</th>
                                     </tr>
                                 </thead>
@@ -400,16 +402,16 @@ export default function Maintenance() {
                                                         <span className="text-[10px] text-slate-400 font-bold truncate max-w-[150px]">{r.vendor_name || '---'}</span>
                                                     </div>
                                                 </td>
-                                                <td className="py-5 px-3">
+                                                <td className="py-5 px-3 hidden sm:table-cell">
                                                     <span className="text-slate-500 font-bold text-xs">{new Date(r.last_service_date).toLocaleDateString()}</span>
                                                 </td>
-                                                <td className="py-5 px-3 text-right">
+                                                <td className="py-5 px-3 text-right hidden lg:table-cell">
                                                     <span className="text-slate-800 font-black text-xs">{r.last_service_mileage?.toLocaleString()}</span>
                                                 </td>
                                                 <td className="py-5 px-3 text-right">
                                                     <span className="text-[#1C0770] font-black text-sm">{Number(r.actual_cost || r.estimated_cost).toLocaleString()} MAD</span>
                                                 </td>
-                                                <td className="py-5 px-3">
+                                                <td className="py-5 px-3 hidden md:table-cell">
                                                     <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border-2 ${st.color}`}>{st.label}</span>
                                                 </td>
                                                 <td className="py-5 px-3 text-right">

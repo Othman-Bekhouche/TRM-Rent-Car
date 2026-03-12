@@ -400,8 +400,8 @@ export default function AdminVehicles() {
                                         <tr className="bg-[#F0F4FF] text-slate-400 text-[11px] uppercase tracking-[0.15em] font-bold">
                                             <th className="p-4">Véhicule</th>
                                             <th className="p-4">Plaque</th>
-                                            <th className="p-4">Couleur</th>
-                                            <th className="p-4">Photos</th>
+                                            <th className="p-4 hidden md:table-cell">Couleur</th>
+                                            <th className="p-4 hidden lg:table-cell">Photos</th>
                                             <th className="p-4">Prix/Jour</th>
                                             <th className="p-4">Statut</th>
                                             <th className="p-4 text-right">Actions</th>
@@ -426,8 +426,8 @@ export default function AdminVehicles() {
                                                     </div>
                                                 </td>
                                                 <td className="p-4 font-mono text-xs text-[#261CC1] font-bold">{v.plate_number}</td>
-                                                <td className="p-4 text-slate-600">{v.color}</td>
-                                                <td className="p-4">
+                                                <td className="p-4 text-slate-600 hidden md:table-cell">{v.color}</td>
+                                                <td className="p-4 hidden lg:table-cell">
                                                     <div className="flex items-center gap-1.5">
                                                         <Eye className="w-3.5 h-3.5 text-slate-400" />
                                                         <span className={`text-xs font-bold ${getImageCount(v) >= 4 ? 'text-emerald-600' : getImageCount(v) > 0 ? 'text-amber-600' : 'text-red-400'}`}>

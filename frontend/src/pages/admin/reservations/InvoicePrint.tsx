@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { reservationsApi, invoicesApi, settingsApi } from '../../../lib/api';
+import { supabase } from '../../../lib/supabase';
 import { Loader2, Printer } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -10,6 +11,7 @@ export default function InvoicePrint() {
     const [reservation, setReservation] = useState<any>(null);
     const [invoice, setInvoice] = useState<any>(null);
     const [settings, setSettings] = useState<any>(null);
+    const [role, setRole] = useState<string | null>(null);
     const [searchParams] = useSearchParams();
     const shouldPrint = searchParams.get('action') === 'print';
 
@@ -17,11 +19,22 @@ export default function InvoicePrint() {
         const loadData = async () => {
             try {
                 if (!id) return;
-                const [resData, invData, set] = await Promise.all([
+                const [resData, invData, set, { data: { user: authUser } }] = await Promise.all([
                     reservationsApi.getById(id),
                     invoicesApi.getByReservation(id),
-                    settingsApi.get()
+                    settingsApi.get(),
+                    supabase.auth.getUser()
                 ]);
+
+                if (authUser) {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('role')
+                        .eq('id', authUser.id)
+                        .single();
+                    setRole(profile?.role || 'client');
+                }
+
                 setReservation(resData);
                 setInvoice(invData);
                 setSettings(set);
@@ -67,7 +80,12 @@ export default function InvoicePrint() {
 
             {/* Print Controls */}
             <div className="print:hidden fixed top-8 right-8 flex gap-3 z-50">
-                <Link to={`/admin/reservations/${id}`} className="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold shadow-sm hover:bg-slate-50 transition-all uppercase tracking-widest">Retour</Link>
+                <Link
+                    to={['admin', 'super_admin', 'gestionnaire', 'assistant'].includes(role || '') ? `/admin/reservations/${id}` : '/profile'}
+                    className="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold shadow-sm hover:bg-slate-50 transition-all uppercase tracking-widest"
+                >
+                    Retour
+                </Link>
                 <button onClick={() => window.print()} className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-slate-900/20 hover:bg-black transition-all uppercase tracking-widest">
                     <Printer className="w-4 h-4" /> Imprimer
                 </button>

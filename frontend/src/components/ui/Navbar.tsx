@@ -84,15 +84,42 @@ export default function Navbar() {
 
             {/* Mobile Menu */}
             {isOpen && (
-                <div className="md:hidden bg-[var(--color-surface)] border-b border-[var(--color-border)]">
-                    <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                        <Link to="/" className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-[var(--color-border)] rounded-md">Accueil</Link>
-                        <Link to="/vehicles" className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-[var(--color-border)] rounded-md">Flotte</Link>
-                        <Link to="/about" className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-[var(--color-border)] rounded-md">À Propos</Link>
-                        <Link to="/contact" className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-[var(--color-border)] rounded-md">Contact</Link>
-                        <div className="mt-4 pt-4 border-t border-[var(--color-border)] flex flex-col gap-2 px-3">
-                            <Link to="/login" className="text-center py-2 text-slate-300 hover:text-white border border-slate-600 rounded-lg">Connexion</Link>
-                            <Link to="/register" className="text-center py-2 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-white font-bold rounded-lg">S'inscrire</Link>
+                <div className="md:hidden bg-gradient-to-b from-[#0B0F19] to-[#121826] border-b border-[#1F2A3D] animate-fade-in">
+                    <div className="px-6 pt-2 pb-8 space-y-2">
+                        <Link to="/" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition-all font-bold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)]"></span> Accueil
+                        </Link>
+                        <Link to="/vehicles" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition-all font-bold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)]"></span> Flotte
+                        </Link>
+                        <Link to="/about" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition-all font-bold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)]"></span> À Propos
+                        </Link>
+                        <Link to="/contact" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition-all font-bold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)]"></span> Contact
+                        </Link>
+
+                        <div className="mt-6 pt-6 border-t border-[#1F2A3D] flex flex-col gap-4">
+                            {user ? (
+                                <>
+                                    <div className="px-4 py-2 text-slate-500 text-xs font-bold uppercase tracking-widest">{user.email}</div>
+                                    <Link to="/profile" onClick={() => setIsOpen(false)} className="flex items-center justify-center gap-2 py-3 bg-slate-800 text-white font-bold rounded-xl active:scale-95 transition-all">
+                                        <User className="w-4 h-4" /> Mon Profil
+                                    </Link>
+                                    <button onClick={handleLogout} className="py-3 text-rose-500 font-bold hover:bg-rose-500/5 rounded-xl transition-all">
+                                        Déconnexion
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <Link to="/login" onClick={() => setIsOpen(false)} className="text-center py-3 text-slate-300 hover:text-white border border-slate-700 rounded-xl font-bold active:scale-95 transition-all">
+                                        Connexion
+                                    </Link>
+                                    <Link to="/register" onClick={() => setIsOpen(false)} className="text-center py-3 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
+                                        S'inscrire
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

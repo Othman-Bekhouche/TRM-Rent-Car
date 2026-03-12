@@ -314,12 +314,12 @@ export default function Reservations() {
                                 <table className="w-full text-left border-collapse">
                                     <thead>
                                         <tr className="bg-[#F0F4FF] text-slate-400 text-[11px] uppercase tracking-[0.15em] font-bold">
-                                            <th className="p-4 rounded-l-xl">Réf</th>
-                                            <th className="p-4">Client</th>
+                                            <th className="p-4 rounded-l-xl hidden sm:table-cell">Réf</th>
+                                            <th className="p-4 sm:rounded-none rounded-l-xl">Client</th>
                                             <th className="p-4">Véhicule</th>
-                                            <th className="p-4">Période</th>
+                                            <th className="p-4 hidden lg:table-cell">Période</th>
                                             <th className="p-4">Statut</th>
-                                            <th className="p-4">Paiement</th>
+                                            <th className="p-4 hidden md:table-cell">Paiement</th>
                                             <th className="p-4">Total</th>
                                             <th className="p-4 text-right rounded-r-xl">Actions</th>
                                         </tr>
@@ -329,26 +329,26 @@ export default function Reservations() {
                                             const st = STATUS_MAP[r.status] || STATUS_MAP.pending;
                                             const StIcon = st.icon;
                                             return (
-                                                <tr key={r.id} className="hover:bg-[#F8FAFF] transition-colors border-b border-slate-50 group">
-                                                    <td className="p-4 text-[#261CC1] font-mono text-xs font-bold">{r.reservation_number || r.id.substring(0, 8)}</td>
+                                                <tr key={r.id} className="hover:bg-[#F8FAFF] transition-colors border-b border-slate-50 group text-xs sm:text-sm">
+                                                    <td className="p-4 text-[#261CC1] font-mono text-[10px] sm:text-xs font-bold hidden sm:table-cell">{r.reservation_number || r.id.substring(0, 8)}</td>
                                                     <td className="p-4">
                                                         <p className="text-slate-800 font-semibold">{r.customers?.full_name || 'Étranger'}</p>
-                                                        <p className="text-slate-400 text-xs">{r.customers?.phone}</p>
+                                                        <p className="text-slate-400 text-[10px] sm:text-xs">{r.customers?.phone}</p>
                                                     </td>
                                                     <td className="p-4">
                                                         <p className="text-slate-700 font-medium">{r.vehicles?.brand} {r.vehicles?.model}</p>
-                                                        <p className="text-slate-400 text-xs font-mono">{r.vehicles?.plate_number}</p>
+                                                        <p className="text-slate-400 text-[10px] sm:text-xs font-mono">{r.vehicles?.plate_number}</p>
                                                     </td>
-                                                    <td className="p-4 text-slate-500 text-xs">
+                                                    <td className="p-4 text-slate-500 text-[10px] sm:text-xs hidden lg:table-cell">
                                                         {new Date(r.start_date).toLocaleDateString()} → {new Date(r.end_date).toLocaleDateString()}
                                                     </td>
                                                     <td className="p-4">
-                                                        <span className={`${st.color} inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border whitespace-nowrap`}>
+                                                        <span className={`${st.color} inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold border whitespace-nowrap`}>
                                                             <StIcon className="w-3 h-3" /> {st.label}
                                                         </span>
                                                     </td>
-                                                    <td className="p-4">
-                                                        <p className="text-slate-500 text-xs font-medium">{r.payment_method}</p>
+                                                    <td className="p-4 hidden md:table-cell">
+                                                        <p className="text-slate-500 text-[10px] font-medium">{r.payment_method}</p>
                                                         <p className={`text-[10px] font-bold ${r.payment_status === 'paid' ? 'text-emerald-500' : 'text-amber-500'}`}>
                                                             {r.payment_status === 'paid' ? 'PAYÉ' : 'À RÉGLER'}
                                                         </p>

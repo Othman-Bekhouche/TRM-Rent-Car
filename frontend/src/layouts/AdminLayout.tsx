@@ -318,7 +318,7 @@ export default function AdminLayout() {
                             )}
                         </div>
 
-                        <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+                        <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-4 border-l border-slate-200">
                             <div className="text-right hidden sm:block">
                                 <p className="text-sm font-bold text-slate-800 leading-tight">{profile?.full_name}</p>
                                 <p className="text-[10px] font-black text-[#3A9AFF] uppercase tracking-tighter">
