@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { quotesApi, settingsApi } from '../../../lib/api';
-import { Loader2, Printer, ArrowLeft, Download } from 'lucide-react';
+import { Loader2, Printer } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function QuotePrint() {
     const { id } = useParams();
     const [loading, setLoading] = useState(true);
     const [quote, setQuote] = useState<any>(null);
-    const [settings, setSettings] = useState<any>(null);
     const [searchParams] = useSearchParams();
     const shouldPrint = searchParams.get('action') === 'print';
 
@@ -16,12 +15,11 @@ export default function QuotePrint() {
         const loadData = async () => {
             try {
                 if (!id) return;
-                const [qData, set] = await Promise.all([
+                const [qData] = await Promise.all([
                     quotesApi.getById(id),
                     settingsApi.get()
                 ]);
                 setQuote(qData);
-                setSettings(set);
 
                 if (shouldPrint) {
                     setTimeout(() => {
