@@ -49,6 +49,7 @@ services:
       GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres?sslmode=disable
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL}
       GOTRUE_SITE_URL: ${SITE_URL}
       GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS}
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
@@ -82,20 +83,21 @@ services:
 
   realtime:
     container_name: supabase-realtime
-    image: supabase/realtime:v2.33.64
+    image: supabase/realtime:v2.76.5
     restart: always
     environment:
       PORT: 4000
       DB_HOST: db
       DB_PORT: 5432
-      DB_USER: postgres
+      DB_USER: supabase_admin
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: postgres
       DB_AFTER_CONNECT_QUERY: 'SET search_path TO _realtime'
-      HOSTNAME: localhost
+      DB_ENC_KEY: supabaserealtime
+      API_JWT_SECRET: ${JWT_SECRET}
+      SECRET_KEY_BASE: ${JWT_SECRET}
       REPLICATION_MODE: RLS
       REPLICATION_SLOT_NAME: supabase_realtime_rc
-      JWT_SECRET: ${JWT_SECRET}
       SECURE_CHANNELS_ONLY: "true"
     networks:
       - supabase-network
