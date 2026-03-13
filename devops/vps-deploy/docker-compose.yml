@@ -151,12 +151,13 @@ services:
     restart: always
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_DB: postgres
+      POSTGRES_HOST: /var/run/postgresql
       # Roles and JWT
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRY: 3600
