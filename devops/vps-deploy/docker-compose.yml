@@ -35,9 +35,16 @@ services:
 
   auth:
     container_name: supabase-auth
-    image: supabase/gotrue:v2.158.3
+    image: supabase/gotrue:v2.151.0
     restart: always
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health"]
+      timeout: 5s
+      interval: 5s
+      retries: 3
     environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
       GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
       GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
       GOTRUE_DB_DRIVER: postgres
