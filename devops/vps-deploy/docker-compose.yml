@@ -13,6 +13,8 @@ services:
       DEFAULT_PROJECT_NAME: ${PROJECT_NAME}
       # Required for Supabase AI
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "54423:3000"
     networks:
       - supabase-network
 
