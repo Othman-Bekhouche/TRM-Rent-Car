@@ -29,7 +29,7 @@ services:
       KONG_PLUGINS: request-transformer,cors,key-auth,acl,jwt
     ports:
       - "8000:8000"
-      - "8443:8443"
+      - "8444:8443"
     networks:
       - supabase-network
 
@@ -108,6 +108,7 @@ services:
       timeout: 5s
       interval: 5s
       retries: 3
+      start_period: 30s
     depends_on:
       db:
         condition: service_healthy
