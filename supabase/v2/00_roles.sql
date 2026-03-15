@@ -15,6 +15,12 @@ BEGIN
     IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'supabase_admin') THEN CREATE ROLE supabase_admin WITH LOGIN SUPERUSER; END IF;
 END $$;
 
+-- Héritage des rôles pour PostgREST (Fix role "" does not exist)
+GRANT anon TO authenticator;
+GRANT authenticated TO authenticator;
+GRANT service_role TO authenticator;
+GRANT supabase_admin TO authenticator;
+
 -- Synchronisation des mots de passe
 ALTER ROLE postgres WITH PASSWORD 'trmrentcar2026';
 ALTER ROLE authenticator WITH PASSWORD 'trmrentcar2026';
