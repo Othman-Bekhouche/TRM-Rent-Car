@@ -169,7 +169,7 @@ export default function Customers() {
                             </div>
 
                             <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">CIN</label>
                                         <div className="relative">
@@ -186,7 +186,7 @@ export default function Customers() {
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Adresse</label>
                                     <input type="text" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" placeholder="Adresse complète" />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Ville</label>
                                         <input type="text" value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" placeholder="Taourirt" />

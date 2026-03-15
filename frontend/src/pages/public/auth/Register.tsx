@@ -49,7 +49,7 @@ export default function Register() {
                 style: { background: '#1F2937', color: '#fff', border: '1px solid #3A9AFF' },
                 duration: 3000,
             });
-            setTimeout(() => navigate('/login'), 2000);
+            setTimeout(() => navigate('/profile'), 2000);
         } catch (err: any) {
             const msg = err?.message?.includes('already registered')
                 ? 'Cet email est déjà utilisé.'

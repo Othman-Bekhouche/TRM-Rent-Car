@@ -194,7 +194,7 @@ export default function Reservations() {
                                         {vehicles.map(v => <option key={v.id} value={v.id}>{v.brand} {v.model} - {v.plate_number}</option>)}
                                     </select>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Date début *</label>
                                         <input required type="date" value={formData.start_date} onChange={e => setFormData({ ...formData, start_date: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" />
@@ -207,7 +207,7 @@ export default function Reservations() {
                             </div>
 
                             <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Lieu Retrait</label>
                                         <input type="text" value={formData.pickup_location} onChange={e => setFormData({ ...formData, pickup_location: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" />
@@ -217,7 +217,7 @@ export default function Reservations() {
                                         <input type="text" value={formData.dropoff_location} onChange={e => setFormData({ ...formData, dropoff_location: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" />
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Prix Total (MAD)</label>
                                         <input type="number" value={formData.total_price} onChange={e => setFormData({ ...formData, total_price: parseFloat(e.target.value) })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] font-bold text-[#1C0770] text-slate-800" />
@@ -234,7 +234,7 @@ export default function Reservations() {
                                         </select>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Paiement</label>
                                         <select value={formData.payment_method} onChange={e => setFormData({ ...formData, payment_method: e.target.value as any })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800">

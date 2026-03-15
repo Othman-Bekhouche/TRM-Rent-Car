@@ -331,7 +331,7 @@ export default function AdminVehicles() {
                             </div>
                             <p className="text-xs text-slate-400">Ajoutez jusqu'à 4 photos : Couverture (principale), Vue Avant, Vue Arrière et Intérieur. Collez le chemin ou l'URL de chaque image.</p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <ImageField label="📷 Photo Couverture (principale)" value={coverImageUrl} onChange={setCoverImageUrl} placeholder="/images/cars/voiture_cover.png" slotName="cover" />
                                 <ImageField label="🚗 Vue Avant" value={frontImageUrl} onChange={setFrontImageUrl} placeholder="/images/cars/voiture_front.png" slotName="front" />
                                 <ImageField label="🔙 Vue Arrière" value={rearImageUrl} onChange={setRearImageUrl} placeholder="/images/cars/voiture_rear.png" slotName="rear" />

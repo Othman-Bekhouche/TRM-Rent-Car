@@ -37,7 +37,7 @@ export function useRoleRedirect() {
             } else if (userRole === 'assistant') {
                 navigate('/admin/reservations');
             } else {
-                navigate('/');
+                navigate('/profile');
             }
         } catch (err) {
             console.error('Redirect error:', err);

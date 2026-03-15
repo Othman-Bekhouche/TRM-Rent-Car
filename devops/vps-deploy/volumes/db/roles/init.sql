@@ -41,6 +41,8 @@ ALTER SCHEMA storage OWNER TO supabase_storage_admin;
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO supabase_admin;
+GRANT ALL ON SCHEMA public TO supabase_auth_admin;
+GRANT ALL ON SCHEMA public TO supabase_storage_admin;
 
 -- Set search path
 ALTER DATABASE postgres SET search_path TO public, extensions, auth, storage, realtime;
