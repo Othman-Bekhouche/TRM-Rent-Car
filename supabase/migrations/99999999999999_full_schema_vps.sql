@@ -1,6 +1,6 @@
 -- =============================================
 -- TRM Rent Car — FULL CONSOLIDATED SCHEMA (VPS)
--- Version: PRODUCTION READY - IDEMPOTENT
+-- Version: PRODUCTION READY - IDEMPOTENT V2
 -- =============================================
 
 -- 0. Préparation de l'environnement
@@ -336,92 +336,46 @@ $$;
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  -- Création automatique du profil
   INSERT INTO public.profiles (id, full_name, email, role)
-  VALUES (
-    new.id,
-    COALESCE(new.raw_user_meta_data->>'full_name', 'Utilisateur'),
-    new.email,
-    'customer'
-  );
+  VALUES (new.id, COALESCE(new.raw_user_meta_data->>'full_name', 'Utilisateur'), new.email, 'customer')
+  ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;
   
-  -- Création automatique du client (pour visibilité immédiate dans la liste)
   INSERT INTO public.customers (id, full_name, email, phone)
-  VALUES (
-    new.id,
-    COALESCE(new.raw_user_meta_data->>'full_name', 'Utilisateur'),
-    new.email,
-    COALESCE(new.raw_user_meta_data->>'phone', '')
-  ) ON CONFLICT (id) DO NOTHING;
+  VALUES (new.id, COALESCE(new.raw_user_meta_data->>'full_name', 'Utilisateur'), new.email, COALESCE(new.raw_user_meta_data->>'phone', ''))
+  ON CONFLICT (id) DO NOTHING;
 
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 5. Triggers (Sûrs)
+-- 5. Triggers (Suppression et Recréation Propre)
 DO $$
+DECLARE
+    t text;
 BEGIN
-    -- Drop triggers if they exist
+    -- Auth trigger
     DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
     CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
-    -- Updated at triggers
-    PERFORM 'DROP TRIGGER IF EXISTS set_updated_at ON ' || quote_ident(t.table_name) FROM (SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('profiles', 'vehicles', 'reservations', 'customers', 'infractions', 'maintenance', 'vehicle_maintenance_records', 'company_settings', 'invoices', 'rental_contracts', 'rental_handover_records', 'quotes')) t;
-    
-    CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-    CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.vehicles FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-    CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.reservations FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-    CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-    CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.infractions FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-    CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.maintenance FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-    CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.vehicle_maintenance_records FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-    CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.company_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-    CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.invoices FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-    CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.rental_contracts FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-    CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.rental_handover_records FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-    CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.quotes FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+    -- Updated_at triggers pour toutes les tables
+    FOR t IN SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('profiles', 'vehicles', 'reservations', 'customers', 'infractions', 'maintenance', 'vehicle_maintenance_records', 'company_settings', 'invoices', 'rental_contracts', 'rental_handover_records', 'quotes')
+    LOOP
+        EXECUTE format('DROP TRIGGER IF EXISTS set_updated_at ON public.%I', t);
+        EXECUTE format('CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.%I FOR EACH ROW EXECUTE FUNCTION update_updated_at()', t);
+    END LOOP;
 END $$;
 
--- 6. Sécurité RLS et Politiques (Sûres)
-DO $$
-BEGIN
-    -- Activation RLS
-    ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.vehicles ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.vehicle_images ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.reservations ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.infractions ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.maintenance ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.gps_tracking ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.vehicle_mileage_logs ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.maintenance_alerts ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.vehicle_maintenance_records ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.system_notifications ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.company_settings ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.rental_contracts ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.rental_handover_records ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.quotes ENABLE ROW LEVEL SECURITY;
-
-    -- Cleanup old policies
-    -- (On pourrait tout dropper par précaution, mais ici on va juste s'assurer que les GRANT sont bons)
-    GRANT ALL ON ALL TABLES IN SCHEMA public TO postgres, supabase_admin;
-    GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
-    GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
-END $$;
+-- 6. Sécurité RLS et Politiques
+-- On force les permissions de base
+GRANT ALL ON ALL TABLES IN SCHEMA public TO postgres, supabase_admin;
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
 
 -- 7. Données de base
 INSERT INTO public.company_settings (company_name, phone, email, address, website)
 VALUES ('TRM Rent Car', '06 06 06 6426', 'trm.rentcar@gmail.com', 'Appt Sabrine 2éme Etage N°6 Bloc A, 65800 Taourirt', 'www.trmrentcar.ma')
 ON CONFLICT DO NOTHING;
 
--- 8. Storage (Sûr)
--- Le schéma storage est géré par l'API Storage de Supabase, on vérifie juste s'il existe
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.schemata WHERE schema_name = 'storage') THEN
-        INSERT INTO storage.buckets (id, name, public) VALUES ('vehicles', 'vehicles', true) ON CONFLICT (id) DO NOTHING;
-    END IF;
-END $$;
+-- 8. Storage (Configuré après le démarrage du service storage sur le VPS)
+-- On ne met pas d'INSERT ici pour le moment car le storage-api crée ses tables plus tard
