@@ -38,11 +38,13 @@ ALTER SCHEMA auth OWNER TO supabase_auth_admin;
 ALTER SCHEMA storage OWNER TO supabase_storage_admin;
 
 -- Grant usage on public to everyone
-GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+ALTER SCHEMA public OWNER TO postgres;
+GRANT ALL ON SCHEMA public TO public;
 GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO supabase_admin;
 GRANT ALL ON SCHEMA public TO supabase_auth_admin;
 GRANT ALL ON SCHEMA public TO supabase_storage_admin;
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 
 -- Set search path
 ALTER DATABASE postgres SET search_path TO public, extensions, auth, storage, realtime;

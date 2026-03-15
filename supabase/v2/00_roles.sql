@@ -40,3 +40,15 @@ GRANT anon, authenticated, service_role TO authenticator;
 ALTER ROLE authenticator SET search_path TO public, auth, extensions, storage;
 ALTER ROLE anon SET search_path TO public, extensions;
 ALTER ROLE authenticated SET search_path TO public, extensions;
+
+-- CRITICAL FIX FOR POSTGRES 15 (Self-hosted)
+-- Permet aux services Supabase (Auth, Storage) de créer leurs tables internes dans public
+ALTER SCHEMA public OWNER TO postgres;
+GRANT ALL ON SCHEMA public TO public;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO supabase_admin;
+GRANT ALL ON SCHEMA public TO supabase_auth_admin;
+GRANT ALL ON SCHEMA public TO supabase_storage_admin;
+
+-- Grant usage for API roles
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
