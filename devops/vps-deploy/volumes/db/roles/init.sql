@@ -52,5 +52,9 @@ CREATE SCHEMA IF NOT EXISTS extensions;
 ALTER SCHEMA auth OWNER TO supabase_auth_admin;
 ALTER SCHEMA storage OWNER TO supabase_storage_admin;
 
+-- FIX PG15: Pré-création de la table de migration
+CREATE TABLE IF NOT EXISTS public.schema_migrations (version varchar(255) primary key);
+ALTER TABLE public.schema_migrations OWNER TO supabase_auth_admin;
+
 -- Search path
 ALTER DATABASE postgres SET search_path TO public, auth, extensions, storage, realtime;

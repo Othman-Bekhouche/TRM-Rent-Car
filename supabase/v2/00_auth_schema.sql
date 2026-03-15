@@ -5,6 +5,10 @@
 
 CREATE SCHEMA IF NOT EXISTS auth;
 
+-- FIX PG15: Pré-création de la table que le service Auth n'arrive pas à créer tout seul
+CREATE TABLE IF NOT EXISTS public.schema_migrations (version varchar(255) primary key);
+ALTER TABLE public.schema_migrations OWNER TO supabase_auth_admin;
+
 -- Création minimale de la table users pour permettre aux triggers de se lier
 -- Supabase Auth complétera la table au démarrage
 CREATE TABLE IF NOT EXISTS auth.users (
