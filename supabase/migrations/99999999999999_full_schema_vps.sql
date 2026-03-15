@@ -1,7 +1,24 @@
--- =============================================
--- TRM Rent Car — ULTIMATE CONSOLIDATED SCHEMA (VPS)
--- Version: FINAL PRODUCTION - MIRROR ALL FIXES
--- =============================================
+-- 0. ROLES & SECURITY INFRASTRUCTURE
+-- This ensures PostgREST can connect and switch to anon/authenticated roles
+DO $$
+BEGIN
+    -- 1. Create Roles if they don't exist
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'anon') THEN CREATE ROLE anon NOLOGIN NOINHERIT; END IF;
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticated') THEN CREATE ROLE authenticated NOLOGIN NOINHERIT; END IF;
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'service_role') THEN CREATE ROLE service_role NOLOGIN NOINHERIT; END IF;
+
+    -- 2. Create Authenticator (the gateway role)
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticator') THEN 
+        CREATE ROLE authenticator NOINHERIT LOGIN;
+    END IF;
+
+    -- 3. Link roles
+    GRANT anon, authenticated, service_role TO authenticator;
+END $$;
+
+-- Fix search paths for PostgREST
+ALTER ROLE authenticator SET search_path TO public, extensions, storage;
+ALTER ROLE anon SET search_path TO public, extensions, storage;
 
 -- 0. EXTENSIONS & SETUP
 SET search_path TO public, auth, extensions, storage;
