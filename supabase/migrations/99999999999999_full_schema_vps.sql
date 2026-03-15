@@ -16,9 +16,14 @@ BEGIN
     GRANT anon, authenticated, service_role TO authenticator;
 END $$;
 
--- Fix search paths for PostgREST
+-- Fix search paths for ALL roles (Crucial to prevent role "" error)
 ALTER ROLE authenticator SET search_path TO public, extensions, storage;
 ALTER ROLE anon SET search_path TO public, extensions, storage;
+ALTER ROLE authenticated SET search_path TO public, extensions, storage; -- MISSING PREVIOUSLY
+
+-- Force default role for new users in the Auth schema
+ALTER TABLE auth.users ALTER COLUMN role SET DEFAULT 'authenticated';
+UPDATE auth.users SET role = 'authenticated' WHERE role IS NULL OR role = '';
 
 -- 0. EXTENSIONS & SETUP
 SET search_path TO public, auth, extensions, storage;
