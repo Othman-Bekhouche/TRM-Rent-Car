@@ -3,8 +3,9 @@
 -- This file consolidates all organized schema parts.
 -- =============================================
 
--- 0. Roles
+-- 0. Roles & Auth Schema
 \i 00_roles.sql
+\i 00_auth_schema.sql
 
 -- 1. Extensions & Schemas
 \i 01_extensions.sql
