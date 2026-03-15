@@ -1,50 +1,50 @@
 -- =============================================
--- TRM Rent Car — MASTER STRICT SCHEMA (VPS)
--- Mirrors Local Environment Exactly
+-- TRM Rent Car — ULTIMATE CONSOLIDATED SCHEMA (VPS)
+-- Version: FINAL PRODUCTION - MIRROR ALL FIXES
 -- =============================================
 
--- 0. Préparation de l'environnement
+-- 0. EXTENSIONS & SETUP
 SET search_path TO public, auth, extensions, storage;
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS "pgcrypto" SCHEMA extensions;
 
--- 1. Nettoyage (On repart de zéro pour éviter les conflits)
-DROP TABLE IF EXISTS public.vehicle_maintenance_records CASCADE;
-DROP TABLE IF EXISTS public.maintenance_alerts CASCADE;
-DROP TABLE IF EXISTS public.vehicle_mileage_logs CASCADE;
-DROP TABLE IF EXISTS public.gps_tracking CASCADE;
-DROP TABLE IF EXISTS public.transactions CASCADE;
-DROP TABLE IF EXISTS public.maintenance CASCADE;
-DROP TABLE IF EXISTS public.infractions CASCADE;
-DROP TABLE IF EXISTS public.rental_handover_records CASCADE;
-DROP TABLE IF EXISTS public.rental_contracts CASCADE;
-DROP TABLE IF EXISTS public.invoices CASCADE;
-DROP TABLE IF EXISTS public.quotes CASCADE;
-DROP TABLE IF EXISTS public.reservations CASCADE;
-DROP TABLE IF EXISTS public.vehicle_images CASCADE;
-DROP TABLE IF EXISTS public.vehicles CASCADE;
-DROP TABLE IF EXISTS public.customers CASCADE;
-DROP TABLE IF EXISTS public.profiles CASCADE;
-DROP TABLE IF EXISTS public.company_settings CASCADE;
-DROP TABLE IF EXISTS public.system_notifications CASCADE;
-
--- 2. ENUMS
+-- Clear previous failed attempts in public
 DO $$ 
+DECLARE
+    r RECORD;
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
-        CREATE TYPE user_role AS ENUM ('customer', 'admin', 'super_admin', 'gestionnaire', 'assistant');
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'vehicle_status') THEN
-        CREATE TYPE vehicle_status AS ENUM ('available', 'booked', 'maintenance', 'inactive', 'rented');
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'reservation_status') THEN
-        CREATE TYPE reservation_status AS ENUM ('pending', 'confirmed', 'cancelled', 'completed', 'rejected', 'rented', 'returned');
-    END IF;
+    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+        EXECUTE 'DROP TABLE IF EXISTS public.' || quote_ident(r.tablename) || ' CASCADE';
+    END LOOP;
+    FOR r IN (SELECT typname FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE n.nspname = 'public') LOOP
+        EXECUTE 'DROP TYPE IF EXISTS public.' || quote_ident(r.typname) || ' CASCADE';
+    END LOOP;
 END $$;
 
--- 3. TABLES (Structure Complète)
+-- 1. ENUMS (Exactly matching local)
+CREATE TYPE user_role AS ENUM ('customer', 'admin', 'super_admin', 'gestionnaire', 'assistant');
+CREATE TYPE vehicle_status AS ENUM ('available', 'booked', 'maintenance', 'inactive', 'rented');
+CREATE TYPE reservation_status AS ENUM ('pending', 'confirmed', 'cancelled', 'completed', 'rejected', 'rented', 'returned');
+CREATE TYPE infraction_status AS ENUM ('pending', 'matched', 'transmitted', 'resolved', 'unmatched');
+CREATE TYPE infraction_type AS ENUM ('radar_fixe', 'exces_vitesse', 'stationnement_interdit', 'feu_rouge', 'controle_routier', 'autre');
+CREATE TYPE maintenance_status AS ENUM ('planned', 'in_progress', 'completed');
+CREATE TYPE transaction_type AS ENUM ('encaissement', 'caution', 'remboursement', 'charge');
+CREATE TYPE quote_status AS ENUM ('draft', 'sent', 'accepted', 'rejected', 'expired');
+
+-- 2. HELPER FUNCTIONS
+CREATE OR REPLACE FUNCTION public.update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 3. CORE TABLES
+
+-- Profiles (Auth Link)
 CREATE TABLE public.profiles (
-    id UUID PRIMARY KEY,
+    id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
     full_name TEXT,
     email TEXT UNIQUE NOT NULL,
     phone TEXT,
@@ -53,10 +53,43 @@ CREATE TABLE public.profiles (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Helper for RLS
+CREATE OR REPLACE FUNCTION public.get_my_role()
+RETURNS TEXT LANGUAGE sql SECURITY DEFINER STABLE AS $$
+    SELECT role::text FROM public.profiles WHERE id = auth.uid();
+$$;
+
+-- Vehicles (With all maintenance columns)
+CREATE TABLE public.vehicles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    brand TEXT NOT NULL,
+    model TEXT NOT NULL,
+    year INT NOT NULL,
+    plate_number TEXT UNIQUE NOT NULL,
+    transmission TEXT DEFAULT 'Automatic',
+    fuel_type TEXT,
+    seats INT DEFAULT 5,
+    doors INT DEFAULT 5,
+    color TEXT,
+    traction TEXT DEFAULT 'Traction avant',
+    mileage INT DEFAULT 0,
+    price_per_day DECIMAL(10,2) NOT NULL,
+    deposit_amount DECIMAL(10,2) NOT NULL,
+    status vehicle_status DEFAULT 'available'::vehicle_status,
+    description TEXT,
+    last_oil_change_mileage INTEGER DEFAULT 0,
+    next_oil_change_mileage INTEGER DEFAULT 0,
+    last_service_mileage INTEGER DEFAULT 0,
+    next_service_mileage INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Customers (With Unique Email Fix)
 CREATE TABLE public.customers (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     full_name TEXT NOT NULL,
-    email TEXT,
+    email TEXT UNIQUE NOT NULL, -- Fix from fix_customers_unique.sql
     phone TEXT NOT NULL,
     cin TEXT,
     passport TEXT,
@@ -65,111 +98,171 @@ CREATE TABLE public.customers (
     total_spent DECIMAL(10,2) DEFAULT 0,
     total_reservations INT DEFAULT 0,
     status TEXT DEFAULT 'Actif',
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE public.vehicles (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    brand TEXT NOT NULL,
-    model TEXT NOT NULL,
-    year INT NOT NULL,
-    plate_number TEXT UNIQUE NOT NULL,
-    color TEXT,
-    fuel_type TEXT,
-    transmission TEXT,
-    seats INT DEFAULT 5,
-    price_per_day DECIMAL(10,2) NOT NULL,
-    deposit_amount DECIMAL(10,2) NOT NULL,
-    status vehicle_status DEFAULT 'available'::vehicle_status,
-    description TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE public.vehicle_images (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    vehicle_id UUID REFERENCES public.vehicles(id) ON DELETE CASCADE,
-    image_url TEXT NOT NULL,
-    is_cover BOOLEAN DEFAULT FALSE
-);
-
+-- Reservations
 CREATE TABLE public.reservations (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    customer_id UUID REFERENCES public.customers(id),
-    vehicle_id UUID REFERENCES public.vehicles(id),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id UUID REFERENCES public.customers(id) ON DELETE SET NULL,
+    vehicle_id UUID REFERENCES public.vehicles(id) ON DELETE RESTRICT,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
+    pickup_location TEXT,
+    return_location TEXT,
     total_price DECIMAL(10,2) NOT NULL,
     status reservation_status DEFAULT 'pending'::reservation_status,
     payment_status TEXT DEFAULT 'unpaid',
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT valid_dates CHECK (end_date >= start_date)
+);
+
+-- 4. MAINTENANCE & LOGISTICS TABLES (From ultimate_fix.sql)
+
+CREATE TABLE public.vehicle_maintenance_records (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    vehicle_id UUID REFERENCES public.vehicles(id) ON DELETE CASCADE,
+    maintenance_type TEXT NOT NULL,
+    status TEXT DEFAULT 'Planifié',
+    last_service_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    last_service_mileage INTEGER DEFAULT 0,
+    next_service_date DATE,
+    next_service_mileage INTEGER DEFAULT 0,
+    estimated_cost DECIMAL(10,2) DEFAULT 0,
+    actual_cost DECIMAL(10,2) DEFAULT 0,
+    vendor_name TEXT,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE public.vehicle_mileage_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    vehicle_id UUID REFERENCES public.vehicles(id) ON DELETE CASCADE,
+    mileage_value INTEGER NOT NULL,
+    recorded_at TIMESTAMPTZ DEFAULT NOW(),
+    recorded_by UUID REFERENCES auth.users(id),
+    notes TEXT
+);
+
+CREATE TABLE public.maintenance_alerts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    vehicle_id UUID REFERENCES public.vehicles(id) ON DELETE CASCADE,
+    maintenance_record_id UUID REFERENCES public.vehicle_maintenance_records(id) ON DELETE CASCADE,
+    alert_type TEXT NOT NULL,
+    alert_message TEXT NOT NULL,
+    priority TEXT DEFAULT 'low',
+    status TEXT DEFAULT 'active',
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 5. FINANCE & CRM TABLES
+
 CREATE TABLE public.transactions (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    reservation_id UUID REFERENCES public.reservations(id),
-    customer_id UUID REFERENCES public.customers(id),
-    transaction_type TEXT NOT NULL, -- 'encaissement', 'remboursement'
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    reservation_id UUID REFERENCES public.reservations(id) ON DELETE SET NULL,
+    customer_id UUID REFERENCES public.customers(id) ON DELETE SET NULL,
+    transaction_type transaction_type NOT NULL DEFAULT 'encaissement',
     amount DECIMAL(10,2) NOT NULL,
+    payment_method TEXT,
+    description TEXT,
+    status TEXT DEFAULT 'Payé',
     transaction_date DATE DEFAULT CURRENT_DATE,
-    status TEXT DEFAULT 'Payé'
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE public.invoices (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     reservation_id UUID REFERENCES public.reservations(id) ON DELETE CASCADE,
     invoice_number TEXT UNIQUE NOT NULL,
-    total_amount DECIMAL(10,2) NOT NULL,
+    invoice_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    total_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+    payment_status TEXT DEFAULT 'unpaid',
     pdf_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. POLITIQUES DE SÉCURITÉ (RLS) - "Strictement comme local"
+CREATE TABLE public.quotes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    quote_number TEXT UNIQUE NOT NULL,
+    customer_id UUID REFERENCES public.customers(id) ON DELETE CASCADE,
+    vehicle_id UUID REFERENCES public.vehicles(id) ON DELETE SET NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    total_amount DECIMAL(10,2) NOT NULL,
+    status quote_status DEFAULT 'draft',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 6. IMAGES & CONFIG
+
+CREATE TABLE public.vehicle_images (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    vehicle_id UUID REFERENCES public.vehicles(id) ON DELETE CASCADE,
+    image_url TEXT NOT NULL,
+    is_cover BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE public.company_settings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    company_name TEXT NOT NULL DEFAULT 'TRM Rent Car',
+    phone TEXT,
+    email TEXT,
+    address TEXT,
+    website TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 7. SECURITY (Strict RLS mirroring fix_rls_visibility.sql)
+
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vehicles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reservations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vehicle_images ENABLE ROW LEVEL SECURITY;
 
--- Profiles: Chacun voit le sien, Admin voit tout
-CREATE POLICY "Profiles viewable by self" ON public.profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Admins manage profiles" ON public.profiles FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'super_admin'))
+-- Vehicles Visibility
+CREATE POLICY "Public view vehicles" ON public.vehicles FOR SELECT USING (true);
+CREATE POLICY "Staff manage vehicles" ON public.vehicles FOR ALL USING (
+    get_my_role() IN ('admin', 'super_admin', 'gestionnaire', 'assistant')
 );
 
--- Vehicles: Tout le monde voit, Admin gère
-CREATE POLICY "Vehicles viewable by everyone" ON public.vehicles FOR SELECT USING (true);
-CREATE POLICY "Admins manage vehicles" ON public.vehicles FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'super_admin', 'gestionnaire'))
+-- Profiles Visibility
+CREATE POLICY "Self view profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Staff manage profiles" ON public.profiles FOR ALL USING (get_my_role() IN ('admin', 'super_admin'));
+
+-- Customers Visibility (Robust mirror of fix_rls_visibility.sql)
+CREATE POLICY "Customers view self" ON public.customers FOR SELECT USING (
+    LOWER(email) = LOWER(COALESCE(auth.jwt()->>'email', auth.email()))
+);
+CREATE POLICY "Staff view customers" ON public.customers FOR SELECT USING (
+    get_my_role() IN ('admin', 'super_admin', 'gestionnaire', 'assistant')
+);
+CREATE POLICY "Public lookup checkout" ON public.customers FOR SELECT USING (true);
+
+-- Reservations Visibility
+CREATE POLICY "Customers view reservations" ON public.reservations FOR SELECT USING (
+    customer_id IN (SELECT id FROM public.customers WHERE LOWER(email) = LOWER(COALESCE(auth.jwt()->>'email', auth.email())))
+);
+CREATE POLICY "Staff view reservations" ON public.reservations FOR SELECT USING (
+    get_my_role() IN ('admin', 'super_admin', 'gestionnaire', 'assistant')
 );
 
--- Reservations: Clients voient les leurs, Staff voit tout
-CREATE POLICY "Customers view own reservations" ON public.reservations FOR SELECT USING (
-  customer_id IN (SELECT id FROM public.customers WHERE email = auth.jwt()->>'email')
-);
-CREATE POLICY "Staff manage all reservations" ON public.reservations FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'super_admin', 'gestionnaire', 'assistant'))
-);
+-- 8. TRIGGERS
 
--- 5. DROITS D'ACCÈS (GRANTS) - INDISPENSABLE
-GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.vehicles FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
--- 6. DONNÉES DE BASE (Voitures et Admin)
-INSERT INTO public.vehicles (id, brand, model, color, fuel_type, transmission, year, plate_number, price_per_day, deposit_amount, status)
-VALUES 
-('11111111-1111-1111-1111-111111111111', 'Peugeot', '208', 'Noir', 'Diesel', 'Manuelle', 2026, '208-A-001', 420.00, 5000.00, 'available'),
-('22222222-2222-2222-2222-222222222222', 'Peugeot', '208', 'Gris', 'Diesel', 'Automatique', 2026, '208-B-002', 520.00, 6000.00, 'available'),
-('33333333-3333-3333-3333-333333333333', 'Dacia', 'Logan', 'Blanc', 'Diesel', 'Manuelle', 2026, 'LOG-C-003', 300.00, 3000.00, 'available')
-ON CONFLICT DO NOTHING;
-
--- Injection forcée de l'Admin principal (Attention: remplacez par votre ID réel si possible)
-DELETE FROM public.profiles WHERE email = 'admin@trmrentcar.ma';
-INSERT INTO public.profiles (id, full_name, email, role)
-VALUES ('d5d4d3d2-d1d0-4a9b-8c8d-7e6f5d4c3b2a', 'Med Tahiri', 'admin@trmrentcar.ma', 'super_admin');
-
--- 7. Trigger Automatique Identique au Local
+-- Auto User Creation
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS trigger AS $$
+RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (id, full_name, email, role)
   VALUES (new.id, COALESCE(new.raw_user_meta_data->>'full_name', 'Client'), new.email, 'customer')
@@ -177,10 +270,42 @@ BEGIN
   
   INSERT INTO public.customers (id, full_name, email, phone)
   VALUES (new.id, COALESCE(new.raw_user_meta_data->>'full_name', 'Client'), new.email, COALESCE(new.raw_user_meta_data->>'phone', ''))
-  ON CONFLICT (id) DO NOTHING;
-  RETURN new;
+  ON CONFLICT (email) DO NOTHING; -- Use email for conflict as id might differ if not synced
+  
+  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- 9. PERMISSIONS (FINAL GRANT)
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+
+-- 10. REAL DATA SEED
+
+DO $$
+DECLARE
+    v1 UUID := '11111111-1111-1111-1111-111111111111';
+    v2 UUID := '22222222-2222-2222-2222-222222222222';
+    v3 UUID := '33333333-3333-3333-3333-333333333333';
+BEGIN
+    INSERT INTO public.vehicles (id, brand, model, color, fuel_type, transmission, year, plate_number, price_per_day, deposit_amount, status)
+    VALUES 
+    (v1, 'Peugeot', '208 (Citadine)', 'Noir', 'Diesel', 'Manuelle', 2026, '208-A-001', 420.00, 5000.00, 'available'),
+    (v2, 'Peugeot', '208 (Citadine)', 'Gris', 'Hybride', 'Automatique', 2026, '208-B-002', 520.00, 6000.00, 'available'),
+    (v3, 'Dacia', 'Logan (Berline)', 'Blanc', 'Diesel', 'Manuelle', 2026, 'LOG-C-003', 300.00, 3000.00, 'available');
+
+    INSERT INTO public.vehicle_images (vehicle_id, image_url, is_cover) VALUES
+    (v1, '/images/cars/peugeot_208_noir.png', true),
+    (v1, '/images/cars/peugeot_208_noir_front.png', false),
+    (v2, '/images/cars/peugeot_208_gris.png', true),
+    (v3, '/images/cars/dacia_logan_blanc.png', true);
+
+    -- Admin Profile
+    INSERT INTO public.profiles (id, full_name, email, role)
+    VALUES ('d5d4d3d2-d1d0-4a9b-8c8d-7e6f5d4c3b2a', 'Med Tahiri', 'admin@trmrentcar.ma', 'super_admin')
+    ON CONFLICT (id) DO UPDATE SET role = 'super_admin';
+END $$;
