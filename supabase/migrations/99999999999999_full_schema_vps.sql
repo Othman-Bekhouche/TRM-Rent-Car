@@ -304,8 +304,5 @@ BEGIN
     (v2, '/images/cars/peugeot_208_gris.png', true),
     (v3, '/images/cars/dacia_logan_blanc.png', true);
 
-    -- Admin Profile
-    INSERT INTO public.profiles (id, full_name, email, role)
-    VALUES ('d5d4d3d2-d1d0-4a9b-8c8d-7e6f5d4c3b2a', 'Med Tahiri', 'admin@trmrentcar.ma', 'super_admin')
-    ON CONFLICT (id) DO UPDATE SET role = 'super_admin';
+    -- (L'admin sera créé via l'inscription sur le site puis promu par commande)
 END $$;
