@@ -1,8 +1,9 @@
 -- =============================================
--- 05_rls.sql
+-- 06_rls.sql
+-- Politiques de sécurité (Row Level Security)
 -- =============================================
 
--- Enable RLS on all tables
+-- Activation RLS
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vehicles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
@@ -20,8 +21,7 @@ ALTER TABLE public.vehicle_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.company_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.system_notifications ENABLE ROW LEVEL SECURITY;
 
--- 1. Unified Staff Policy (Admins, Gestionnaires, etc.)
--- This loop creates a "Staff manage ..." policy for every table for staff members
+-- 1. Unified Staff Policy
 DO $$ 
 DECLARE
     t text;
@@ -32,18 +32,20 @@ BEGIN
     END LOOP;
 END $$;
 
--- 2. Public/Customer specific policies
-
--- Vehicles & Images are viewable by everyone
+-- 2. Public Policies
+DROP POLICY IF EXISTS "Public view vehicles" ON public.vehicles;
 CREATE POLICY "Public view vehicles" ON public.vehicles FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public view images" ON public.vehicle_images;
 CREATE POLICY "Public view images" ON public.vehicle_images FOR SELECT USING (true);
 
--- Customers can view themselves
+-- 3. Customer Policies
+DROP POLICY IF EXISTS "Customers view self" ON public.customers;
 CREATE POLICY "Customers view self" ON public.customers FOR SELECT USING (
     LOWER(email) = LOWER(COALESCE(auth.jwt()->>'email', auth.email()))
 );
 
--- Customers can view their own reservations
+DROP POLICY IF EXISTS "Customers view reservations" ON public.reservations;
 CREATE POLICY "Customers view reservations" ON public.reservations FOR SELECT USING (
     customer_id IN (
         SELECT id FROM public.customers 
@@ -51,12 +53,11 @@ CREATE POLICY "Customers view reservations" ON public.reservations FOR SELECT US
     )
 );
 
--- Allow public lookup for checkout (optional, based on your app logic)
--- CREATE POLICY "Allow public lookup for checkout." ON public.customers FOR SELECT USING (true);
-
--- Profiles: Users can view their own profile
+DROP POLICY IF EXISTS "Users view own profile" ON public.profiles;
 CREATE POLICY "Users view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users update own profile" ON public.profiles;
 CREATE POLICY "Users update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
--- Notifications: Users see their own
+DROP POLICY IF EXISTS "Users view own notifications" ON public.system_notifications;
 CREATE POLICY "Users view own notifications" ON public.system_notifications FOR SELECT USING (user_id = auth.uid());

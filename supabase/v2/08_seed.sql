@@ -5,18 +5,20 @@
 
 DO $$
 DECLARE
-    -- Utilisation d'IDs fixes pour rendre le seed répétable (idempotent)
+    -- Utilisation d'IDs fixes
     v1 UUID := '62e7d409-0ee6-4ea9-b05d-2e7cdcc1be18';
     v2 UUID := '72e7d409-0ee6-4ea9-b05d-2e7cdcc1be19';
     v3 UUID := '82e7d409-0ee6-4ea9-b05d-2e7cdcc1be20';
 BEGIN
-    -- Insertion des Véhicules
+    -- Insertion des Véhicules (Gestion des conflits sur ID et Plate Number)
     INSERT INTO public.vehicles (id, brand, model, color, fuel_type, transmission, year, plate_number, price_per_day, deposit_amount, status)
     VALUES 
     (v1, 'Peugeot', '208 (Citadine)', 'Noir', 'Diesel', 'Manuelle', 2026, '208-A-001', 420.00, 5000.00, 'available'),
     (v2, 'Peugeot', '208 (Citadine)', 'Gris', 'Hybride', 'Automatique', 2026, '208-B-002', 520.00, 6000.00, 'available'),
     (v3, 'Dacia', 'Logan (Berline)', 'Blanc', 'Diesel', 'Manuelle', 2026, 'LOG-C-003', 300.00, 3000.00, 'available')
-    ON CONFLICT (id) DO NOTHING;
+    ON CONFLICT (id) DO UPDATE SET 
+        plate_number = EXCLUDED.plate_number,
+        status = EXCLUDED.status;
 
     -- Insertion des Images
     INSERT INTO public.vehicle_images (vehicle_id, image_url, is_cover) VALUES
