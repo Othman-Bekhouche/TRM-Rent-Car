@@ -256,12 +256,12 @@ CREATE POLICY "Staff manage vehicles" ON public.vehicles FOR ALL USING (
 );
 
 -- Profiles Visibility
-CREATE POLICY "Self view profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Self view profile" ON public.profiles FOR SELECT USING (auth.uid() = id OR true); -- Re-allow read for login check
 CREATE POLICY "Staff manage profiles" ON public.profiles FOR ALL USING (get_my_role() IN ('admin', 'super_admin'));
 
 -- Customers Visibility (Robust mirror of fix_rls_visibility.sql)
 CREATE POLICY "Customers view self" ON public.customers FOR SELECT USING (
-    LOWER(email) = LOWER(COALESCE(auth.jwt()->>'email', auth.email()))
+    LOWER(email) = LOWER(COALESCE(auth.jwt()->>'email', auth.email())) OR auth.uid() = id
 );
 CREATE POLICY "Staff view customers" ON public.customers FOR SELECT USING (
     get_my_role() IN ('admin', 'super_admin', 'gestionnaire', 'assistant')
