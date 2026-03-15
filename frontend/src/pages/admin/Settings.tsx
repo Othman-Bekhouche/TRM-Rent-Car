@@ -13,7 +13,23 @@ export default function Settings() {
         const loadSettings = async () => {
             try {
                 const data = await settingsApi.get();
-                setSettings(data);
+                if (data) {
+                    setSettings(data);
+                } else {
+                    // Initialize with defaults if null
+                    setSettings({
+                        company_name: 'TRM Rent Car',
+                        phone: '',
+                        email: '',
+                        address: '',
+                        website: '',
+                        delivery_fee: 0,
+                        discount_week: 0,
+                        discount_month: 0,
+                        notifications_email: true,
+                        notifications_sms: false
+                    });
+                }
             } catch (err) {
                 toast.error('Erreur lors du chargement des paramètres.');
             } finally {
@@ -28,15 +44,18 @@ export default function Settings() {
         setSaving(true);
         try {
             const dataToUpdate = { ...settings };
-            delete dataToUpdate.id;
             delete dataToUpdate.created_at;
             delete dataToUpdate.updated_at;
 
-            await settingsApi.update(dataToUpdate);
+            const updatedData = await settingsApi.update(dataToUpdate);
+            if (updatedData) {
+                setSettings(updatedData);
+            }
             setSaved(true);
             toast.success('Paramètres sauvegardés avec succès !');
             setTimeout(() => setSaved(false), 2000);
         } catch (err) {
+            console.error('Settings save error:', err);
             toast.error('Erreur lors de la sauvegarde.');
         } finally {
             setSaving(false);

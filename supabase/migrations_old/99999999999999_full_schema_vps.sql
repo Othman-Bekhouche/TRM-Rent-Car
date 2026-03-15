@@ -281,6 +281,11 @@ CREATE TABLE public.company_settings (
     email TEXT,
     address TEXT,
     website TEXT,
+    delivery_fee DECIMAL(10,2) DEFAULT 0,
+    discount_week DECIMAL(5,2) DEFAULT 0,
+    discount_month DECIMAL(5,2) DEFAULT 0,
+    notifications_email BOOLEAN DEFAULT TRUE,
+    notifications_sms BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -444,4 +449,9 @@ BEGIN
     (v1, '/images/cars/peugeot_208_noir_front.png', false),
     (v2, '/images/cars/peugeot_208_gris.png', true),
     (v3, '/images/cars/dacia_logan_blanc.png', true);
+
+    -- Settings Seed
+    INSERT INTO public.company_settings (company_name, phone, email, address, website, delivery_fee, discount_week, discount_month)
+    VALUES ('TRM Rent Car', '06 06 06 6426', 'trm.rentcar@gmail.com', 'Appt Sabrine 2éme Etage N°6 Bloc A, 65800 Taourirt', 'www.trmrentcar.ma', 0, 0, 0)
+    ON CONFLICT DO NOTHING;
 END $$;

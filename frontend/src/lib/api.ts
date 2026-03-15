@@ -644,12 +644,36 @@ export const dashboardApi = {
 // ===== SETTINGS =====
 export const settingsApi = {
     async get() {
-        const { data, error } = await supabase.from('company_settings').select('*').single();
+        const { data, error } = await supabase.from('company_settings').select('*').limit(1).maybeSingle();
         if (error) throw error;
         return data;
     },
     async update(settingsData: any) {
-        const { data, error } = await supabase.from('company_settings').update(settingsData).neq('id', '00000000-0000-0000-0000-000000000000').select().single();
+        const allowedFields = [
+            'company_name', 'phone', 'email', 'address', 'website',
+            'delivery_fee', 'discount_week', 'discount_month',
+            'notifications_email', 'notifications_sms'
+        ];
+
+        const cleanData: any = {};
+        allowedFields.forEach(field => {
+            if (settingsData[field] !== undefined) {
+                cleanData[field] = settingsData[field];
+            }
+        });
+
+        // Use upsert with a check for the first record
+        const { data: existing } = await supabase.from('company_settings').select('id').limit(1).maybeSingle();
+
+        if (existing?.id) {
+            cleanData.id = existing.id;
+        }
+
+        const { data, error } = await supabase.from('company_settings')
+            .upsert(cleanData)
+            .select()
+            .single();
+
         if (error) throw error;
         return data;
     }
