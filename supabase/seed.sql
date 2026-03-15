@@ -1,6 +1,6 @@
 -- Nettoyage de la base
 DELETE FROM public.infractions;
-DELETE FROM public.maintenance;
+DELETE FROM public.vehicle_maintenance_records;
 DELETE FROM public.transactions;
 DELETE FROM public.gps_tracking;
 DELETE FROM public.customers;
@@ -77,7 +77,7 @@ VALUES
 ('d5d4d3d2-d1d0-4a9b-8c8d-7e6f5d4c3b2a', 'Med Tahiri', 'admin@trmrentcar.ma', '+212606066426', 'super_admin', NOW()),
 ('a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', 'Ahmed Tahiri', 'ahmed.t@trmrentcar.ma', '+212600112233', 'admin', NOW()),
 ('b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e', 'Sara Bennani', 'sara.b@trmrentcar.ma', '+212600445566', 'assistant', NOW())
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET role = EXCLUDED.role, full_name = EXCLUDED.full_name, phone = EXCLUDED.phone;
 
 -- 2. Insertion Data 4 Mois (Décembre 2025 -> Mars 2026)
 DO $$
@@ -284,3 +284,8 @@ BEGIN
     (NULL, c1, 'caution', 5000, 'Carte Bancaire', 'Caution Berline Oujda', 'En attente', '2026-03-12');
 
 END $$;
+
+-- Company Settings Seed
+INSERT INTO public.company_settings (company_name, phone, email, address, website, delivery_fee, discount_week, discount_month)
+SELECT 'TRM Rent Car', '06 06 06 6426', 'trm.rentcar@gmail.com', 'Appt Sabrine 2éme Etage N°6 Bloc A, 65800 Taourirt', 'www.trmrentcar.ma', 0, 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM public.company_settings);
