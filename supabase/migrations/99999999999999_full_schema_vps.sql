@@ -57,7 +57,7 @@ CREATE TYPE public.maintenance_status AS ENUM ('planned', 'in_progress', 'comple
 CREATE TYPE public.transaction_type AS ENUM ('encaissement', 'caution', 'remboursement', 'charge');
 CREATE TYPE public.quote_status AS ENUM ('draft', 'sent', 'accepted', 'rejected', 'expired');
 
--- 4. HELPER FUNCTIONS
+-- 4. BASIC TRIGGER FUNCTIONS
 CREATE OR REPLACE FUNCTION public.update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -65,20 +65,6 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION public.get_my_role()
-RETURNS TEXT LANGUAGE sql SECURITY DEFINER STABLE AS $$
-    SELECT role::text FROM public.profiles WHERE id = auth.uid();
-$$;
-
-CREATE OR REPLACE FUNCTION public.is_staff()
-RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER STABLE AS $$
-    SELECT EXISTS (
-        SELECT 1 FROM public.profiles 
-        WHERE id = auth.uid() 
-        AND role IN ('admin', 'super_admin', 'gestionnaire', 'assistant')
-    );
-$$;
 
 -- 5. TABLES
 
@@ -317,7 +303,22 @@ CREATE INDEX idx_cust_email ON public.customers(email);
 CREATE INDEX idx_maint_veh ON public.vehicle_maintenance_records(vehicle_id);
 CREATE INDEX idx_inf_res ON public.infractions(reservation_id);
 
--- 7. FUNCTIONS (RPC & TRIGGERS)
+-- 7. FUNCTIONS (RPC & SECURITY HELPERS)
+
+-- Security Helpers
+CREATE OR REPLACE FUNCTION public.get_my_role()
+RETURNS TEXT LANGUAGE sql SECURITY DEFINER STABLE AS $$
+    SELECT role::text FROM public.profiles WHERE id = auth.uid();
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_staff()
+RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER STABLE AS $$
+    SELECT EXISTS (
+        SELECT 1 FROM public.profiles 
+        WHERE id = auth.uid() 
+        AND role IN ('admin', 'super_admin', 'gestionnaire', 'assistant')
+    );
+$$;
 
 -- Checkout RPC
 CREATE OR REPLACE FUNCTION public.handle_checkout_customer(
