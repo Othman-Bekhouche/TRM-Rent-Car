@@ -31,7 +31,7 @@ GRANT ALL ON SCHEMA public TO public;
 GRANT ALL ON SCHEMA public TO postgres, supabase_admin, supabase_auth_admin, supabase_storage_admin;
 GRANT USAGE, CREATE ON SCHEMA public TO supabase_auth_admin, supabase_storage_admin;
 
--- GESTION DES SCHÉMAS TECHNIQUES (Propriété)
+-- GESTION DES SCHÉMAS TECHNIQUES (Propriété et Fix Chirurgical)
 CREATE SCHEMA IF NOT EXISTS auth;
 CREATE SCHEMA IF NOT EXISTS storage;
 CREATE SCHEMA IF NOT EXISTS realtime;
@@ -42,21 +42,21 @@ ALTER SCHEMA storage OWNER TO supabase_storage_admin;
 ALTER SCHEMA realtime OWNER TO supabase_admin;
 ALTER SCHEMA extensions OWNER TO supabase_admin;
 
--- SEARCH PATHS
-ALTER ROLE authenticator SET search_path TO public, auth, extensions, storage;
-ALTER ROLE anon SET search_path TO public, extensions;
-ALTER ROLE authenticated SET search_path TO public, extensions;
-ALTER ROLE supabase_admin SET search_path TO public, extensions, realtime;
-ALTER ROLE supabase_auth_admin SET search_path TO auth, public;
-ALTER ROLE supabase_storage_admin SET search_path TO storage, public;
-
--- TRANSFERT DE PROPRIÉTÉ SI TABLES EXISTENT DÉJÀ
+-- TRANSFERT DE PROPRIÉTÉ POUR TOUT LE CONTENU (Fix 'must be owner' errors)
 DO $$ 
+DECLARE
+    r RECORD;
 BEGIN 
-  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'auth' AND tablename = 'users') THEN
-    ALTER TABLE auth.users OWNER TO supabase_auth_admin;
-  END IF;
-  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'schema_migrations') THEN
-    ALTER TABLE public.schema_migrations OWNER TO supabase_auth_admin;
-  END IF;
+    -- Auth
+    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'auth') LOOP
+        EXECUTE 'ALTER TABLE auth.' || quote_ident(r.tablename) || ' OWNER TO supabase_auth_admin';
+    END LOOP;
+    -- Storage
+    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'storage') LOOP
+        EXECUTE 'ALTER TABLE storage.' || quote_ident(r.tablename) || ' OWNER TO supabase_storage_admin';
+    END LOOP;
+    -- Public technical tables
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'schema_migrations') THEN
+        ALTER TABLE public.schema_migrations OWNER TO supabase_auth_admin;
+    END IF;
 END $$;
