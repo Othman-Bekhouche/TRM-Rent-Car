@@ -85,3 +85,12 @@ ALTER ROLE authenticator SET pgrst.db_anon_role = 'anon';
 
 -- USAGE SUR LES SCHÉMAS TECHNIQUES (Essentiel pour auth.uid())
 GRANT USAGE ON SCHEMA public, auth, storage, extensions TO anon, authenticated, service_role;
+
+-- DROITS SUR LE SCHÉMA PUBLIC (Fix 400 Bad Request)
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated, service_role;
+
+-- DROITS SUR LES SCHÉMAS TECHNIQUES (Pour les fonctions auth.uid() etc)
+GRANT ALL ON ALL FUNCTIONS IN SCHEMA auth TO anon, authenticated, service_role;
+GRANT ALL ON ALL FUNCTIONS IN SCHEMA extensions TO anon, authenticated, service_role;
