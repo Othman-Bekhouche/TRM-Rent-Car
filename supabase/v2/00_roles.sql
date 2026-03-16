@@ -72,6 +72,16 @@ BEGIN
 END $$;
 
 -- SEARCH PATHS COHÉRENTS
+ALTER ROLE anon SET search_path TO public, auth, extensions;
+ALTER ROLE authenticated SET search_path TO public, auth, extensions;
+ALTER ROLE authenticator SET search_path TO public, auth, extensions;
 ALTER ROLE supabase_auth_admin SET search_path TO auth, public;
 ALTER ROLE supabase_storage_admin SET search_path TO storage, public;
 ALTER ROLE supabase_admin SET search_path TO public, extensions, realtime;
+
+-- CONFIGURATION POSTGREST (Fix role "" does not exist)
+ALTER ROLE authenticator SET pgrst.db_schemas = 'public, auth, storage';
+ALTER ROLE authenticator SET pgrst.db_anon_role = 'anon';
+
+-- USAGE SUR LES SCHÉMAS TECHNIQUES (Essentiel pour auth.uid())
+GRANT USAGE ON SCHEMA public, auth, storage, extensions TO anon, authenticated, service_role;
