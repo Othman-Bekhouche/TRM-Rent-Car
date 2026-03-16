@@ -76,11 +76,11 @@ services:
     restart: always
     environment:
       PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
-      PGRST_DB_SCHEMAS: public,storage,auth,graphql_public
+      PGRST_DB_SCHEMAS: public,auth,storage,graphql_public
       PGRST_DB_ANON_ROLE: anon
       PGRST_JWT_SECRET: ${JWT_SECRET}
       PGRST_DB_USE_STATS: "false"
-      PGRST_DB_EXTRA_SEARCH_PATH: public,extensions
+      PGRST_DB_EXTRA_SEARCH_PATH: public,auth,extensions
     networks:
       - supabase-network
 
