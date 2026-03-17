@@ -192,12 +192,18 @@ CREATE TABLE IF NOT EXISTS public.rental_handover_records (
     customer_id UUID REFERENCES public.customers(id) ON DELETE CASCADE,
     handover_date TIMESTAMPTZ DEFAULT NOW(),
     return_date TIMESTAMPTZ,
-    mileage_out INT,
-    mileage_in INT,
-    fuel_level_out TEXT,
-    fuel_level_in TEXT,
-    notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    departure_mileage INT,
+    return_mileage INT,
+    departure_fuel_level TEXT,
+    return_fuel_level TEXT,
+    departure_condition_notes TEXT,
+    return_condition_notes TEXT,
+    extra_charges DECIMAL(10,2) DEFAULT 0,
+    deposit_collected BOOLEAN DEFAULT FALSE,
+    payment_collected BOOLEAN DEFAULT FALSE,
+    admin_notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Quotes
