@@ -157,10 +157,14 @@ CREATE TABLE IF NOT EXISTS public.invoices (
     reservation_id UUID REFERENCES public.reservations(id) ON DELETE CASCADE,
     invoice_number TEXT UNIQUE NOT NULL,
     invoice_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    subtotal DECIMAL(10,2) NOT NULL DEFAULT 0,
+    deposit_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+    extras_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
     total_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
     payment_status TEXT DEFAULT 'unpaid',
     pdf_url TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Rental Contracts
@@ -168,8 +172,16 @@ CREATE TABLE IF NOT EXISTS public.rental_contracts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     reservation_id UUID REFERENCES public.reservations(id) ON DELETE CASCADE,
     contract_number TEXT UNIQUE NOT NULL,
+    customer_id UUID REFERENCES public.customers(id),
+    vehicle_id UUID REFERENCES public.vehicles(id),
+    contract_status TEXT DEFAULT 'draft',
+    total_amount DECIMAL(10,2) DEFAULT 0,
+    deposit_amount DECIMAL(10,2) DEFAULT 0,
+    contract_date TIMESTAMPTZ DEFAULT NOW(),
+    signed_at TIMESTAMPTZ,
     pdf_url TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Rental Handover Records
