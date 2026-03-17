@@ -210,16 +210,33 @@ export default function ReservationDetails() {
     };
 
     const handleReturnSubmit = async () => {
-        if (!reservation || !handover) return;
+        if (!reservation) return;
         try {
-            await handoversApi.update(handover.id, {
+            const returnPayload = {
                 return_date: new Date().toISOString(),
                 return_mileage: returnData.return_mileage,
                 return_fuel_level: returnData.return_fuel_level,
                 return_condition_notes: returnData.return_condition_notes,
                 extra_charges: returnData.extra_charges,
                 admin_notes: returnData.admin_notes
-            });
+            };
+
+            if (handover) {
+                // Mode Mise à jour classique
+                await handoversApi.update(handover.id, returnPayload);
+            } else {
+                // Mode Création de secours (si le départ n'a pas été enregistré)
+                await handoversApi.create({
+                    reservation_id: reservation.id,
+                    vehicle_id: reservation.vehicle_id,
+                    customer_id: reservation.customer_id,
+                    handover_date: new Date(reservation.start_date).toISOString(),
+                    departure_mileage: reservation.vehicles?.mileage || 0,
+                    departure_fuel_level: '100%',
+                    departure_condition_notes: 'Départ auto-généré au retour',
+                    ...returnPayload
+                });
+            }
 
             // Update Reservation
             await reservationsApi.update(reservation.id, {
@@ -233,6 +250,9 @@ export default function ReservationDetails() {
                 mileage: returnData.return_mileage
             });
 
+            // Update Vehicle Status globally if needed (redundancy)
+            await supabase.from('vehicles').update({ status: 'available', mileage: returnData.return_mileage }).eq('id', reservation.vehicle_id);
+
             // Log mileage update
             await mileageApi.create({
                 vehicle_id: reservation.vehicle_id,
@@ -245,6 +265,7 @@ export default function ReservationDetails() {
             setShowReturnModal(false);
             await loadData();
         } catch (error) {
+            console.error(error);
             toast.error("Erreur lors du retour du véhicule");
         }
     };
