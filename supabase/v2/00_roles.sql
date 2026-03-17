@@ -90,7 +90,6 @@ GRANT USAGE ON SCHEMA public, auth, storage, extensions TO anon, authenticated, 
 GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
 GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated, service_role;
-GRANT ALL ON ALL TYPES IN SCHEMA public TO anon, authenticated, service_role;
 
 -- DROITS SUR LES SCHÉMAS TECHNIQUES (Pour les fonctions auth.uid() etc)
 GRANT USAGE ON SCHEMA auth, extensions TO anon, authenticated, service_role;
