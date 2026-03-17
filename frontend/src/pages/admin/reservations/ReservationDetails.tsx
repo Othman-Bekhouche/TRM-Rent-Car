@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../../../lib/supabase';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
     reservationsApi,
@@ -241,7 +242,7 @@ export default function ReservationDetails() {
             // Update Reservation
             await reservationsApi.update(reservation.id, {
                 status: 'returned',
-                total_price: reservation.total_price + returnData.extra_charges
+                total_price: Number(reservation.total_price) + Number(returnData.extra_charges)
             });
 
             // Update Vehicle Status to available
