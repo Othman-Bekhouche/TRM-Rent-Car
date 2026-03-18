@@ -1,3 +1,22 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import {
+    Clock,
+    CheckCircle,
+    XCircle,
+    Plus,
+    Search,
+    Filter as FilterIcon,
+    Calendar,
+    MapPin,
+    User,
+    Car,
+    Check,
+    X,
+    Info,
+    Eye,
+    Loader2
+} from 'lucide-react';
 import { reservationsApi, vehiclesApi, customersApi, supabase, type Reservation, type Vehicle, type Customer } from '../../lib/api';
 import toast, { Toaster } from 'react-hot-toast';
 import { format, addDays } from 'date-fns';
