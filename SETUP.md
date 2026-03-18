@@ -35,14 +35,13 @@ Le backend est situé dans le dossier `devops/vps-deploy`.
 ### 3. Initialisation de la Base de Données
 Si la base de données est vide, vous pouvez tout configurer en une seule commande :
 
-1. Ouvrez l'éditeur SQL dans **Supabase Studio** (généralement sur `http://localhost:54323`).
-2. Copiez et collez le contenu du fichier `supabase/v2/master_init.sql` et exécutez-le. 
-   > **Note** : Ce fichier exécute automatiquement tous les autres scripts (rôles, tables, fonctions, RLS).
+1. Ouvrez l'éditeur SQL dans **Supabase Studio** (généralement sur `http://localhost:54423`).
+2. Copiez et collez le contenu du fichier `supabase/v2/full_setup_consolidated.sql` et exécutez-le. 
 
 Si vous préférez la ligne de commande (Psql) :
 ```bash
 # Depuis le dossier devops/vps-deploy
-docker exec -i supabase_db_TRM_Rent_Car psql -U postgres -d postgres < ../../supabase/v2/master_init.sql
+docker exec -i supabase-db psql -U postgres -d postgres < ../../supabase/v2/full_setup_consolidated.sql
 ```
 
 #### Vérification des Rôles
