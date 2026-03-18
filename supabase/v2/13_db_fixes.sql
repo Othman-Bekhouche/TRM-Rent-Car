@@ -9,8 +9,8 @@ CREATE POLICY "Staff manage handovers" ON public.rental_handover_records
 FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- 3. Correct Reservations if any
-UPDATE public.reservations SET status = 'completed' WHERE status = 'Terminé';
-UPDATE public.reservations SET status = 'confirmed' WHERE status = 'Confirmé';
+UPDATE public.reservations SET status = 'completed' WHERE status::text = 'Terminé';
+UPDATE public.reservations SET status = 'confirmed' WHERE status::text = 'Confirmé';
 
 -- 4. Invoices and Contracts (just in case they have same issues)
 ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;

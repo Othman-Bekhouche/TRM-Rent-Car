@@ -33,7 +33,7 @@ $$ LANGUAGE plpgsql;
 -- Sync maintenance costs to transactions
 CREATE OR REPLACE FUNCTION public.sync_maintenance_to_transactions() RETURNS trigger AS $$
 BEGIN
-    IF NEW.total_cost > 0 THEN
+    IF NEW.actual_cost > 0 THEN
         INSERT INTO public.transactions (
             transaction_type,
             amount,
@@ -43,11 +43,11 @@ BEGIN
             transaction_date
         ) VALUES (
             'décaissement',
-            NEW.total_cost,
+            NEW.actual_cost,
             'Virement',
             'Frais de maintenance: ' || NEW.maintenance_type || ' (' || (SELECT plate_number FROM vehicles WHERE id = NEW.vehicle_id) || ')',
             'Payé',
-            COALESCE(NEW.service_date::date, CURRENT_DATE)
+            COALESCE(NEW.last_service_date::date, CURRENT_DATE)
         );
     END IF;
     RETURN NEW;
@@ -56,6 +56,6 @@ $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS tr_sync_maintenance_to_transactions ON public.vehicle_maintenance_records;
 CREATE TRIGGER tr_sync_maintenance_to_transactions
-AFTER INSERT OR UPDATE OF total_cost ON public.vehicle_maintenance_records
+AFTER INSERT OR UPDATE OF actual_cost ON public.vehicle_maintenance_records
 FOR EACH ROW
 EXECUTE FUNCTION public.sync_maintenance_to_transactions();
