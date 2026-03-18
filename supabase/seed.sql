@@ -172,106 +172,106 @@ BEGIN
     
     -- MOIS DECEMBRE 2025 (Faible activité - Hiver)
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c1, v_citadine1, '2025-12-05', '2025-12-15', 'Aéroport Oujda', 'Aéroport Oujda', 4200, 'completed', 'paid', '2025-12-01');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c1, 'encaissement', 4200, 'Carte Bancaire', 'Payé', '2025-12-05');
 
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c3, v_berline1, '2025-12-10', '2025-12-15', 'Fès Centre', 'Fès Centre', 1500, 'completed', 'paid', '2025-12-05');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c3, 'encaissement', 1500, 'Espèces', 'Payé', '2025-12-10');
 
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c5, v_citadine3, '2025-12-20', '2025-12-30', 'Aéroport Nador', 'Aéroport Nador', 3200, 'completed', 'paid', '2025-12-15');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c5, 'encaissement', 3200, 'Virement', 'Payé', '2025-12-20');
 
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c7, v_suv1, '2025-12-25', '2026-01-04', 'Aéroport Oujda', 'Aéroport Oujda', 12000, 'completed', 'paid', '2025-12-20');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c7, 'encaissement', 12000, 'Carte Bancaire', 'Payé', '2025-12-25');
 
     -- MOIS JANVIER 2026 (Augmentation Activité)
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c1, v_citadine1, '2026-01-05', '2026-01-15', 'Aéroport Oujda', 'Aéroport Oujda', 4200, 'completed', 'paid', '2026-01-01');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c1, 'encaissement', 4200, 'Carte Bancaire', 'Payé', '2026-01-05');
 
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c2, v_citadine2, '2026-01-12', '2026-01-22', 'Fès Aéroport', 'Fès Aéroport', 5200, 'completed', 'paid', '2026-01-10');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c2, 'encaissement', 5200, 'Virement', 'Payé', '2026-01-12');
 
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c3, v_berline1, '2026-01-20', '2026-01-28', 'Taourirt Centre', 'Aéroport Fès', 2400, 'completed', 'paid', '2026-01-15');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c3, 'encaissement', 2400, 'Espèces', 'Payé', '2026-01-20');
 
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c4, v_citadine4, '2026-01-25', '2026-01-30', 'Oujda Aéroport', 'Berkane Centre', 1600, 'completed', 'paid', '2026-01-20');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c4, 'encaissement', 1600, 'Espèces', 'Payé', '2026-01-25');
 
     -- MOIS FEVRIER 2026 (Forte Hausse)
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c5, v_berline2, '2026-02-01', '2026-02-11', 'Nador Aéroport', 'Taourirt Centre', 3000, 'completed', 'paid', '2026-01-25');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c5, 'encaissement', 3000, 'Carte Bancaire', 'Payé', '2026-02-01');
 
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c6, v_citadine3, '2026-02-10', '2026-02-14', 'Berkane Centre', 'Berkane Centre', 1280, 'completed', 'paid', '2026-02-05');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c6, 'encaissement', 1280, 'Espèces', 'Payé', '2026-02-10');
 
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c1, v_suv2, '2026-02-14', '2026-02-24', 'Aéroport Oujda', 'Aéroport Oujda', 8000, 'completed', 'paid', '2026-02-10');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c1, 'encaissement', 8000, 'Virement', 'Payé', '2026-02-14');
 
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c2, v_citadine2, '2026-02-22', '2026-02-28', 'Fès Centre', 'Fès Centre', 3120, 'completed', 'paid', '2026-02-15');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c2, 'encaissement', 3120, 'Virement', 'Payé', '2026-02-22');
 
     -- MOIS MARS 2026 (En Cours - Haut Vol)
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c3, v_berline1, '2026-03-02', '2026-03-08', 'Fès Centre', 'Aéroport Fès', 1800, 'returned', 'paid', '2026-02-25');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c3, 'encaissement', 1800, 'Carte Bancaire', 'Payé', '2026-03-02');
 
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c4, v_citadine4, '2026-03-05', '2026-03-15', 'Aéroport Oujda', 'Aéroport Oujda', 3200, 'rented', 'paid', '2026-02-28');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c4, 'encaissement', 3200, 'Carte Bancaire', 'Payé', '2026-03-05');
 
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c2, v_citadine2, '2026-03-10', '2026-03-24', 'Fès Aéroport', 'Fès Aéroport', 7280, 'rented', 'paid', '2026-03-01');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c2, 'encaissement', 7280, 'Virement', 'Payé', '2026-03-10');
 
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c1, v_berline2, '2026-03-12', '2026-03-20', 'Oujda Centre', 'Oujda Centre', 2400, 'rented', 'paid', '2026-03-05');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c1, 'encaissement', 2400, 'Espèces', 'Payé', '2026-03-12');
 
     res_id := gen_random_uuid();
-    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, return_location, total_price, status, payment_status, created_at)
+    INSERT INTO public.reservations (id, customer_id, vehicle_id, start_date, end_date, pickup_location, dropoff_location, total_price, status, payment_status, created_at)
     VALUES (res_id, c6, v_utilitaire1, '2026-03-15', '2026-03-25', 'Nador Centre', 'Nador Centre', 4000, 'confirmed', 'paid', '2026-03-10');
     INSERT INTO public.transactions (reservation_id, customer_id, transaction_type, amount, payment_method, status, transaction_date)
     VALUES (res_id, c6, 'encaissement', 4000, 'Virement', 'Payé', '2026-03-15');

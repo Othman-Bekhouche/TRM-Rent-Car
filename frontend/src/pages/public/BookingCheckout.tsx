@@ -169,7 +169,7 @@ export default function BookingCheckout() {
                     start_date: booking.startDate,
                     end_date: booking.endDate,
                     pickup_location: booking.pickup,
-                    return_location: booking.pickup,
+                    dropoff_location: booking.pickup,
                     total_price: totalPrice,
                     status: 'pending',
                     payment_status: 'unpaid',

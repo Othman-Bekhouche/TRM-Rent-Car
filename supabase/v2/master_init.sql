@@ -30,3 +30,5 @@
 
 -- 8. Seed
 \i 08_seed.sql
+-- 9. Storage
+\i 09_storage.sql

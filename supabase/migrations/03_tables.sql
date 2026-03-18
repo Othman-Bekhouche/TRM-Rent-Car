@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS public.reservations (
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     pickup_location TEXT,
-    return_location TEXT,
+    dropoff_location TEXT,
     total_price DECIMAL(10,2) NOT NULL,
     status public.reservation_status DEFAULT 'pending'::public.reservation_status,
     payment_status TEXT DEFAULT 'unpaid',
