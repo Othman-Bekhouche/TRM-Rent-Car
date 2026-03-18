@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Fuel, Users, MapPin, Search as Box, CheckCircle, CreditCard, Shield, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function VehicleDetail() {
     const { id: vehicleId } = useParams();
     const [vehicle, setVehicle] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
 
     useEffect(() => {
         const fetchVehicle = async () => {
@@ -40,6 +43,19 @@ export default function VehicleDetail() {
         fetchVehicle();
     }, [vehicleId]);
 
+    const handleBookingClick = (e: React.MouseEvent) => {
+        if (!startDate || !endDate) {
+            e.preventDefault();
+            toast.error("Veuillez choisir les dates de début et de fin.");
+            return;
+        }
+        if (new Date(startDate) >= new Date(endDate)) {
+            e.preventDefault();
+            toast.error("La date de fin doit être après la date de début.");
+            return;
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-[60vh] bg-[var(--color-background)]">
@@ -61,6 +77,8 @@ export default function VehicleDetail() {
 
     return (
         <div className="pb-24 bg-[var(--color-background)] min-h-screen font-sans">
+            <Toaster position="top-right" />
+
             {/* SaaS Header Breadcrumb Navigation */}
             <div className="bg-[#141C2B] border-b border-[var(--color-border)] py-4">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -84,7 +102,7 @@ export default function VehicleDetail() {
                                     {vehicle.brand} <span className="text-[var(--color-primary)]">{vehicle.model}</span>
                                 </h1>
                                 <span className="px-4 py-1.5 bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-sm font-black tracking-widest uppercase rounded-lg border border-[var(--color-primary)]/50">
-                                    Disponible
+                                    {vehicle.status === 'available' ? 'Disponible' : 'Indisponible'}
                                 </span>
                             </div>
                             <p className="text-slate-400 text-lg flex items-center font-medium">
@@ -203,11 +221,21 @@ export default function VehicleDetail() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Retrait</label>
-                                            <input type="date" className="w-full bg-transparent border-b border-[var(--color-border)] text-white text-sm focus:ring-0 focus:border-[var(--color-primary)] block pb-2 px-0 font-medium" />
+                                            <input
+                                                type="date"
+                                                value={startDate}
+                                                onChange={(e) => setStartDate(e.target.value)}
+                                                className="w-full bg-transparent border-b border-[var(--color-border)] text-white text-sm focus:ring-0 focus:border-[var(--color-primary)] block pb-2 px-0 font-medium"
+                                            />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Retour</label>
-                                            <input type="date" className="w-full bg-transparent border-b border-[var(--color-border)] text-white text-sm focus:ring-0 focus:border-[var(--color-primary)] block pb-2 px-0 font-medium" />
+                                            <input
+                                                type="date"
+                                                value={endDate}
+                                                onChange={(e) => setEndDate(e.target.value)}
+                                                className="w-full bg-transparent border-b border-[var(--color-border)] text-white text-sm focus:ring-0 focus:border-[var(--color-primary)] block pb-2 px-0 font-medium"
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -219,15 +247,11 @@ export default function VehicleDetail() {
                                         <span className="ml-3 text-sm font-bold text-white uppercase tracking-wider">Assurance Multirisque</span>
                                         <span className="ml-auto text-xs font-bold text-[var(--color-primary)]">INCLUS</span>
                                     </label>
-                                    <label className="flex items-center p-3 rounded-xl border border-[var(--color-border)] hover:border-[var(--color-primary)]/50 bg-[var(--color-background)] cursor-pointer transition-colors">
-                                        <input type="checkbox" className="w-4 h-4 text-[var(--color-primary)] bg-[#141C2B] border-slate-600 rounded focus:ring-[var(--color-primary)]" />
-                                        <span className="ml-3 text-sm font-medium text-slate-300">Siège Enfant</span>
-                                        <span className="ml-auto text-xs font-bold text-slate-400">+50 MAD/J</span>
-                                    </label>
                                 </div>
 
                                 <Link
-                                    to={`/booking/checkout/${vehicle.id}`}
+                                    to={`/booking/checkout/${vehicle.id}?start=${startDate}&end=${endDate}`}
+                                    onClick={handleBookingClick}
                                     className="flex w-full justify-center items-center px-6 py-4 border border-transparent text-sm font-black rounded-xl text-[#0B0F19] bg-[var(--color-primary)] hover:bg-white hover:text-[#0B0F19] uppercase tracking-widest transition-all shadow-lg hover:-translate-y-1"
                                 >
                                     Poursuivre la Réservation

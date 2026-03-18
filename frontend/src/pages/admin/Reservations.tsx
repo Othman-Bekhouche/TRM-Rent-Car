@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Plus, Search, CheckCircle, Clock, XCircle, Edit, Trash2, X, Check, Loader2, AlertCircle, FileText } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { reservationsApi, vehiclesApi, customersApi, type Reservation, type Vehicle, type Customer } from '../../lib/api';
+import { reservationsApi, vehiclesApi, customersApi, supabase, type Reservation, type Vehicle, type Customer } from '../../lib/api';
 import toast, { Toaster } from 'react-hot-toast';
+import { format, addDays } from 'date-fns';
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
     pending: { label: 'En attente', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: Clock },
@@ -24,6 +22,16 @@ export default function Reservations() {
     const [showForm, setShowForm] = useState(false);
     const [selectedReservation, setSelectedReservation] = useState<any | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
+    const [showPickupCustom, setShowPickupCustom] = useState(false);
+    const [showDropoffCustom, setShowDropoffCustom] = useState(false);
+
+    const PRESET_LOCATIONS = [
+        'Agence Taourirt',
+        'Aéroport Oujda Angads',
+        'Aéroport Nador Arrouit',
+        'Gare Ferroviaire Taourirt',
+    ];
 
     // Form state
     const [formData, setFormData] = useState<Partial<Reservation>>({
@@ -99,8 +107,62 @@ export default function Reservations() {
         }
     };
 
+    const checkAvailability = async () => {
+        if (!formData.vehicle_id || !formData.start_date || !formData.end_date) return true;
+
+        try {
+            setIsCheckingAvailability(true);
+            const { data, error } = await supabase.rpc('check_vehicle_availability', {
+                p_vehicle_id: formData.vehicle_id,
+                p_start_date: formData.start_date,
+                p_end_date: formData.end_date
+            });
+
+            if (error) throw error;
+            if (data && data.length > 0) {
+                const result = data[0];
+                if (!result.is_available) {
+                    const nextDate = result.next_available_date ? format(new Date(result.next_available_date), 'dd/MM/yyyy') : 'plus tard';
+                    toast.error(`Ce véhicule est déjà réservé. Prochaine disponibilité : à partir du ${nextDate}.`);
+                    return false;
+                }
+            }
+            return true;
+        } catch (error) {
+            console.error('Availability check failed:', error);
+            // If check fails, we might still allow but warning
+            return true;
+        } finally {
+            setIsCheckingAvailability(false);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validation basic
+        if (new Date(formData.start_date!) >= new Date(formData.end_date!)) {
+            toast.error("La date de fin doit être après la date de début.");
+            return;
+        }
+
+        // Check availability strictly for NEW reservations or if dates/vehicle changed on EDIT
+        let needsAvailabilityCheck = false;
+        if (!selectedReservation) {
+            needsAvailabilityCheck = true;
+        } else if (
+            selectedReservation.vehicle_id !== formData.vehicle_id ||
+            selectedReservation.start_date.split('T')[0] !== formData.start_date ||
+            selectedReservation.end_date.split('T')[0] !== formData.end_date
+        ) {
+            needsAvailabilityCheck = true;
+        }
+
+        if (needsAvailabilityCheck) {
+            const isAvailable = await checkAvailability();
+            if (!isAvailable) return;
+        }
+
         setIsSaving(true);
         try {
             if (selectedReservation) {
@@ -210,11 +272,65 @@ export default function Reservations() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Lieu Retrait</label>
-                                        <input type="text" value={formData.pickup_location} onChange={e => setFormData({ ...formData, pickup_location: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" />
+                                        {!showPickupCustom ? (
+                                            <select
+                                                value={PRESET_LOCATIONS.includes(formData.pickup_location!) ? formData.pickup_location : 'custom'}
+                                                onChange={e => {
+                                                    if (e.target.value === 'custom') {
+                                                        setShowPickupCustom(true);
+                                                    } else {
+                                                        setFormData({ ...formData, pickup_location: e.target.value });
+                                                    }
+                                                }}
+                                                className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800"
+                                            >
+                                                {PRESET_LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+                                                <option value="custom">+ Autre lieu...</option>
+                                            </select>
+                                        ) : (
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    autoFocus
+                                                    value={formData.pickup_location}
+                                                    onChange={e => setFormData({ ...formData, pickup_location: e.target.value })}
+                                                    className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800"
+                                                    placeholder="Saisir lieu..."
+                                                />
+                                                <button type="button" onClick={() => setShowPickupCustom(false)} className="p-2 text-slate-400 hover:text-slate-600"><X className="w-4 h-4" /></button>
+                                            </div>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Lieu Retour</label>
-                                        <input type="text" value={formData.dropoff_location} onChange={e => setFormData({ ...formData, dropoff_location: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" />
+                                        {!showDropoffCustom ? (
+                                            <select
+                                                value={PRESET_LOCATIONS.includes(formData.dropoff_location!) ? formData.dropoff_location : 'custom'}
+                                                onChange={e => {
+                                                    if (e.target.value === 'custom') {
+                                                        setShowDropoffCustom(true);
+                                                    } else {
+                                                        setFormData({ ...formData, dropoff_location: e.target.value });
+                                                    }
+                                                }}
+                                                className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800"
+                                            >
+                                                {PRESET_LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+                                                <option value="custom">+ Autre lieu...</option>
+                                            </select>
+                                        ) : (
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    autoFocus
+                                                    value={formData.dropoff_location}
+                                                    onChange={e => setFormData({ ...formData, dropoff_location: e.target.value })}
+                                                    className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800"
+                                                    placeholder="Saisir lieu..."
+                                                />
+                                                <button type="button" onClick={() => setShowDropoffCustom(false)} className="p-2 text-slate-400 hover:text-slate-600"><X className="w-4 h-4" /></button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -256,11 +372,23 @@ export default function Reservations() {
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                            <button type="button" onClick={() => setShowForm(false)} className="px-6 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">Annuler</button>
-                            <button type="submit" disabled={isSaving} className="px-8 py-2.5 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-white text-sm font-bold rounded-xl hover:shadow-lg transition-all flex items-center gap-2">
-                                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                                {selectedReservation ? 'Mettre à jour' : 'Créer la réservation'}
+                        <div className="pt-6 border-t border-slate-100 flex justify-end gap-3">
+                            <button type="button" onClick={() => setShowForm(false)} className="px-6 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 transition-all">Annuler</button>
+                            <button
+                                type="submit"
+                                disabled={isSaving || isCheckingAvailability}
+                                className="flex items-center gap-2 px-8 py-2.5 bg-[#261CC1] text-sm font-bold text-white rounded-xl hover:shadow-[0_6px_20px_rgba(38,28,193,0.3)] transition-all disabled:opacity-50"
+                            >
+                                {isSaving || isCheckingAvailability ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        {isCheckingAvailability ? 'Vérification...' : 'Enregistrement...'}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Check className="w-4 h-4" /> {selectedReservation ? 'Mettre à jour' : 'Confirmer la réservation'}
+                                    </>
+                                )}
                             </button>
                         </div>
                     </form>

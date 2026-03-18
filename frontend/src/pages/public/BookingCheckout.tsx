@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, Car, User, CheckCircle, Shield, Loader2, Lock } from 'lucide-react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Calendar, MapPin, Car, User, CheckCircle, Shield, Loader2, Lock, AlertCircle } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 
 export default function BookingCheckout() {
     const { vehicleId } = useParams();
-    console.log('Booking for vehicle:', vehicleId); // Use it to fix lint
+    const [searchParams] = useSearchParams();
     const [step, setStep] = useState(1); // 1: recap, 2: info client, 3: confirmation
     const [loadingVehicle, setLoadingVehicle] = useState(true);
     const [loading, setLoading] = useState(false);
@@ -39,9 +39,15 @@ export default function BookingCheckout() {
     });
 
     useEffect(() => {
+        const start = searchParams.get('start');
+        const end = searchParams.get('end');
+        if (start) setBooking(prev => ({ ...prev, startDate: start }));
+        if (end) setBooking(prev => ({ ...prev, endDate: end }));
+
         const loadInitialData = async () => {
             try {
                 setLoadingVehicle(true);
+                // ... rest of logic
 
                 // 1. Fetch Vehicle from DB
                 if (vehicleId) {
@@ -331,16 +337,46 @@ export default function BookingCheckout() {
                                 </div>
 
                                 <button
-                                    onClick={() => {
+                                    onClick={async () => {
                                         if (!booking.startDate || !booking.endDate) {
                                             toast.error('Veuillez choisir les dates de retrait et retour.');
                                             return;
                                         }
-                                        setStep(2);
+                                        if (new Date(booking.startDate) >= new Date(booking.endDate)) {
+                                            toast.error('La date de retour doit être après la date de retrait.');
+                                            return;
+                                        }
+
+                                        setLoading(true);
+                                        try {
+                                            const { data, error } = await supabase.rpc('check_vehicle_availability', {
+                                                p_vehicle_id: vehicleId,
+                                                p_start_date: booking.startDate,
+                                                p_end_date: booking.endDate
+                                            });
+
+                                            if (error) throw error;
+
+                                            if (data && data.length > 0 && !data[0].is_available) {
+                                                const nextDate = new Date(data[0].next_available_date).toLocaleDateString('fr-FR');
+                                                toast.error(
+                                                    `Véhicule indisponible pour ces dates. Veuillez choisir une date à partir du ${nextDate} ou réserver un autre véhicule.`,
+                                                    { duration: 6000, icon: <AlertCircle className="text-red-500" /> }
+                                                );
+                                                return;
+                                            }
+                                            setStep(2);
+                                        } catch (err) {
+                                            console.error(err);
+                                            toast.error("Erreur lors de la vérification de disponibilité.");
+                                        } finally {
+                                            setLoading(false);
+                                        }
                                     }}
-                                    className="w-full py-5 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-white font-black uppercase tracking-[0.2em] text-sm rounded-2xl hover:scale-[1.02] transition-all shadow-2xl shadow-blue-500/20 active:scale-[0.98]"
+                                    disabled={loading}
+                                    className="w-full py-5 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-white font-black uppercase tracking-[0.2em] text-sm rounded-2xl hover:scale-[1.02] transition-all shadow-2xl shadow-blue-500/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
                                 >
-                                    Suivant
+                                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Suivant'}
                                 </button>
                             </div>
                         )}

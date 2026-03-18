@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Search, Edit, Trash2, X, Loader2, AlertCircle, Check, Car, ImagePlus, Eye, Upload } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, X, Loader2, AlertCircle, Check, Car, ImagePlus, Eye, Upload, Wrench } from 'lucide-react';
 import { vehiclesApi, type Vehicle } from '../../lib/api';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -401,7 +401,7 @@ export default function AdminVehicles() {
                                             <th className="p-4">Véhicule</th>
                                             <th className="p-4">Plaque</th>
                                             <th className="p-4 hidden md:table-cell">Couleur</th>
-                                            <th className="p-4 hidden lg:table-cell">Photos</th>
+                                            <th className="p-4 hidden lg:table-cell">Entretien</th>
                                             <th className="p-4">Prix/Jour</th>
                                             <th className="p-4">Statut</th>
                                             <th className="p-4 text-right">Actions</th>
@@ -412,39 +412,67 @@ export default function AdminVehicles() {
                                             <tr key={v.id} className="hover:bg-[#F8FAFF] transition-colors border-b border-slate-50 group">
                                                 <td className="p-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-16 h-11 bg-gradient-to-br from-slate-100 to-slate-50 rounded-lg overflow-hidden flex items-center justify-center p-1 border border-slate-100 group-hover:shadow-md transition-shadow">
+                                                        <div className="w-16 h-11 bg-gradient-to-br from-slate-100 to-slate-50 rounded-lg overflow-hidden flex items-center justify-center p-1 border border-slate-100 group-hover:shadow-md transition-shadow relative">
                                                             {getVehicleCover(v) ? (
                                                                 <img src={getVehicleCover(v)} alt="" className="w-full h-full object-contain" />
                                                             ) : (
                                                                 <Car className="w-6 h-6 text-slate-400" />
                                                             )}
+                                                            {(v.next_service_mileage && v.mileage >= v.next_service_mileage - 1000) && (
+                                                                <div className="absolute top-0 right-0 p-1 bg-red-500 rounded-bl-lg shadow-sm">
+                                                                    <AlertCircle className="w-3 h-3 text-white" />
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         <div>
-                                                            <p className="font-bold text-slate-800">{v.brand} {v.model}</p>
-                                                            <p className="text-xs text-slate-400">{v.year} · {v.transmission}</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="font-bold text-slate-800">{v.brand} {v.model}</p>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 mt-0.5">
+                                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{v.year} · {v.transmission}</p>
+                                                                <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-black">{v.mileage?.toLocaleString()} KM</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="p-4 font-mono text-xs text-[#261CC1] font-bold">{v.plate_number}</td>
-                                                <td className="p-4 text-slate-600 hidden md:table-cell">{v.color}</td>
-                                                <td className="p-4 hidden lg:table-cell">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <Eye className="w-3.5 h-3.5 text-slate-400" />
-                                                        <span className={`text-xs font-bold ${getImageCount(v) >= 4 ? 'text-emerald-600' : getImageCount(v) > 0 ? 'text-amber-600' : 'text-red-400'}`}>
-                                                            {getImageCount(v)} / 4
-                                                        </span>
+                                                <td className="p-4 text-slate-600 hidden md:table-cell">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs">{v.color}</span>
+                                                        <span className="text-[10px] text-slate-400 uppercase font-bold">{v.fuel_type}</span>
                                                     </div>
                                                 </td>
-                                                <td className="p-4 font-black text-[#1C0770]">{v.price_per_day} MAD</td>
+                                                <td className="p-4 hidden lg:table-cell">
+                                                    {v.next_service_mileage ? (
+                                                        <div className="flex flex-col">
+                                                            <div className="flex items-center gap-1.5 mb-1">
+                                                                <Wrench className="w-3 h-3 text-emerald-500" />
+                                                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tight">Planifié à</span>
+                                                            </div>
+                                                            <p className={`text-xs font-black ${v.mileage >= v.next_service_mileage - 1000 ? 'text-red-600' : 'text-emerald-700'}`}>
+                                                                {v.next_service_mileage.toLocaleString()} KM
+                                                            </p>
+                                                            <div className="w-20 h-1 bg-slate-100 rounded-full mt-1.5 overflow-hidden">
+                                                                <div
+                                                                    className={`h-full ${v.mileage >= v.next_service_mileage - 1000 ? 'bg-red-500' : 'bg-emerald-500'}`}
+                                                                    style={{ width: `${Math.min((v.mileage / v.next_service_mileage) * 100, 100)}%` }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-[10px] text-slate-300 font-bold uppercase">Non configuré</span>
+                                                    )}
+                                                </td>
+                                                <td className="p-4 font-black text-[#1C0770]">{v.price_per_day} <span className="text-[10px] text-slate-400">MAD</span></td>
                                                 <td className="p-4">
-                                                    <span className={`${getStatusStyle(v.status)} px-3 py-1.5 rounded-full text-xs font-bold border whitespace-nowrap`}>
+                                                    <span className={`${getStatusStyle(v.status)} px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border whitespace-nowrap`}>
                                                         {getStatusLabel(v.status)}
                                                     </span>
                                                 </td>
                                                 <td className="p-4 text-right">
                                                     <div className="flex items-center justify-end gap-1">
-                                                        <button onClick={() => handleEdit(v)} className="p-2 text-slate-400 hover:text-[#261CC1] hover:bg-[#261CC1]/10 rounded-lg transition-colors"><Edit className="w-4 h-4" /></button>
-                                                        <button onClick={() => handleDelete(v.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                                        <button onClick={() => handleEdit(v)} title="Mise à jour technique" className="p-2 text-slate-400 hover:text-[#261CC1] hover:bg-[#261CC1]/10 rounded-lg transition-colors"><Edit className="w-4 h-4" /></button>
+                                                        <button onClick={() => handleDelete(v.id)} title="Retirer de la flotte" className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
                                                     </div>
                                                 </td>
                                             </tr>

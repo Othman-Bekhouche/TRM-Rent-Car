@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
     DollarSign,
     TrendingUp,
+    TrendingDown,
     Download,
     ArrowUpRight,
     Banknote,
@@ -12,8 +13,12 @@ import {
     Activity,
     PieChart,
     ChevronRight,
-    Search
+    Search,
+    Plus,
+    X,
+    CheckCircle2
 } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 import {
     transactionsApi,
     reservationsApi,
@@ -44,25 +49,58 @@ export default function Accounting() {
     const [loading, setLoading] = useState(true);
     const [period, setPeriod] = useState<Period>('month');
     const [searchTerm, setSearchTerm] = useState('');
+    const [showModal, setShowModal] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [newTx, setNewTx] = useState<Partial<Transaction>>({
+        transaction_type: 'encaissement',
+        amount: 0,
+        payment_method: 'Espèces',
+        status: 'Payé',
+        description: ''
+    });
+
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const [txs, resas] = await Promise.all([
+                transactionsApi.getAll(),
+                reservationsApi.getAll()
+            ]);
+            setTransactions(txs);
+            setReservations(resas);
+        } catch (error) {
+            console.error("Error loading accounting data:", error);
+            toast.error("Erreur de chargement");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const [txs, resas] = await Promise.all([
-                    transactionsApi.getAll(),
-                    reservationsApi.getAll()
-                ]);
-                setTransactions(txs);
-                setReservations(resas);
-            } catch (error) {
-                console.error("Error loading accounting data:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchData();
     }, []);
+
+    const handleCreateTransaction = async () => {
+        if (!newTx.amount || newTx.amount <= 0) {
+            toast.error("Montant invalide");
+            return;
+        }
+        try {
+            setIsSaving(true);
+            await transactionsApi.create({
+                ...newTx,
+                transaction_date: new Date().toISOString().split('T')[0]
+            });
+            toast.success("Transaction enregistrée !");
+            setShowModal(false);
+            setNewTx({ transaction_type: 'encaissement', amount: 0, payment_method: 'Espèces', status: 'Payé', description: '' });
+            await fetchData();
+        } catch (error) {
+            toast.error("Erreur lors de l'enregistrement");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const dataAnalysis = useMemo(() => {
         const now = new Date();
@@ -91,8 +129,12 @@ export default function Accounting() {
             .filter(t => t.transaction_type === 'encaissement' && t.status === 'Payé')
             .reduce((acc, t) => acc + Number(t.amount || 0), 0);
 
+        const totalExpenses = filteredTxs
+            .filter(t => t.transaction_type === 'décaissement' && t.status === 'Payé')
+            .reduce((acc, t) => acc + Number(t.amount || 0), 0);
+
         const pendingRevenue = filteredTxs
-            .filter(t => t.status === 'En attente' || t.status === 'Impayé')
+            .filter(t => t.transaction_type === 'encaissement' && (t.status === 'En attente' || t.status === 'Impayé'))
             .reduce((acc, t) => acc + Number(t.amount || 0), 0);
 
         // Chart Data Generation
@@ -121,6 +163,8 @@ export default function Accounting() {
             transactions: filteredTxs,
             reservations: filteredResas,
             totalRevenue,
+            totalExpenses,
+            netBalance: totalRevenue - totalExpenses,
             pendingRevenue,
             chartPoints,
             maxChartVal: Math.max(...chartPoints.map(p => p.revenue), 1)
@@ -169,7 +213,16 @@ export default function Accounting() {
                         </button>
                     ))}
                 </div>
+
+                <button
+                    onClick={() => setShowModal(true)}
+                    className="px-6 py-3 bg-[#261CC1] text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-xl shadow-[#261CC1]/20 hover:scale-[1.05] transition-all flex items-center gap-3"
+                >
+                    <Plus className="w-4 h-4" /> Nouveau Flux
+                </button>
             </div>
+
+            <Toaster position="top-right" />
 
             {/* Main KPI Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -198,6 +251,30 @@ export default function Accounting() {
                     </p>
                     <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between text-[9px] font-black uppercase tracking-widest text-slate-400">
                         <span>Sur {dataAnalysis.reservations.length} départs</span>
+                    </div>
+                </div>
+
+                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-xl group">
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="p-3 bg-red-50 rounded-2xl text-red-600"><TrendingDown className="w-6 h-6" /></div>
+                        <div className="px-2 py-1 bg-red-50 text-[8px] font-black text-red-600 rounded-lg">CHARGES</div>
+                    </div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Dépenses</p>
+                    <p className="text-3xl font-black text-[#1C0770] tracking-tighter">{dataAnalysis.totalExpenses.toLocaleString()} <span className="text-xs text-slate-300 ml-1">MAD</span></p>
+                    <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        <span>Maintenance & Autres</span>
+                    </div>
+                </div>
+
+                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-xl group">
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="p-3 bg-blue-50 rounded-2xl text-blue-600"><Activity className="w-6 h-6" /></div>
+                        <div className="px-2 py-1 bg-blue-50 text-[8px] font-black text-blue-600 rounded-lg">RÉSULTAT</div>
+                    </div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Résultat Net</p>
+                    <p className="text-3xl font-black text-[#1C0770] tracking-tighter">{dataAnalysis.netBalance.toLocaleString()} <span className="text-xs text-slate-300 ml-1">MAD</span></p>
+                    <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        <span>Solde actuel</span>
                     </div>
                 </div>
 
@@ -392,6 +469,109 @@ export default function Accounting() {
                     )}
                 </div>
             </div>
+
+            {/* Modal Nouveau Flux */}
+            {showModal && (
+                <div className="fixed inset-0 bg-[#0B0F19]/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                    <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out]">
+                        <div className="p-8 border-b border-slate-50 flex justify-between items-center">
+                            <div>
+                                <h3 className="text-xl font-black text-[#1C0770] uppercase">Opération de Caisse</h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Enregistrer un nouveau flux financier</p>
+                            </div>
+                            <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                                <X className="w-5 h-5 text-slate-400" />
+                            </button>
+                        </div>
+                        <div className="p-8 space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <button
+                                    onClick={() => setNewTx({ ...newTx, transaction_type: 'encaissement' })}
+                                    className={`py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all ${newTx.transaction_type === 'encaissement'
+                                        ? 'bg-emerald-50 border-emerald-500 text-emerald-600'
+                                        : 'bg-slate-50 border-transparent text-slate-400'
+                                        }`}
+                                >
+                                    Entrée (CA)
+                                </button>
+                                <button
+                                    onClick={() => setNewTx({ ...newTx, transaction_type: 'décaissement' })}
+                                    className={`py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all ${newTx.transaction_type === 'décaissement'
+                                        ? 'bg-rose-50 border-rose-500 text-rose-600'
+                                        : 'bg-slate-50 border-transparent text-slate-400'
+                                        }`}
+                                >
+                                    Sortie (Frais)
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Montant (MAD)</label>
+                                    <input
+                                        type="number"
+                                        value={newTx.amount || ''}
+                                        onChange={(e) => setNewTx({ ...newTx, amount: Number(e.target.value) })}
+                                        className="w-full bg-slate-50 border-2 border-transparent focus:border-[#261CC1]/20 focus:bg-white rounded-2xl px-6 py-4 text-lg font-black text-[#1C0770] transition-all outline-none"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Description / Motif</label>
+                                    <textarea
+                                        value={newTx.description}
+                                        onChange={(e) => setNewTx({ ...newTx, description: e.target.value })}
+                                        className="w-full bg-slate-50 border-2 border-transparent focus:border-[#261CC1]/20 focus:bg-white rounded-2xl px-6 py-4 text-xs font-bold text-slate-600 transition-all outline-none min-h-[100px]"
+                                        placeholder="Ex: Frais de dossier, Révision, Règlement..."
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Méthode</label>
+                                        <select
+                                            value={newTx.payment_method}
+                                            onChange={(e) => setNewTx({ ...newTx, payment_method: e.target.value })}
+                                            className="w-full bg-slate-50 border-2 border-transparent rounded-2xl px-4 py-3 text-xs font-bold text-slate-600 outline-none"
+                                        >
+                                            <option>Espèces</option>
+                                            <option>Virement</option>
+                                            <option>Carte Bancaire</option>
+                                            <option>Chèque</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Statut</label>
+                                        <select
+                                            value={newTx.status}
+                                            onChange={(e) => setNewTx({ ...newTx, status: e.target.value })}
+                                            className="w-full bg-slate-50 border-2 border-transparent rounded-2xl px-4 py-3 text-xs font-bold text-slate-600 outline-none"
+                                        >
+                                            <option>Payé</option>
+                                            <option>En attente</option>
+                                            <option>Impayé</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-8 bg-slate-50/50 flex gap-4">
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={handleCreateTransaction}
+                                disabled={isSaving}
+                                className="flex-[2] py-4 bg-[#261CC1] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#261CC1]/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                            >
+                                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle2 className="w-4 h-4" /> Enregistrer</>}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

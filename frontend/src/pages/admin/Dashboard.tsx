@@ -90,13 +90,21 @@ export default function Dashboard() {
         let start: Date;
         let end: Date = endOfDay(now);
 
+        const isPaid = (status: string) => {
+            if (!status) return false;
+            const s = status.toLowerCase();
+            return s.includes('pay') || s.includes('encaiss') || s.includes('termin');
+        };
+
         switch (period) {
             case 'today': start = startOfDay(now); break;
             case 'week': start = startOfWeek(now, { weekStartsOn: 1 }); break;
             case 'month': start = startOfMonth(now); break;
             case 'year': start = startOfMonth(subDays(now, 365)); break;
+            case 'all':
             default: return {
-                revenue: allTransactions.filter(t => t.transaction_type === 'encaissement' && t.status === 'Payé').reduce((acc, t) => acc + Number(t.amount || 0), 0),
+                revenue: allTransactions.filter(t => t.transaction_type === 'encaissement' && isPaid(t.status)).reduce((acc, t) => acc + Number(t.amount || 0), 0),
+                expenses: allTransactions.filter(t => t.transaction_type === 'décaissement' && isPaid(t.status)).reduce((acc, t) => acc + Number(t.amount || 0), 0),
                 resas: allReservations.length,
                 newCustomers: stats?.totalCustomers || 0,
                 occupation: Math.round(((fleetStatus.length - fleetStatus.filter(v => v.status === 'available').length) / fleetStatus.length) * 100) || 0,
@@ -113,18 +121,22 @@ export default function Dashboard() {
         let chartDataRaw = last15Days.map(date => {
             const dayTxs = allTransactions.filter(t =>
                 t.transaction_type === 'encaissement' &&
-                t.status === 'Payé' &&
+                isPaid(t.status) &&
                 isWithinInterval(parseISO(t.transaction_date || t.created_at), { start: startOfDay(date), end: endOfDay(date) })
             );
             return dayTxs.reduce((acc, t) => acc + Number(t.amount || 0), 0);
         });
 
-        // Normalize to 0-100 for SVG
-        const maxVal = Math.max(...chartDataRaw, 1); // prevent division by zero
+        const maxVal = Math.max(...chartDataRaw, 1);
         const chartDataPoints = chartDataRaw.map(v => Math.round((v / maxVal) * 100));
 
+        const revenue = periodTxs.filter(t => t.transaction_type === 'encaissement' && isPaid(t.status)).reduce((acc, t) => acc + Number(t.amount || 0), 0);
+        const expenses = periodTxs.filter(t => t.transaction_type === 'décaissement' && isPaid(t.status)).reduce((acc, t) => acc + Number(t.amount || 0), 0);
+
         return {
-            revenue: periodTxs.filter(t => t.transaction_type === 'encaissement' && t.status === 'Payé').reduce((acc, t) => acc + Number(t.amount || 0), 0),
+            revenue,
+            expenses,
+            net: revenue - expenses,
             resas: periodResas.length,
             newCustomers: periodResas.reduce((acc: string[], r) => r.customer_id && !acc.includes(r.customer_id) ? [...acc, r.customer_id] : acc, []).length,
             occupation: Math.round(((fleetStatus.length - fleetStatus.filter(v => v.status === 'available').length) / fleetStatus.length) * 100) || 0,
@@ -133,162 +145,118 @@ export default function Dashboard() {
         };
     }, [allReservations, allTransactions, fleetStatus, period, stats]);
 
-    // Helper to generate Cubic Bezier points for a smooth curve
     const getBezierPath = (points: number[]) => {
         if (!points || points.length < 2) return "";
         const width = 100;
         const height = 100;
         const step = width / (points.length - 1);
-
         let d = `M 0,${height - points[0]}`;
-
         for (let i = 0; i < points.length - 1; i++) {
             const x1 = i * step;
             const y1 = height - points[i];
             const x2 = (i + 1) * step;
             const y2 = height - points[i + 1];
-
-            const cx1 = x1 + step / 2;
-            const cy1 = y1;
-            const cx2 = x2 - step / 2;
-            const cy2 = y2;
-
-            d += ` C ${cx1},${cy1} ${cx2},${cy2} ${x2},${y2}`;
+            const xc = (x1 + x2) / 2;
+            const yc = (y1 + y2) / 2;
+            d += ` Q ${x1},${y1} ${xc},${yc} T ${x2},${y2}`;
         }
         return d;
     };
 
-    const bezierPath = useMemo(() => getBezierPath(filteredStats?.chartDataPoints || []), [filteredStats]);
-
     if (loading) {
         return (
-            <div className="h-full flex flex-col items-center justify-center py-20 gap-4">
-                <Loader2 className="w-12 h-12 text-[#261CC1] animate-spin" />
-                <p className="text-slate-400 font-bold animate-pulse uppercase tracking-widest text-xs">Synchronisation des données...</p>
+            <div className="flex justify-center items-center min-h-[60vh]">
+                <Loader2 className="w-12 h-12 animate-spin text-[#261CC1]" />
             </div>
         );
     }
 
     const cards = [
-        { label: 'Revenus Période', value: `${filteredStats?.revenue.toLocaleString()} MAD`, icon: DollarSign, color: 'from-[#261CC1] to-[#3A9AFF]', trend: 'Ventes confirmées' },
-        { label: 'Réservations', value: filteredStats?.resas.toString() || '0', icon: Calendar, color: 'from-[#1C0770] to-[#261CC1]', trend: 'Activité sur période' },
-        { label: 'Taux Occupation', value: `${filteredStats?.occupation || 0}%`, icon: Car, color: 'from-[#3A9AFF] to-[#60B8FF]', trend: 'Flotte en mouvement' },
-        { label: 'Clients Période', value: filteredStats?.newCustomers.toString() || '0', icon: Users, color: 'from-[#00C853] to-[#69F0AE]', trend: 'Nouveaux engagés' },
+        { label: 'Chiffre d\'Affaires', value: `${(filteredStats?.revenue || 0).toLocaleString()} MAD`, icon: DollarSign, color: 'text-emerald-500', trend: '+12.5%', bg: 'bg-emerald-50' },
+        { label: 'Dépenses (Charges)', value: `${(filteredStats?.expenses || 0).toLocaleString()} MAD`, icon: Activity, color: 'text-rose-500', trend: 'Global', bg: 'bg-rose-50' },
+        { label: 'Réservations', value: filteredStats?.resas || 0, icon: Calendar, color: 'text-[#3A9AFF]', trend: '+5.4%', bg: 'bg-[#3A9AFF]/10' },
+        { label: 'Taux d\'Occupation', value: `${filteredStats?.occupation || 0}%`, icon: Activity, color: 'text-amber-500', trend: 'Stable', bg: 'bg-amber-50' },
     ];
 
+    const bezierPath = getBezierPath(filteredStats?.chartDataPoints || []);
+
     return (
-        <div className="space-y-8 animate-[fadeIn_0.5s_ease-out] pb-10">
-            {/* Page Header */}
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center text-[#261CC1]">
-                        <LayoutDashboard className="w-5 h-5 md:w-6 md:h-6" />
-                    </div>
-                    <div>
-                        <h1 className="text-xl md:text-3xl font-black text-[#1C0770] tracking-tighter uppercase leading-none">Tableau de Bord</h1>
-                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[8px] md:text-[9px] mt-1">Analyse et indicateurs de performance</p>
-                    </div>
+        <div className="space-y-8 pb-12 animate-fade-in font-sans">
+            {/* SaaS Header Profile Area */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <h1 className="text-3xl font-black text-[#1C0770] uppercase tracking-tight leading-none">
+                        Dashboard <span className="text-[#3A9AFF] font-light">Overview</span>
+                    </h1>
+                    <p className="text-slate-400 mt-2 font-medium">Bienvenue dans votre centre de pilotage TRM Rent Car</p>
                 </div>
 
-                <div className="flex overflow-x-auto pb-2 xl:pb-0 scrollbar-hide">
-                    <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm min-w-max">
-                        {[
-                            { id: 'today', label: 'Jour' },
-                            { id: 'week', label: 'Sem.' },
-                            { id: 'month', label: 'Mois' },
-                            { id: 'year', label: 'An' },
-                            { id: 'all', label: 'Global' }
-                        ].map((btn) => (
-                            <button
-                                key={btn.id}
-                                onClick={() => setPeriod(btn.id as Period)}
-                                className={`px-4 py-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${period === btn.id
-                                    ? 'bg-[#261CC1] text-white shadow-lg shadow-[#261CC1]/20'
-                                    : 'text-slate-400 hover:bg-slate-50'
-                                    }`}
-                            >
-                                {btn.label}
-                            </button>
-                        ))}
-                    </div>
+                <div className="flex flex-wrap items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200/50">
+                    {['today', 'week', 'month', 'year', 'all'].map((p) => (
+                        <button
+                            key={p}
+                            onClick={() => setPeriod(p as Period)}
+                            className={`px-5 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${period === p
+                                ? 'bg-white text-[#261CC1] shadow-lg shadow-slate-200 ring-1 ring-slate-100'
+                                : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                        >
+                            {p === 'today' ? 'Jour' : p === 'week' ? 'Semaine' : p === 'month' ? 'Mois' : p === 'year' ? 'Année' : 'Global'}
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {cards.map((stat, i) => {
-                    const Icon = stat.icon;
-                    const isRevenue = stat.label === 'Revenus Période';
-                    const CardContent = (
-                        <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 group relative overflow-hidden h-full">
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform"></div>
-                            <div className="relative z-10">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className={`bg-gradient-to-br ${stat.color} p-3 rounded-2xl text-white shadow-lg shadow-[var(--color-primary)]/10`}>
-                                        <Icon className="h-5 w-5" />
-                                    </div>
-                                    <p className="text-slate-400 text-[9px] font-black tracking-widest uppercase">{stat.label}</p>
-                                </div>
-                                <p className="text-2xl font-black text-[#1C0770] mb-2 tracking-tighter">{stat.value}</p>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">{stat.trend}</span>
-                                    <ArrowUpRight className="w-3 h-3 text-emerald-500" />
-                                </div>
+            {/* Main KPI Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {cards.map((card, i) => (
+                    <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-xl hover:-translate-y-1 group">
+                        <div className="flex justify-between items-start mb-6">
+                            <div className={`p-3.5 ${card.bg} rounded-2xl transition-transform group-hover:scale-110 duration-500`}>
+                                <card.icon className={`w-6 h-6 ${card.color}`} />
                             </div>
+                            <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg">
+                                {card.trend}
+                            </span>
                         </div>
-                    );
-
-                    return isRevenue ? (
-                        <Link key={i} to="/admin/accounting" className="block transform transition-transform hover:scale-[1.02]">
-                            {CardContent}
-                        </Link>
-                    ) : (
-                        <div key={i}>{CardContent}</div>
-                    );
-                })}
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{card.label}</p>
+                        <p className="text-3xl font-black text-[#1C0770] tracking-tighter">{card.value}</p>
+                    </div>
+                ))}
             </div>
 
-            {/* Main Visual Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Visual Chart Card */}
-                <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden flex flex-col justify-between group min-h-[450px]">
-                    {/* Background Decorative Gradient */}
-                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-[#3A9AFF]/5 to-transparent rounded-full blur-[100px] -mr-64 -mt-64 transition-all duration-1000 group-hover:from-[#3A9AFF]/10"></div>
+            {/* Charts & Fleet Status Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                    <div className="relative z-10 flex flex-col h-full">
-                        <div className="flex flex-col md:flex-row justify-between items-start mb-12 gap-4">
-                            <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-2 h-2 rounded-full bg-[#3A9AFF]"></div>
-                                    <h2 className="text-[#1C0770] text-sm font-black tracking-widest uppercase">Performances Financières</h2>
-                                </div>
-                                <h1 className="text-4xl font-black text-[#1C0770] tracking-tighter">
-                                    {filteredStats?.revenue.toLocaleString()} <span className="text-lg font-bold text-slate-300 ml-1">MAD</span>
-                                </h1>
-                                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-2">Évolution des flux entrants (15 derniers jours)</p>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="text-right">
-                                    <div className="flex items-center gap-1.5 justify-end text-emerald-500 font-black text-[10px] uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
-                                        <Activity className="w-3 h-3" /> Connecté
-                                    </div>
-                                    <p className="text-[9px] text-slate-400 mt-2 font-bold uppercase tracking-widest">MaJ: {format(new Date(), 'HH:mm')}</p>
-                                </div>
-                            </div>
+                {/* Revenue Evolution Chart (SaaS Minimalist Style) */}
+                <div className="lg:col-span-2 bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-8">
+                        <div className="px-4 py-2 bg-emerald-50 rounded-2xl flex items-center gap-2 text-emerald-600">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                            <span className="text-[10px] font-black uppercase tracking-widest">Connecté</span>
                         </div>
+                        <p className="text-[9px] text-slate-300 font-bold text-right mt-2 uppercase tracking-tighter">maj: {format(new Date(), 'HH:mm')}</p>
+                    </div>
 
-                        {/* Modern Smooth Curve Visualization */}
-                        <div className="relative flex-1 group/chart pt-4">
-                            <div className="absolute inset-0 grid grid-cols-14 pointer-events-none opacity-20">
-                                {Array.from({ length: 15 }).map((_, i) => (
-                                    <div key={i} className="border-r border-slate-200 h-full last:border-0" />
-                                ))}
-                            </div>
+                    <div className="mb-12">
+                        <h2 className="text-xs font-black text-[#1C0770] uppercase tracking-[0.2em] flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-[#3A9AFF]"></div>
+                            Performances Financières
+                        </h2>
+                        <div className="mt-4 flex items-baseline gap-3">
+                            <span className="text-6xl font-black text-[#1C0770] tracking-tighter">{(filteredStats?.revenue || 0).toLocaleString()}</span>
+                            <span className="text-xl font-bold text-slate-300">MAD</span>
+                        </div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Évolution des flux entrants (15 derniers jours)</p>
+                    </div>
 
-                            <svg className="absolute inset-0 w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <div className="relative h-64 w-full">
+                        {/* SVG Chart Layer */}
+                        <div className="absolute inset-0">
+                            <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full overflow-visible">
                                 <defs>
                                     <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#3A9AFF" stopOpacity="0.2" />
+                                        <stop offset="0%" stopColor="#3A9AFF" stopOpacity="0.3" />
                                         <stop offset="100%" stopColor="#3A9AFF" stopOpacity="0" />
                                     </linearGradient>
                                     <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">

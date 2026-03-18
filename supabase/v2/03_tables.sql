@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS public.customers (
 -- Reservations
 CREATE TABLE IF NOT EXISTS public.reservations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    reservation_number TEXT UNIQUE,
     customer_id UUID REFERENCES public.customers(id) ON DELETE SET NULL,
     vehicle_id UUID REFERENCES public.vehicles(id) ON DELETE RESTRICT,
     start_date DATE NOT NULL,
@@ -68,6 +69,7 @@ CREATE TABLE IF NOT EXISTS public.reservations (
     dropoff_location TEXT,
     total_price DECIMAL(10,2) NOT NULL,
     status public.reservation_status DEFAULT 'pending'::public.reservation_status,
+    payment_method TEXT DEFAULT 'Espèces',
     payment_status TEXT DEFAULT 'unpaid',
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
