@@ -198,7 +198,6 @@ export default function ReservationDetails() {
             await mileageApi.create({
                 vehicle_id: reservation.vehicle_id,
                 mileage_value: handoverData.departure_mileage,
-                recorded_by: 'Admin',
                 notes: `Départ location N° ${reservation.id.slice(0, 8)}`
             });
 
@@ -258,7 +257,6 @@ export default function ReservationDetails() {
             await mileageApi.create({
                 vehicle_id: reservation.vehicle_id,
                 mileage_value: returnData.return_mileage,
-                recorded_by: 'Admin',
                 notes: `Retour location N° ${reservation.id.slice(0, 8)}`
             });
 
