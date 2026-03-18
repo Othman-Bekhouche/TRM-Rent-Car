@@ -61,3 +61,33 @@ CREATE POLICY "Users update own profile" ON public.profiles FOR UPDATE USING (au
 
 DROP POLICY IF EXISTS "Users view own notifications" ON public.system_notifications;
 CREATE POLICY "Users view own notifications" ON public.system_notifications FOR SELECT USING (user_id = auth.uid());
+
+-- 4. Booking & Public Access
+DROP POLICY IF EXISTS "Anyone can create reservations" ON public.reservations;
+CREATE POLICY "Anyone can create reservations" ON public.reservations FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public view company settings" ON public.company_settings;
+CREATE POLICY "Public view company settings" ON public.company_settings FOR SELECT USING (true);
+
+-- 5. Document Visibility (Customers)
+DROP POLICY IF EXISTS "Customers view own invoices" ON public.invoices;
+CREATE POLICY "Customers view own invoices" ON public.invoices FOR SELECT USING (
+    reservation_id IN (
+        SELECT id FROM public.reservations 
+        WHERE customer_id IN (
+            SELECT id FROM public.customers 
+            WHERE LOWER(email) = LOWER(COALESCE(auth.jwt()->>'email', auth.email()))
+        )
+    )
+);
+
+DROP POLICY IF EXISTS "Customers view own contracts" ON public.rental_contracts;
+CREATE POLICY "Customers view own contracts" ON public.rental_contracts FOR SELECT USING (
+    reservation_id IN (
+        SELECT id FROM public.reservations 
+        WHERE customer_id IN (
+            SELECT id FROM public.customers 
+            WHERE LOWER(email) = LOWER(COALESCE(auth.jwt()->>'email', auth.email()))
+        )
+    )
+);
