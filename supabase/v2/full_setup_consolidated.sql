@@ -95,6 +95,7 @@ GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated, service_role
 GRANT USAGE ON SCHEMA auth, extensions TO anon, authenticated, service_role;
 GRANT ALL ON ALL FUNCTIONS IN SCHEMA auth TO anon, authenticated, service_role;
 GRANT ALL ON ALL FUNCTIONS IN SCHEMA extensions TO anon, authenticated, service_role;
+
 -- =============================================
 -- 00_auth_schema.sql
 -- Initialise le schéma auth et les fonctions d'aide
@@ -139,6 +140,7 @@ $$ LANGUAGE sql STABLE;
 CREATE OR REPLACE FUNCTION auth.email() RETURNS text AS $$
   SELECT nullif(current_setting('request.jwt.claim.email', true), '')::text;
 $$ LANGUAGE sql STABLE;
+
 -- =============================================
 -- 00_extensions.sql
 -- =============================================
@@ -151,6 +153,7 @@ CREATE SCHEMA IF NOT EXISTS storage;
 -- 2. EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" SCHEMA extensions;
 CREATE EXTENSION IF NOT EXISTS "pgcrypto" SCHEMA extensions;
+
 -- =============================================
 -- 01_enums.sql
 -- =============================================
@@ -163,6 +166,7 @@ CREATE TYPE public.infraction_type AS ENUM ('radar_fixe', 'exces_vitesse', 'stat
 CREATE TYPE public.maintenance_status AS ENUM ('planned', 'in_progress', 'completed');
 CREATE TYPE public.transaction_type AS ENUM ('encaissement', 'caution', 'remboursement', 'charge');
 CREATE TYPE public.quote_status AS ENUM ('draft', 'sent', 'accepted', 'rejected', 'expired');
+
 -- =============================================
 -- 02_tables.sql
 -- =============================================
@@ -436,6 +440,7 @@ CREATE INDEX IF NOT EXISTS idx_res_status ON public.reservations(status);
 CREATE INDEX IF NOT EXISTS idx_cust_email ON public.customers(email);
 CREATE INDEX IF NOT EXISTS idx_maint_veh ON public.vehicle_maintenance_records(vehicle_id);
 CREATE INDEX IF NOT EXISTS idx_inf_res ON public.infractions(reservation_id);
+
 -- =============================================
 -- 03_functions.sql
 -- =============================================
@@ -499,6 +504,7 @@ BEGIN
   
   RETURN NEW;
 END; $$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- =============================================
 -- 04_triggers.sql
 -- =============================================
@@ -525,6 +531,7 @@ CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.quotes FOR EACH ROW EXECUT
 
 DROP TRIGGER IF EXISTS set_updated_at ON public.vehicle_maintenance_records;
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.vehicle_maintenance_records FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
 -- =============================================
 -- 06_rls.sql
 -- Politiques de sécurité (Row Level Security)
@@ -618,6 +625,7 @@ CREATE POLICY "Customers view own contracts" ON public.rental_contracts FOR SELE
         )
     )
 );
+
 -- =============================================
 -- 06_permissions.sql
 -- =============================================
@@ -636,6 +644,7 @@ GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated, service_role
 -- But on VPS we might need to be explicit
 ALTER TABLE auth.users ALTER COLUMN role SET DEFAULT 'authenticated';
 UPDATE auth.users SET role = 'authenticated' WHERE role IS NULL OR role = '';
+
 -- =============================================
 -- 08_seed.sql
 -- Données de test et configuration initiale TRM
@@ -674,6 +683,7 @@ BEGIN
     ON CONFLICT DO NOTHING;
 
 END $$;
+
 -- =============================================
 -- 09_storage.sql
 -- Configuration du stockage Supabase (Buckets et RLS)
@@ -715,6 +725,7 @@ USING (bucket_id = 'vehicles');
 GRANT USAGE ON SCHEMA storage TO authenticated;
 GRANT ALL ON TABLE storage.objects TO authenticated;
 GRANT ALL ON TABLE storage.buckets TO authenticated;
+
 -- =============================================
 -- 10_notifications_and_alerts.sql
 -- Enhanced notification and maintenance system
@@ -861,6 +872,7 @@ DROP TRIGGER IF EXISTS tr_reservation_notify ON public.reservations;
 CREATE TRIGGER tr_reservation_notify
 AFTER INSERT ON public.reservations
 FOR EACH ROW EXECUTE FUNCTION public.tr_notify_reservation();
+
 -- =============================================
 -- 11_accounting_automation.sql
 -- Automatic transaction logging for accounting
@@ -945,6 +957,7 @@ DROP TRIGGER IF EXISTS tr_handover_deposit_sync ON public.rental_handover_record
 CREATE TRIGGER tr_handover_deposit_sync
 AFTER INSERT ON public.rental_handover_records
 FOR EACH ROW EXECUTE FUNCTION public.sync_handover_deposit_to_transactions();
+
 CREATE OR REPLACE FUNCTION public.check_vehicle_availability(p_vehicle_id uuid, p_start_date date, p_end_date date)
 RETURNS TABLE (is_available boolean, next_available_date date) AS $$
 DECLARE
@@ -967,6 +980,7 @@ BEGIN
         RETURN QUERY SELECT false, (v_conflict_end + INTERVAL '1 day')::date;
     END IF;
 END; $$ LANGUAGE plpgsql STABLE;
+
 -- 1. Correct Transaction statuses and descriptions
 UPDATE public.transactions SET status = 'Payé' WHERE status LIKE 'Pay%';
 UPDATE public.transactions SET description = REPLACE(description, 'R??servation', 'Réservation');
@@ -978,8 +992,8 @@ CREATE POLICY "Staff manage handovers" ON public.rental_handover_records
 FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- 3. Correct Reservations if any
-UPDATE public.reservations SET status = 'completed' WHERE status = 'Terminé';
-UPDATE public.reservations SET status = 'confirmed' WHERE status = 'Confirmé';
+UPDATE public.reservations SET status = 'completed' WHERE status::text = 'Terminé';
+UPDATE public.reservations SET status = 'confirmed' WHERE status::text = 'Confirmé';
 
 -- 4. Invoices and Contracts (just in case they have same issues)
 ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
@@ -992,6 +1006,7 @@ CREATE POLICY "Staff manage contracts" ON public.rental_contracts FOR ALL TO aut
 
 -- 5. RELOAD SCHEMA CACHE
 NOTIFY pgrst, 'reload schema';
+
 -- Fix handover deposit trigger
 CREATE OR REPLACE FUNCTION public.sync_handover_deposit_to_transactions() RETURNS trigger AS $$ 
 BEGIN 
@@ -1027,7 +1042,7 @@ $$ LANGUAGE plpgsql;
 -- Sync maintenance costs to transactions
 CREATE OR REPLACE FUNCTION public.sync_maintenance_to_transactions() RETURNS trigger AS $$
 BEGIN
-    IF NEW.total_cost > 0 THEN
+    IF NEW.actual_cost > 0 THEN
         INSERT INTO public.transactions (
             transaction_type,
             amount,
@@ -1037,11 +1052,11 @@ BEGIN
             transaction_date
         ) VALUES (
             'décaissement',
-            NEW.total_cost,
+            NEW.actual_cost,
             'Virement',
             'Frais de maintenance: ' || NEW.maintenance_type || ' (' || (SELECT plate_number FROM vehicles WHERE id = NEW.vehicle_id) || ')',
             'Payé',
-            COALESCE(NEW.service_date::date, CURRENT_DATE)
+            COALESCE(NEW.last_service_date::date, CURRENT_DATE)
         );
     END IF;
     RETURN NEW;
@@ -1050,7 +1065,7 @@ $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS tr_sync_maintenance_to_transactions ON public.vehicle_maintenance_records;
 CREATE TRIGGER tr_sync_maintenance_to_transactions
-AFTER INSERT OR UPDATE OF total_cost ON public.vehicle_maintenance_records
+AFTER INSERT OR UPDATE OF actual_cost ON public.vehicle_maintenance_records
 FOR EACH ROW
 EXECUTE FUNCTION public.sync_maintenance_to_transactions();
 
