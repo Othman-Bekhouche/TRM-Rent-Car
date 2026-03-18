@@ -32,3 +32,13 @@
 \i 08_seed.sql
 -- 9. Storage
 \i 09_storage.sql
+
+-- 10. Advanced Features
+\i 10_notifications_and_alerts.sql
+\i 11_accounting_automation.sql
+\i 12_check_availability.sql
+\i 13_db_fixes.sql
+\i 14_accounting_triggers_update.sql
+
+-- Refresh schema cache
+NOTIFY pgrst, 'reload schema';

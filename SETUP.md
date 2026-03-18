@@ -33,13 +33,20 @@ Le backend est situé dans le dossier `devops/vps-deploy`.
    ```
 
 ### 3. Initialisation de la Base de Données
-Si la base de données est vide, vous devez appliquer les scripts SQL situés dans `supabase/v2` dans l'ordre numérique :
-- `01_setup_auth.sql`
-- `02_extensions.sql`
-- `03_tables.sql`
-- ... et ainsi de suite.
+Si la base de données est vide, vous pouvez tout configurer en une seule commande :
 
-Vous pouvez les appliquer via l'interface **Supabase Studio** (généralement sur `http://localhost:54323`) dans l'éditeur SQL.
+1. Ouvrez l'éditeur SQL dans **Supabase Studio** (généralement sur `http://localhost:54323`).
+2. Copiez et collez le contenu du fichier `supabase/v2/master_init.sql` et exécutez-le. 
+   > **Note** : Ce fichier exécute automatiquement tous les autres scripts (rôles, tables, fonctions, RLS).
+
+Si vous préférez la ligne de commande (Psql) :
+```bash
+# Depuis le dossier devops/vps-deploy
+docker exec -i supabase_db_TRM_Rent_Car psql -U postgres -d postgres < ../../supabase/v2/master_init.sql
+```
+
+#### Vérification des Rôles
+Le script `00_roles.sql` (inclus dans le master) crée automatiquement les rôles nécessaires (`anon`, `authenticated`, `service_role`, `authenticator`). Si vous avez un PC avec une installation Docker PostgreSQL existante, assurez-vous qu'elle n'utilise pas le port 5432.
 
 ### 4. Configuration du Frontend
 1. Accédez au dossier frontend :
@@ -65,6 +72,8 @@ Vous pouvez les appliquer via l'interface **Supabase Studio** (généralement su
 - `supabase/v2/` : Scripts de migration et structure de la base de données.
 - `devops/` : Configuration Docker et déploiement.
 
-## Maintenance
-- Pour voir les logs Docker : `docker-compose logs -f`
-- Pour arrêter les services : `docker-compose down`
+## Accès par défaut
+- **Admin Panel** : `http://localhost:5173/admin/login`
+- **Identifiants (si configurés dans seed.sql)** : 
+  - Email: `admin@trm.com` (Exemple)
+  - Password: `trmrentcar2026`
