@@ -651,6 +651,7 @@ export const settingsApi = {
     async update(settingsData: any) {
         const allowedFields = [
             'company_name', 'phone', 'email', 'address', 'website',
+            'manager_name', 'legal_rc', 'legal_if', 'legal_patente', 'legal_ice',
             'delivery_fee', 'discount_week', 'discount_month',
             'notifications_email', 'notifications_sms'
         ];

@@ -1,4 +1,4 @@
-import { Save, Building2, Phone, Mail, MapPin, Globe, CreditCard, Bell, Loader2 } from 'lucide-react';
+import { Save, Building2, Phone, Mail, MapPin, Globe, CreditCard, Bell, Loader2, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { settingsApi } from '../../lib/api';
@@ -115,9 +115,33 @@ export default function Settings() {
                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1"><MapPin className="w-3 h-3" /> Adresse</label>
                             <textarea value={settings.address || ''} onChange={e => setSettings({ ...settings, address: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 text-slate-800 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] h-20 resize-none" />
                         </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1"><Globe className="w-3 h-3" /> Site Web</label>
-                            <input type="text" value={settings.website || ''} onChange={e => setSettings({ ...settings, website: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 text-slate-800 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1"><User className="w-3 h-3" /> Gérant / Manager</label>
+                                <input type="text" value={settings.manager_name || ''} onChange={e => setSettings({ ...settings, manager_name: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 text-slate-800 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1"><Globe className="w-3 h-3" /> Site Web</label>
+                                <input type="text" value={settings.website || ''} onChange={e => setSettings({ ...settings, website: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 text-slate-800 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-1">R.C.</label>
+                                <input type="text" placeholder="Registre Commerce" value={settings.legal_rc || ''} onChange={e => setSettings({ ...settings, legal_rc: e.target.value })} className="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2 text-xs focus:ring-[#3A9AFF]" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-1">I.F.</label>
+                                <input type="text" placeholder="Identifiant Fiscal" value={settings.legal_if || ''} onChange={e => setSettings({ ...settings, legal_if: e.target.value })} className="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2 text-xs focus:ring-[#3A9AFF]" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-1">PATENTE</label>
+                                <input type="text" placeholder="Patente" value={settings.legal_patente || ''} onChange={e => setSettings({ ...settings, legal_patente: e.target.value })} className="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2 text-xs focus:ring-[#3A9AFF]" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-1">I.C.E.</label>
+                                <input type="text" placeholder="ICE" value={settings.legal_ice || ''} onChange={e => setSettings({ ...settings, legal_ice: e.target.value })} className="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2 text-xs focus:ring-[#3A9AFF]" />
+                            </div>
                         </div>
                     </div>
                 </div>
