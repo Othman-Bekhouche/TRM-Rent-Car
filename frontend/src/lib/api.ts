@@ -422,42 +422,16 @@ export const infractionsApi = {
     },
 };
 
-// ===== MAINTENANCE (New Version) =====
-// Internal mapping to bridge Frontend naming with Backend naming
+// ===== MAINTENANCE =====
 const mapToDB = (record: Partial<MaintenanceRecord>) => {
-    // Labels mapping for enum
-    const statusMap: Record<string, string> = {
-        'Planifié': 'planned',
-        'En cours': 'in_progress',
-        'Terminé': 'completed',
-        'Annulé': 'cancelled'
-    };
-
-    // Create DB object
-    const { last_service_date, last_service_mileage, status, vehicle, ...rest } = record;
-    return {
-        ...rest,
-        maintenance_date: last_service_date || undefined,
-        mileage_at_maintenance: last_service_mileage || undefined,
-        status: status ? (statusMap[status] || 'planned') : undefined,
-        next_service_date: record.next_service_date || null,
-        next_maintenance_date: record.next_service_date || null // use same for both in DB if needed
-    };
+    const { vehicle, ...rest } = record;
+    return rest;
 };
 
 const mapFromDB = (data: any): MaintenanceRecord => {
-    const statusMapRev: Record<string, string> = {
-        'planned': 'Planifié',
-        'in_progress': 'En cours',
-        'completed': 'Terminé',
-        'cancelled': 'Annulé'
-    };
-
     return {
         ...data,
-        last_service_date: data.maintenance_date || data.last_service_date,
-        last_service_mileage: data.mileage_at_maintenance || data.last_service_mileage,
-        status: statusMapRev[data.status] || data.status || 'Planifié'
+        status: data.status || 'Planifié'
     } as MaintenanceRecord;
 };
 
