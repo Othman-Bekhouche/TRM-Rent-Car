@@ -19,8 +19,9 @@ export default function Vehicles() {
 
                 if (data) {
                     const mappedVehicles = data.map(v => {
-                        const coverImg = v.vehicle_images?.find((img: any) => img.is_cover)?.image_url
-                            || v.vehicle_images?.[0]?.image_url
+                        const imgs = Array.isArray(v.vehicle_images) ? v.vehicle_images : (v.vehicle_images ? [v.vehicle_images] : []);
+                        const coverImg = imgs.find((img: any) => img.is_cover)?.image_url
+                            || imgs[0]?.image_url
                             || '/images/cars/default.png';
                         return {
                             ...v,
@@ -180,14 +181,9 @@ export default function Vehicles() {
                                     <ArrowRight className="w-4 h-4 ml-2" />
                                 </Link>
 
-                                {vehicle.status === 'booked' && (
+                                {vehicle.status === 'maintenance' && (
                                     <div className="absolute inset-x-0 bottom-0 bg-red-900/90 text-red-100 text-center py-1 text-xs font-bold uppercase tracking-widest border-t border-red-800 backdrop-blur-md">
                                         Indisponible pour le moment
-                                    </div>
-                                )}
-                                {vehicle.status === 'maintenance' && (
-                                    <div className="absolute inset-x-0 bottom-0 bg-orange-900/90 text-orange-100 text-center py-1 text-xs font-bold uppercase tracking-widest border-t border-orange-800 backdrop-blur-md">
-                                        En maintenance
                                     </div>
                                 )}
                             </div>

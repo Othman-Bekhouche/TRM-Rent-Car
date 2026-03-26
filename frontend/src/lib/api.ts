@@ -43,6 +43,13 @@ export interface Customer {
     total_reservations: number;
     status: string;
     notes: string;
+    license_number?: string;
+    license_expiry_date?: string;
+    birth_date?: string;
+    birth_place?: string;
+    license_image_url?: string;
+    cin_image_url?: string;
+    passport_image_url?: string;
     created_at: string;
     updated_at: string;
 }
@@ -66,7 +73,8 @@ export interface Reservation {
     // Joined
     customers?: Customer;
     vehicles?: Vehicle;
-    handover?: HandoverRecord[]; // Supabase joins return array for HAS_ONE/HAS_MANY
+    handover?: HandoverRecord[];
+    rental_contracts?: any[];
 }
 
 export interface Infraction {
@@ -98,7 +106,7 @@ export interface MaintenanceRecord {
     id: string;
     vehicle_id: string;
     maintenance_type: string;
-    status: 'Planifié' | 'En cours' | 'Terminé' | 'Annulé';
+    status: 'Planifie' | 'En cours' | 'Termine' | 'Annule' | 'Planifié' | 'Terminé' | 'Annulé';
     last_service_date: string;
     last_service_mileage: number;
     next_service_date: string;
@@ -339,6 +347,25 @@ export const customersApi = {
         const { error } = await supabase.from('customers').delete().eq('id', id);
         if (error) throw error;
     },
+    async uploadFile(file: File) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('customers')
+            .upload(filePath, file);
+
+        if (uploadError) {
+            throw uploadError;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+            .from('customers')
+            .getPublicUrl(filePath);
+
+        return publicUrl;
+    }
 };
 
 // ===== RESERVATIONS =====
@@ -346,7 +373,7 @@ export const reservationsApi = {
     async getAll() {
         const { data, error } = await supabase
             .from('reservations')
-            .select('*, customers(*), vehicles(*), handover:rental_handover_records(*)')
+            .select('*, customers(*), vehicles(*), handover:rental_handover_records(*), rental_contracts(*)')
             .order('created_at', { ascending: false });
         if (error) throw error;
         return data as (Reservation & { customers: Customer; vehicles: Vehicle })[];
@@ -354,7 +381,7 @@ export const reservationsApi = {
     async getById(id: string) {
         const { data, error } = await supabase
             .from('reservations')
-            .select('*, customers(*), vehicles(*), handover:rental_handover_records(*)')
+            .select('*, customers(*), vehicles(*), handover:rental_handover_records(*), rental_contracts(*)')
             .eq('id', id).single();
         if (error) throw error;
         return data as (Reservation & { customers: Customer; vehicles: Vehicle });
@@ -432,7 +459,7 @@ const mapToDB = (record: Partial<MaintenanceRecord>) => {
 const mapFromDB = (data: any): MaintenanceRecord => {
     return {
         ...data,
-        status: data.status || 'Planifié'
+        status: data.status || 'Planifie'
     } as MaintenanceRecord;
 };
 
@@ -688,7 +715,7 @@ export const invoicesApi = {
         return data.filter(r => r.invoices && Object.keys(r.invoices).length > 0);
     },
     async getByReservation(reservationId: string) {
-        const { data, error } = await supabase.from('invoices').select('*').eq('reservation_id', reservationId).maybeSingle();
+        const { data, error } = await supabase.from('invoices').select('*').eq('reservation_id', reservationId).limit(1).maybeSingle();
         if (error) throw error;
         return data as Invoice | null;
     },
@@ -717,7 +744,7 @@ export const contractsApi = {
         return data.filter(r => r.rental_contracts && Object.keys(r.rental_contracts).length > 0);
     },
     async getByReservation(reservationId: string) {
-        const { data, error } = await supabase.from('rental_contracts').select('*').eq('reservation_id', reservationId).maybeSingle();
+        const { data, error } = await supabase.from('rental_contracts').select('*').eq('reservation_id', reservationId).limit(1).maybeSingle();
         if (error) throw error;
         return data as RentalContract | null;
     },
@@ -731,7 +758,7 @@ export const contractsApi = {
 
 export const handoversApi = {
     async getByReservation(reservationId: string) {
-        const { data, error } = await supabase.from('rental_handover_records').select('*').eq('reservation_id', reservationId).maybeSingle();
+        const { data, error } = await supabase.from('rental_handover_records').select('*').eq('reservation_id', reservationId).limit(1).maybeSingle();
         if (error) throw error;
         return data as HandoverRecord | null;
     },

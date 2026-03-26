@@ -86,11 +86,11 @@ export default function ReservationDetails() {
     const getStatusInfo = (status: string) => {
         switch (status) {
             case 'pending': return { label: 'En attente', color: 'text-amber-500', bg: 'bg-amber-500/10' };
-            case 'confirmed': return { label: 'Confirmée', color: 'text-blue-500', bg: 'bg-blue-500/10' };
-            case 'rented': return { label: 'Loué', color: 'text-purple-500', bg: 'bg-purple-500/10' };
-            case 'returned': return { label: 'Retourné', color: 'text-emerald-500', bg: 'bg-emerald-500/10' };
-            case 'completed': return { label: 'Terminée', color: 'text-emerald-400', bg: 'bg-emerald-400/10' };
-            case 'cancelled': return { label: 'Annulée', color: 'text-red-500', bg: 'bg-red-500/10' };
+            case 'confirmed': return { label: 'Confirmee', color: 'text-blue-500', bg: 'bg-blue-500/10' };
+            case 'rented': return { label: 'Loue', color: 'text-purple-500', bg: 'bg-purple-500/10' };
+            case 'returned': return { label: 'Retourne', color: 'text-emerald-500', bg: 'bg-emerald-500/10' };
+            case 'completed': return { label: 'Terminee', color: 'text-emerald-400', bg: 'bg-emerald-400/10' };
+            case 'cancelled': return { label: 'Annulee', color: 'text-red-500', bg: 'bg-red-500/10' };
             default: return { label: status, color: 'text-slate-500', bg: 'bg-slate-500/10' };
         }
     };
@@ -111,7 +111,7 @@ export default function ReservationDetails() {
                         payment_status: reservation.payment_status
                     });
                 }
-                toast.success("Dossier clôturé et facture générée !");
+                toast.success("Dossier cloture et facture generee !");
             } else {
                 const newStatus = action === 'confirm' ? 'confirmed' : 'cancelled';
                 await reservationsApi.update(reservation.id, { status: newStatus });
@@ -139,11 +139,11 @@ export default function ReservationDetails() {
                         setContract(existing);
                     }
                 }
-                toast.success(`Dossier ${action === 'confirm' ? 'confirmé' : 'annulé'} avec succès et véhicule mis à jour`);
+                toast.success(`Dossier ${action === 'confirm' ? 'confirme' : 'annule'} avec succes et vehicule mis a jour`);
             }
             await loadData();
         } catch (err) {
-            toast.error("Erreur lors de la mise à jour");
+            toast.error("Erreur lors de la mise a jour");
         }
     };
 
@@ -153,7 +153,7 @@ export default function ReservationDetails() {
             const existing = await invoicesApi.getByReservation(reservation.id);
             if (existing) {
                 setInvoice(existing);
-                toast.success("Facture déjà existante");
+                toast.success("Facture deja existante");
                 return;
             }
             const inv = await invoicesApi.create({
@@ -164,9 +164,9 @@ export default function ReservationDetails() {
                 payment_status: reservation.payment_status
             });
             setInvoice(inv);
-            toast.success("Facture générée !");
+            toast.success("Facture generee !");
         } catch (err) {
-            toast.error("Erreur lors de la création de la facture");
+            toast.error("Erreur lors de la creation de la facture");
         }
     };
 
@@ -201,11 +201,11 @@ export default function ReservationDetails() {
                 notes: `Départ location N° ${reservation.id.slice(0, 8)}`
             });
 
-            toast.success("Véhicule marqué comme loué et remis au client !");
+            toast.success("Vehicule marque comme loue et remis au client !");
             setShowHandoverModal(false);
             await loadData();
         } catch (error) {
-            toast.error("Erreur lors de la remise du véhicule");
+            toast.error("Erreur lors de la remise du vehicule");
         }
     };
 
@@ -260,12 +260,12 @@ export default function ReservationDetails() {
                 notes: `Retour location N° ${reservation.id.slice(0, 8)}`
             });
 
-            toast.success("Le retour a été enregistré avec succès !");
+            toast.success("Le retour a ete enregistre avec succes !");
             setShowReturnModal(false);
             await loadData();
         } catch (error) {
             console.error(error);
-            toast.error("Erreur lors du retour du véhicule");
+            toast.error("Erreur lors du retour du vehicule");
         }
     };
 

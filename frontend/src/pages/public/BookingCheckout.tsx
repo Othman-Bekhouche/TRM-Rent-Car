@@ -38,6 +38,23 @@ export default function BookingCheckout() {
         image_url: ''
     });
 
+    const [vehicleReservations, setVehicleReservations] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (vehicleId) {
+            fetchVehicleReservations(vehicleId);
+        }
+    }, [vehicleId]);
+
+    const fetchVehicleReservations = async (vid: string) => {
+        const { data } = await supabase.from('reservations')
+            .select('start_date, end_date, status')
+            .eq('vehicle_id', vid)
+            .not('status', 'in', '("cancelled","completed","returned","rejected")')
+            .gte('end_date', new Date().toISOString());
+        setVehicleReservations(data || []);
+    };
+
     useEffect(() => {
         const start = searchParams.get('start');
         const end = searchParams.get('end');
@@ -47,7 +64,6 @@ export default function BookingCheckout() {
         const loadInitialData = async () => {
             try {
                 setLoadingVehicle(true);
-                // ... rest of logic
 
                 // 1. Fetch Vehicle from DB
                 if (vehicleId) {
@@ -135,7 +151,7 @@ export default function BookingCheckout() {
     const handleSubmitBooking = async () => {
         setLoading(true);
         try {
-            // 1. Create or Update customer record via Secure RPC (bypasses RLS reading limits for public users)
+            // 1. Create or Update customer record via Secure RPC
             const { data: generatedCustomerId, error: custErr } = await supabase.rpc('handle_checkout_customer', {
                 p_first_name: client.firstName,
                 p_last_name: client.lastName,
@@ -152,37 +168,31 @@ export default function BookingCheckout() {
                 throw new Error("Erreur: Impossible d'enregistrer le profil client.");
             }
 
-            const customerId = generatedCustomerId;
+            // 2. Find the vehicle ID is already in vehicleId
 
-            // 2. Find the vehicle by plate/name
-            const { data: vehicleData } = await supabase
-                .from('vehicles')
-                .select('id')
-                .eq('plate_number', booking.plate)
-                .limit(1)
-                .maybeSingle();
-
-            if (!vehicleData?.id) {
-                throw new Error("Erreur: Le véhicule sélectionné n'est plus disponible.");
-            }
-
-            // 3. Create reservation
+            // 3. Create Reservation
             const { error: resErr } = await supabase
                 .from('reservations')
                 .insert({
-                    customer_id: customerId,
-                    vehicle_id: vehicleData?.id || null,
+                    customer_id: generatedCustomerId,
+                    vehicle_id: vehicleId,
                     start_date: booking.startDate,
                     end_date: booking.endDate,
                     pickup_location: booking.pickup,
-                    dropoff_location: booking.pickup,
+                    dropoff_location: 'Agence Taourirt',
                     total_price: totalPrice,
                     status: 'pending',
-                    payment_status: 'unpaid',
-                    notes: booking.childSeat ? 'Siège enfant demandé' : null,
+                    payment_method: 'Espèces',
+                    payment_status: 'pending',
+                    notes: `Equipements: ${booking.childSeat ? 'Siège enfant included' : 'None'}`
                 });
 
-            if (resErr) throw resErr;
+            if (resErr) {
+                if (resErr.message?.includes('ERREUR_CHEVAUCHEMENT')) {
+                    throw new Error('Ce vehicule est deja reserved sur cette periode. Veuillez choisir d\'autres dates.');
+                }
+                throw resErr;
+            }
 
             // 4. Create account only if NOT logged in and requested
             if (!isLoggedIn && client.createAccount && client.password) {
@@ -199,13 +209,9 @@ export default function BookingCheckout() {
             }
 
             setStep(3);
-            toast.success('Réservation envoyée avec succès !', {
-                style: { background: '#1F2937', color: '#fff', border: '1px solid #3A9AFF' },
-            });
+            toast.success('Réservation envoyée avec succès !');
         } catch (err: any) {
-            toast.error(err?.message || 'Erreur lors de la réservation.', {
-                style: { background: '#1F2937', color: '#fff', border: '1px solid #ef4444' },
-            });
+            toast.error(err?.message || 'Erreur lors de la réservation.');
         } finally {
             setLoading(false);
         }
@@ -247,12 +253,11 @@ export default function BookingCheckout() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                     {/* Main Form */}
-                    <div className="lg:col-span-2 space-y-6 animate-slide-up opacity-0 delay-400">
+                    <div className="lg:col-span-2 space-y-6">
 
                         {/* Step 1: Dates & Options */}
                         {step === 1 && (
-                            <div className="bg-[#121826] rounded-3xl border border-[#1F2A3D] p-10 space-y-8 shadow-2xl relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-3xl -mr-32 -mt-32"></div>
+                            <div className="bg-[#121826] rounded-3xl border border-[#1F2A3D] p-10 space-y-8 shadow-2xl relative overflow-hidden">
                                 <h2 className="text-xl font-black text-white uppercase tracking-wider flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center text-[var(--color-primary)]">
                                         <Calendar className="w-5 h-5" />
@@ -268,7 +273,7 @@ export default function BookingCheckout() {
                                             <select
                                                 value={booking.pickup}
                                                 onChange={(e) => setBooking({ ...booking, pickup: e.target.value })}
-                                                className="w-full bg-[#121826] border border-[#1F2A3D] text-white rounded-xl pl-12 pr-4 py-4 text-sm font-bold focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all outline-none appearance-none cursor-pointer"
+                                                className="w-full bg-[#121826] border border-[#1F2A3D] text-white rounded-xl pl-12 pr-4 py-4 text-sm font-bold focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none appearance-none"
                                             >
                                                 <option>Agence Taourirt (Siège)</option>
                                                 <option>Livraison Oujda</option>
@@ -281,72 +286,91 @@ export default function BookingCheckout() {
 
                                     <div className="grid grid-cols-2 gap-6">
                                         <div className="space-y-2">
-                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Date de retrait</label>
+                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Retrait</label>
                                             <input
                                                 type="date"
                                                 value={booking.startDate}
                                                 onChange={(e) => setBooking({ ...booking, startDate: e.target.value })}
-                                                className="w-full bg-[#121826] border border-[#1F2A3D] text-white rounded-xl px-4 py-4 text-sm font-bold focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all outline-none"
+                                                className="w-full bg-[#121826] border border-[#1F2A3D] text-white rounded-xl px-4 py-4 text-sm font-bold focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none"
                                                 required
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Date de retour</label>
+                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Retour</label>
                                             <input
                                                 type="date"
                                                 value={booking.endDate}
                                                 onChange={(e) => setBooking({ ...booking, endDate: e.target.value })}
                                                 min={booking.startDate}
-                                                className="w-full bg-[#121826] border border-[#1F2A3D] text-white rounded-xl px-4 py-4 text-sm font-bold focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all outline-none"
+                                                className="w-full bg-[#121826] border border-[#1F2A3D] text-white rounded-xl px-4 py-4 text-sm font-bold focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none"
                                                 required
                                             />
                                         </div>
                                     </div>
 
-                                    {/* Options */}
                                     <div className="space-y-4 pt-4">
-                                        <label className="flex items-center p-5 rounded-2xl border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5 cursor-default group/option transition-all">
+                                        <label className="flex items-center p-5 rounded-2xl border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5">
                                             <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-[#121826]">
                                                 <CheckCircle className="w-6 h-6" />
                                             </div>
                                             <div className="ml-4">
                                                 <p className="text-sm font-black text-white uppercase tracking-tight">Assurance Multirisque</p>
-                                                <p className="text-xs text-slate-400">Protection complète incluse par défaut</p>
+                                                <p className="text-xs text-slate-400">Protection complète incluse</p>
                                             </div>
-                                            <span className="ml-auto text-xs font-black text-[var(--color-primary)] tracking-widest bg-white/5 px-4 py-2 rounded-full">OFFERT</span>
+                                            <span className="ml-auto text-[10px] font-black text-[var(--color-primary)] bg-white/5 px-4 py-2 rounded-full">OFFERT</span>
                                         </label>
-                                        <label className="flex items-center p-5 rounded-2xl border border-[#1F2A3D] hover:border-[var(--color-primary)]/50 bg-[#121826]/50 cursor-pointer transition-all group/option">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${booking.childSeat ? 'bg-[var(--color-primary)] text-[#121826]' : 'bg-[#1F2A3D] text-slate-500'}`}>
+                                        <label className="flex items-center p-5 rounded-2xl border border-[#1F2A3D] bg-[#121826]/50 cursor-pointer">
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${booking.childSeat ? 'bg-[var(--color-primary)]' : 'bg-[#1F2A3D]'}`}>
                                                 <Car className="w-6 h-6" />
                                             </div>
                                             <div className="ml-4">
                                                 <p className="text-sm font-black text-white uppercase tracking-tight">Siège Enfant</p>
-                                                <p className="text-xs text-slate-400">Siège homologué pour la sécurité</p>
+                                                <p className="text-xs text-slate-400">Pour la sécurité des petits</p>
                                             </div>
                                             <div className="ml-auto flex items-center gap-4">
-                                                <span className="text-xs font-black text-slate-500">+50 MAD/J</span>
+                                                <span className="text-[10px] font-black text-slate-500">+50 MAD/J</span>
                                                 <input
                                                     type="checkbox"
                                                     checked={booking.childSeat}
                                                     onChange={(e) => setBooking({ ...booking, childSeat: e.target.checked })}
-                                                    className="w-6 h-6 text-[var(--color-primary)] bg-[#0B0F19] border-[#1F2A3D] rounded-lg focus:ring-[var(--color-primary)]/20"
+                                                    className="w-6 h-6 bg-[#0B0F19] border-[#1F2A3D] rounded-lg"
                                                 />
                                             </div>
                                         </label>
                                     </div>
                                 </div>
 
+                                {vehicleReservations.length > 0 && (
+                                    <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-6 space-y-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                                                <AlertCircle className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xs font-black text-white uppercase tracking-wider">Disponibilité</h3>
+                                                <p className="text-[10px] text-slate-500 font-bold mt-0.5 italic">* Déjà réservé :</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {vehicleReservations.map((res, idx) => (
+                                                <div key={idx} className="bg-[#0B0F19] border border-[#1F2A3D] px-4 py-2 rounded-xl text-[10px] font-black">
+                                                    <span className="text-slate-400">{new Date(res.start_date).toLocaleDateString()}</span>
+                                                    <span className="mx-2 text-slate-600">→</span>
+                                                    <span className="text-white">{new Date(res.end_date).toLocaleDateString()}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <button
                                     onClick={async () => {
                                         if (!booking.startDate || !booking.endDate) {
-                                            toast.error('Veuillez choisir les dates de retrait et retour.');
-                                            return;
+                                            toast.error('Choisissez les dates.'); return;
                                         }
                                         if (new Date(booking.startDate) >= new Date(booking.endDate)) {
-                                            toast.error('La date de retour doit être après la date de retrait.');
-                                            return;
+                                            toast.error('Date retour invalide.'); return;
                                         }
-
                                         setLoading(true);
                                         try {
                                             const { data, error } = await supabase.rpc('check_vehicle_availability', {
@@ -354,36 +378,29 @@ export default function BookingCheckout() {
                                                 p_start_date: booking.startDate,
                                                 p_end_date: booking.endDate
                                             });
-
                                             if (error) throw error;
-
                                             if (data && data.length > 0 && !data[0].is_available) {
-                                                const nextDate = new Date(data[0].next_available_date).toLocaleDateString('fr-FR');
-                                                toast.error(
-                                                    `Véhicule indisponible pour ces dates. Veuillez choisir une date à partir du ${nextDate} ou réserver un autre véhicule.`,
-                                                    { duration: 6000, icon: <AlertCircle className="text-red-500" /> }
-                                                );
+                                                toast.error(`Indisponible. Prochain: ${new Date(data[0].next_available_date).toLocaleDateString()}`);
                                                 return;
                                             }
                                             setStep(2);
                                         } catch (err) {
-                                            console.error(err);
-                                            toast.error("Erreur lors de la vérification de disponibilité.");
+                                            toast.error("Erreur de vérification.");
                                         } finally {
                                             setLoading(false);
                                         }
                                     }}
                                     disabled={loading}
-                                    className="w-full py-5 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-white font-black uppercase tracking-[0.2em] text-sm rounded-2xl hover:scale-[1.02] transition-all shadow-2xl shadow-blue-500/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
+                                    className="w-full py-5 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-white font-black uppercase tracking-widest text-sm rounded-2xl"
                                 >
-                                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Suivant'}
+                                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Suivant'}
                                 </button>
                             </div>
                         )}
 
                         {/* Step 2: Client Info */}
                         {step === 2 && (
-                            <div className="bg-[#121826] rounded-3xl border border-[#1F2A3D] p-10 space-y-8 shadow-2xl animate-fade-in">
+                            <div className="bg-[#121826] rounded-3xl border border-[#1F2A3D] p-10 space-y-8 shadow-2xl">
                                 <h2 className="text-xl font-black text-white uppercase tracking-wider flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center text-[var(--color-primary)]">
                                         <User className="w-5 h-5" />
@@ -391,140 +408,51 @@ export default function BookingCheckout() {
                                     Vos Informations
                                 </h2>
 
-                                <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-6 flex items-start gap-4">
-                                    <Shield className="w-6 h-6 text-[var(--color-primary)] shrink-0" />
-                                    <div>
-                                        <p className="text-sm font-bold text-white mb-1">Réservation Sécurisée</p>
-                                        <p className="text-xs text-slate-400 leading-relaxed">
-                                            Vos données sont protégées. Pas de compte obligatoire, mais vous pouvez en créer un pour suivre l'historique de vos locations.
-                                        </p>
-                                    </div>
-                                </div>
-
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Prénom *</label>
-                                        <input
-                                            type="text" required
-                                            value={client.firstName}
-                                            onChange={(e) => setClient({ ...client, firstName: e.target.value })}
-                                            className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all outline-none"
-                                            placeholder="Ex: Omar"
-                                        />
+                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Prénom *</label>
+                                        <input type="text" value={client.firstName} onChange={(e) => setClient({ ...client, firstName: e.target.value })} className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Nom *</label>
-                                        <input
-                                            type="text" required
-                                            value={client.lastName}
-                                            onChange={(e) => setClient({ ...client, lastName: e.target.value })}
-                                            className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all outline-none"
-                                            placeholder="Ex: El Alami"
-                                        />
+                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Nom *</label>
+                                        <input type="text" value={client.lastName} onChange={(e) => setClient({ ...client, lastName: e.target.value })} className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold" />
                                     </div>
                                     <div className="md:col-span-2 space-y-2">
-                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Email *</label>
-                                        <input
-                                            type="email" required
-                                            value={client.email}
-                                            onChange={(e) => setClient({ ...client, email: e.target.value })}
-                                            className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all outline-none"
-                                            placeholder="omar.alami@exemple.com"
-                                        />
+                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Email *</label>
+                                        <input type="email" value={client.email} onChange={(e) => setClient({ ...client, email: e.target.value })} className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Téléphone *</label>
-                                        <input
-                                            type="tel" required
-                                            value={client.phone}
-                                            onChange={(e) => setClient({ ...client, phone: e.target.value })}
-                                            className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all outline-none"
-                                            placeholder="+212 6..."
-                                        />
+                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Téléphone *</label>
+                                        <input type="tel" value={client.phone} onChange={(e) => setClient({ ...client, phone: e.target.value })} className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">CIN / Passeport</label>
-                                        <input
-                                            type="text"
-                                            value={client.cin}
-                                            onChange={(e) => setClient({ ...client, cin: e.target.value })}
-                                            className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all outline-none"
-                                            placeholder="Ex: BH123456"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-2 space-y-2">
-                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Adresse complète</label>
-                                        <input
-                                            type="text"
-                                            value={client.address}
-                                            onChange={(e) => setClient({ ...client, address: e.target.value })}
-                                            className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all outline-none"
-                                            placeholder="N°6 Bloc A, Sabrine..."
-                                        />
+                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">CIN / Passeport</label>
+                                        <input type="text" value={client.cin} onChange={(e) => setClient({ ...client, cin: e.target.value })} className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold" />
                                     </div>
                                 </div>
 
-                                {/* Create Account Section */}
                                 {!isLoggedIn && (
-                                    <div className={`rounded-3xl p-8 transition-all duration-500 ${client.createAccount ? 'bg-[#3A9AFF]/5 border border-[#3A9AFF]/30' : 'bg-[#0B0F19] border border-[#1F2A3D]'}`}>
-                                        <label className="flex items-center cursor-pointer group">
-                                            <div className="relative">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={client.createAccount}
-                                                    onChange={(e) => setClient({ ...client, createAccount: e.target.checked })}
-                                                    className="sr-only"
-                                                />
-                                                <div className={`w-14 h-7 rounded-full transition-all duration-300 ${client.createAccount ? 'bg-[#3A9AFF]' : 'bg-slate-700'}`}></div>
-                                                <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all duration-300 ${client.createAccount ? 'left-8' : 'left-1'}`}></div>
-                                            </div>
-                                            <div className="ml-4">
+                                    <div className="bg-[#0B0F19] border border-[#1F2A3D] rounded-3xl p-8">
+                                        <label className="flex items-center cursor-pointer">
+                                            <input type="checkbox" checked={client.createAccount} onChange={(e) => setClient({ ...client, createAccount: e.target.checked })} className="w-6 h-6 mr-4" />
+                                            <div>
                                                 <p className="text-sm font-black text-white uppercase tracking-tight">Créer un profil client</p>
-                                                <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-0.5">Pour suivre vos locations et profiter d'offres exclusives</p>
+                                                <p className="text-[10px] text-slate-500">Pour suivre vos locations</p>
                                             </div>
                                         </label>
                                         {client.createAccount && (
-                                            <div className="mt-8 space-y-4 animate-scale-in">
-                                                <div className="h-px bg-[#3A9AFF]/20 w-full mb-6"></div>
-                                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Choisir un mot de passe</label>
-                                                <div className="relative">
-                                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                                    <input
-                                                        type="password"
-                                                        value={client.password}
-                                                        onChange={(e) => setClient({ ...client, password: e.target.value })}
-                                                        className="w-full bg-[#0B0F19] border border-[#3A9AFF]/30 text-white rounded-xl pl-12 pr-4 py-4 text-sm font-bold focus:ring-2 focus:ring-[var(--color-primary)]/20 outline-none"
-                                                        placeholder="6 caractères minimum"
-                                                    />
-                                                </div>
+                                            <div className="mt-8">
+                                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Mot de passe</label>
+                                                <input type="password" value={client.password} onChange={(e) => setClient({ ...client, password: e.target.value })} className="w-full bg-[#121826] border border-[#3A9AFF]/30 text-white rounded-xl px-5 py-4 text-sm font-bold" />
                                             </div>
                                         )}
                                     </div>
                                 )}
 
                                 <div className="flex gap-4 pt-4">
-                                    <button
-                                        onClick={() => setStep(1)}
-                                        className="px-8 py-5 border border-[#1F2A3D] text-slate-400 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-[#1F2A3D] hover:text-white transition-all"
-                                    >
-                                        Précédent
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            if (!client.firstName || !client.lastName || !client.email || !client.phone) {
-                                                toast.error('Veuillez remplir tous les champs obligatoires.');
-                                                return;
-                                            }
-                                            if (!isLoggedIn && client.createAccount && (!client.password || client.password.length < 6)) {
-                                                toast.error('Le mot de passe doit faire au moins 6 caractères.');
-                                                return;
-                                            }
-                                            handleSubmitBooking();
-                                        }}
-                                        disabled={loading}
-                                        className="flex-1 py-5 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-white font-black uppercase tracking-[0.2em] text-sm rounded-2xl hover:scale-[1.02] shadow-2xl shadow-blue-500/30 disabled:opacity-50 flex items-center justify-center gap-3 transition-all"
-                                    >
-                                        {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> Traitement...</> : 'Finaliser ma Réservation'}
+                                    <button onClick={() => setStep(1)} className="px-8 py-5 border border-[#1F2A3D] text-slate-400 font-black uppercase tracking-widest text-xs rounded-2xl">Précédent</button>
+                                    <button onClick={handleSubmitBooking} disabled={loading} className="flex-1 py-5 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-white font-black uppercase tracking-widest text-sm rounded-2xl">
+                                        {loading ? 'Traitement...' : 'Finaliser la Réservation'}
                                     </button>
                                 </div>
                             </div>
@@ -532,137 +460,58 @@ export default function BookingCheckout() {
 
                         {/* Step 3: Confirmation */}
                         {step === 3 && (
-                            <div className="bg-[#121826] rounded-3xl border border-[#1F2A3D] p-12 text-center space-y-8 shadow-2xl animate-scale-in">
-                                <div className="w-24 h-24 mx-auto relative">
-                                    <div className="absolute inset-0 bg-emerald-500/20 blur-2xl rounded-full animate-pulse"></div>
-                                    <div className="relative w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-2xl">
-                                        <CheckCircle className="w-12 h-12" />
-                                    </div>
-                                </div>
-                                <div className="space-y-4">
-                                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">
-                                        Demande <span className="text-emerald-500">Enregistrée</span> !
-                                    </h2>
-                                    <p className="text-slate-400 max-w-sm mx-auto leading-relaxed font-medium">
-                                        Merci <strong className="text-white">{client.firstName}</strong> ! Votre demande de réservation pour la <strong className="text-white">{booking.vehicle}</strong> a été transmise à notre équipe.
-                                    </p>
-                                </div>
-
-                                <div className="bg-[#0B0F19] rounded-3xl p-8 border border-[#1F2A3D] text-left space-y-6 max-w-md mx-auto">
-                                    <h3 className="text-xs font-black text-[var(--color-primary)] uppercase tracking-widest border-b border-[#1F2A3D] pb-4">Et après ?</h3>
-                                    <div className="space-y-6">
-                                        {[
-                                            { t: 'Vérification', d: 'Un conseiller valide vos dates et la disponibilité.', c: 'bg-blue-500' },
-                                            { t: 'Confirmation', d: 'Vous recevrez un email de confirmation définitive.', c: 'bg-emerald-500' },
-                                            { t: 'Livraison', d: 'Préparez votre CIN et permis pour le jour J.', c: 'bg-amber-500' }
-                                        ].map((step, i) => (
-                                            <div key={i} className="flex gap-4">
-                                                <div className={`w-1 h-10 ${step.c} rounded-full`}></div>
-                                                <div>
-                                                    <p className="text-sm font-black text-white uppercase tracking-tight">{step.t}</p>
-                                                    <p className="text-xs text-slate-500 mt-1">{step.d}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-                                    <Link
-                                        to="/"
-                                        className="px-10 py-4 border border-[#1F2A3D] text-slate-300 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#1F2A3D] hover:text-white transition-all"
-                                    >
-                                        Accueil
-                                    </Link>
-                                    <Link
-                                        to="/profile"
-                                        className="px-10 py-4 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-blue-500/20"
-                                    >
-                                        Mes Réservations
-                                    </Link>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Sidebar — Booking Summary */}
-                    <div className="lg:col-span-1 animate-slide-up opacity-0 delay-600">
-                        <div className="bg-[#121826] rounded-3xl border border-[#1F2A3D] p-8 sticky top-28 space-y-8 shadow-2xl group overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent opacity-50"></div>
-
-                            <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-3">
-                                <Car className="w-4 h-4 text-[var(--color-primary)]" /> Votre Sélection
-                            </h3>
-
-                            <div className="space-y-6">
-                                <div className="relative h-40 bg-[#0B0F19] rounded-2xl overflow-hidden border border-[#1F2A3D] group-hover:border-[var(--color-primary)]/30 transition-all">
-                                    <img src={booking.image_url} alt="Vehicle" className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-700" />
+                            <div className="bg-[#121826] rounded-3xl border border-[#1F2A3D] p-12 text-center space-y-8 shadow-2xl">
+                                <div className="w-24 h-24 mx-auto bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-2xl">
+                                    <CheckCircle className="w-12 h-12" />
                                 </div>
                                 <div>
-                                    <h4 className="text-xl font-black text-white uppercase tracking-tight">{booking.vehicle}</h4>
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1 flex items-center gap-2">
-                                        <Shield className="w-3 h-3 text-[var(--color-primary)]" /> Flotte Premium TRM
-                                    </p>
+                                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Demande <span className="text-emerald-500">Enregistrée</span> !</h2>
+                                    <p className="text-slate-400 mt-4 leading-relaxed font-medium">Merci {client.firstName} ! Notre équipe va vous contacter.</p>
+                                </div>
+                                <Link to="/" className="inline-block px-10 py-4 bg-[#1F2A3D] text-white rounded-2xl text-xs font-black uppercase tracking-widest">Retour Accueil</Link>
+                            </div>
+                        )}
+
+                    </div>
+
+                    {/* Sidebar: Summary Card */}
+                    <div className="lg:col-span-1">
+                        <div className="bg-[#121826] rounded-3xl border border-[#1F2A3D] p-8 shadow-2xl sticky top-8 space-y-8">
+                            <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-3">
+                                <Car className="w-4 h-4 text-[var(--color-primary)]" /> Récapitulatif
+                            </h3>
+                            <div className="space-y-4">
+                                <div className="aspect-video rounded-2xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 bg-[#0B0F19] border border-[#1F2A3D]">
+                                    <img src={booking.image_url} alt={booking.vehicle} className="w-full h-full object-cover" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-black text-white uppercase tracking-tight">{booking.vehicle}</p>
+                                    <p className="text-[10px] text-slate-500 font-mono mt-1">{booking.plate}</p>
                                 </div>
                             </div>
-
-                            <div className="space-y-4 border-t border-[#1F2A3D] pt-6">
-                                <div className="flex justify-between items-start text-xs">
-                                    <span className="text-slate-500 font-black uppercase tracking-widest flex items-center gap-2"><MapPin className="w-3 h-3" /> Lieu</span>
-                                    <span className="text-white font-bold text-right">{booking.pickup}</span>
+                            <div className="h-px bg-slate-800"></div>
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-end">
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest underline decoration-[var(--color-primary)]/30 underline-offset-4">Location ({totalDays} jours)</span>
+                                    <span className="text-sm font-black text-white">{booking.pricePerDay * totalDays} MAD</span>
                                 </div>
-                                {booking.startDate && (
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between items-center text-xs">
-                                            <span className="text-slate-500 font-black uppercase tracking-widest flex items-center gap-2"><Calendar className="w-3 h-3" /> Période</span>
-                                            <span className="text-white font-bold">{totalDays} jour{totalDays > 1 ? 's' : ''}</span>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div className="bg-[#0B0F19] p-3 rounded-xl border border-[#1F2A3D]">
-                                                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1 italic">Retrait</p>
-                                                <p className="text-[11px] text-white font-black">{new Date(booking.startDate).toLocaleDateString()}</p>
-                                            </div>
-                                            <div className="bg-[#0B0F19] p-3 rounded-xl border border-[#1F2A3D]">
-                                                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1 italic">Retour</p>
-                                                <p className="text-[11px] text-white font-black">{new Date(booking.endDate).toLocaleDateString()}</p>
-                                            </div>
-                                        </div>
+                                {booking.childSeat && (
+                                    <div className="flex justify-between items-end">
+                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest underline decoration-[var(--color-primary)]/30 underline-offset-4">Siège enfant</span>
+                                        <span className="text-sm font-black text-white">{childSeatTotal} MAD</span>
                                     </div>
                                 )}
-                            </div>
-
-                            {totalDays > 0 && (
-                                <div className="border-t border-[#1F2A3D] pt-6 space-y-4">
-                                    <div className="flex justify-between text-xs font-bold text-slate-400">
-                                        <span>Tarif Journalier</span>
-                                        <span className="text-white">{booking.pricePerDay} MAD</span>
-                                    </div>
-                                    {booking.childSeat && (
-                                        <div className="flex justify-between text-xs font-bold text-slate-400">
-                                            <span>Option Siège Enfant</span>
-                                            <span className="text-white">{childSeatTotal} MAD</span>
-                                        </div>
-                                    )}
-                                    <div className="flex justify-between text-xs font-bold text-slate-400">
-                                        <span>Assurance</span>
-                                        <span className="text-emerald-500 uppercase tracking-widest">Inclus</span>
-                                    </div>
-
-                                    <div className="bg-[#0B0F19] p-6 rounded-2xl border border-[var(--color-primary)]/20 shadow-inner">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-xs font-black text-white uppercase tracking-[0.2em]">Total</span>
-                                            <div className="text-right">
-                                                <p className="text-2xl font-black text-[var(--color-primary)] tracking-tighter leading-none">{totalPrice} MAD</p>
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">TVA Incluse</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div className="flex justify-between items-center pt-4 border-t border-slate-800">
+                                    <span className="text-xs font-black text-white uppercase tracking-[0.2em]">Total TTC</span>
+                                    <span className="text-2xl font-black text-[var(--color-primary)] bg-clip-text drop-shadow-[0_0_10px_rgba(58,154,255,0.3)]">{totalPrice} MAD</span>
                                 </div>
-                            )}
-
-                            <div className="flex items-center justify-center gap-3 p-4 bg-white/5 rounded-2xl">
-                                <Shield className="w-5 h-5 text-[var(--color-primary)]" />
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Garantie & Sérénité TRM</span>
+                            </div>
+                            <div className="bg-[var(--color-primary)]/5 border border-[var(--color-primary)]/20 rounded-2xl p-6">
+                                <p className="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-3 mb-2">
+                                    <Shield className="w-4 h-4 text-[var(--color-primary)]" /> Caution Remboursable
+                                </p>
+                                <p className="text-xl font-black text-white">{booking.deposit} MAD</p>
+                                <p className="text-[9px] text-slate-500 font-bold mt-2 uppercase tracking-wide">A régler sur place</p>
                             </div>
                         </div>
                     </div>

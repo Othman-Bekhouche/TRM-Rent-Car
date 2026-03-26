@@ -12,16 +12,16 @@ import { supabase } from '../../lib/supabase';
 import toast, { Toaster } from 'react-hot-toast';
 
 const MAINTENANCE_TYPES = [
-    'Vidange', 'Révision générale', 'Freins / plaquettes', 'Pneus', 'Batterie',
-    'Climatisation', 'Chaîne / courroie', 'Assurance', 'Visite technique',
+    'Vidange', 'Revision generale', 'Freins / plaquettes', 'Pneus', 'Batterie',
+    'Climatisation', 'Chaine / courroie', 'Assurance', 'Visite technique',
     'Vignette', 'Carte grise', 'Autre'
 ];
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
-    'Planifié': { label: 'Planifié', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: Clock },
+    'Planifie': { label: 'Planifie', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: Clock },
     'En cours': { label: 'En cours', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: Wrench },
-    'Terminé': { label: 'Terminé', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle },
-    'Annulé': { label: 'Annulé', color: 'bg-slate-50 text-slate-500 border-slate-200', icon: X },
+    'Termine': { label: 'Termine', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle },
+    'Annule': { label: 'Annule', color: 'bg-slate-50 text-slate-500 border-slate-200', icon: X },
 };
 
 export default function Maintenance() {
@@ -42,7 +42,7 @@ export default function Maintenance() {
     // Form states
     const [recordData, setRecordData] = useState<Partial<MaintenanceRecord>>({
         maintenance_type: 'Vidange',
-        status: 'Planifié',
+        status: 'Planifie',
         last_service_date: new Date().toISOString().split('T')[0],
         last_service_mileage: 0,
         next_service_date: '',
@@ -175,7 +175,7 @@ export default function Maintenance() {
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-2">
                 <div>
                     <h1 className="text-4xl font-black text-[#1C0770] tracking-tight">Maintenance</h1>
-                    <p className="text-slate-500 font-medium mt-1">Gérez la santé technique et réglementaire de votre flotte TRM</p>
+                    <p className="text-slate-500 font-medium mt-1">Gerez la sante technique et reglementaire de votre flotte TRM</p>
                 </div>
 
                 <div className="flex flex-wrap gap-3">
@@ -183,7 +183,7 @@ export default function Maintenance() {
                         onClick={() => setShowMileageForm(true)}
                         className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-[#1C0770] font-bold rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm active:scale-95"
                     >
-                        <Gauge className="w-4 h-4" /> Ajouter Kilométrage
+                        <Gauge className="w-4 h-4" /> Ajouter Kilometrage
                     </button>
                     <button
                         onClick={() => handleAddRecord()}
@@ -214,10 +214,10 @@ export default function Maintenance() {
                     </div>
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-3 bg-amber-50 rounded-2xl"><Calendar className="w-6 h-6 text-amber-600" /></div>
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">À prévoir bientôt</h3>
+                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">A prevoir bientot</h3>
                     </div>
                     <p className="text-4xl font-black text-amber-600">{alerts.filter(a => a.priority === 'medium').length}</p>
-                    <p className="text-xs font-bold text-slate-400 mt-2">Échéances sous 30 jours / 1000km</p>
+                    <p className="text-xs font-bold text-slate-400 mt-2">Echeances sous 30 jours / 1000km</p>
                 </div>
 
                 <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl relative overflow-hidden group">
@@ -253,7 +253,7 @@ export default function Maintenance() {
                             onClick={() => setActiveTab('dashboard')}
                             className={`px-6 py-2.5 rounded-2xl text-sm font-black transition-all flex items-center gap-2 ${activeTab === 'dashboard' ? 'bg-[#1C0770] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/50'}`}
                         >
-                            <Car className="w-4 h-4" /> Flotte & Santé
+                            <Car className="w-4 h-4" /> Flotte et Sante
                         </button>
                         <button
                             onClick={() => setActiveTab('alerts')}
@@ -300,7 +300,7 @@ export default function Maintenance() {
                                                 <span className="text-slate-800 font-black">{v.mileage?.toLocaleString()} km</span>
                                             </div>
                                             <div className="flex justify-between text-xs">
-                                                <span className="text-slate-400 font-bold uppercase tracking-widest">Prochaine Vidange</span>
+                                                <span className="text-slate-400 font-bold uppercase tracking-widest">Prochaine Vidanges</span>
                                                 <span className={`${(v.next_oil_change_mileage || 0) <= (v.mileage || 0) + 500 ? 'text-rose-600' : 'text-slate-800'} font-black`}>
                                                     {v.next_oil_change_mileage?.toLocaleString() || '---'} km
                                                 </span>
@@ -351,12 +351,12 @@ export default function Maintenance() {
                                             <button
                                                 onClick={async () => {
                                                     await alertsApi.resolve(a.id);
-                                                    toast.success('Alerte archivée');
+                                                    toast.success('Alerte archivee');
                                                     loadData();
                                                 }}
                                                 className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 hover:bg-slate-50 transition-all active:scale-95"
                                             >
-                                                Marquer comme résolu
+                                                Marquer comme resolu
                                             </button>
                                         </div>
                                     </div>
@@ -533,7 +533,7 @@ export default function Maintenance() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2 px-1 flex items-center gap-2"><Calendar className="w-3 h-3 text-rose-500" /> Prochaine Échéance</label>
+                                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2 px-1 flex items-center gap-2"><Calendar className="w-3 h-3 text-rose-500" /> Prochaine Echeance</label>
                                         <input
                                             type="date"
                                             value={recordData.next_service_date}
@@ -576,7 +576,7 @@ export default function Maintenance() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2 px-1 flex items-center gap-2"><BadgeCheck className="w-3 h-3 text-emerald-500" /> Réel (MAD)</label>
+                                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2 px-1 flex items-center gap-2"><BadgeCheck className="w-3 h-3 text-emerald-500" /> Reel (MAD)</label>
                                         <input
                                             type="number"
                                             value={recordData.actual_cost}

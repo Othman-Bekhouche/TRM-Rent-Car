@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.check_vehicle_availability(p_vehicle_id uuid, p_start_date date, p_end_date date, p_exclude_id uuid DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.check_vehicle_availability(p_vehicle_id uuid, p_start_date date, p_end_date date)
 RETURNS TABLE (is_available boolean, next_available_date date) AS $$
 DECLARE
     v_conflict_end date;
@@ -7,7 +7,6 @@ BEGIN
     FROM public.reservations
     WHERE vehicle_id = p_vehicle_id
     AND status NOT IN ('cancelled', 'completed', 'returned', 'rejected')
-    AND (p_exclude_id IS NULL OR id != p_exclude_id)
     AND (
         (p_start_date BETWEEN start_date AND end_date) OR
         (p_end_date BETWEEN start_date AND end_date) OR

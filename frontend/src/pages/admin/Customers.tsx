@@ -22,6 +22,13 @@ export default function Customers() {
         city: 'Taourirt',
         status: 'Actif',
         notes: '',
+        license_number: '',
+        license_expiry_date: '',
+        birth_date: '',
+        birth_place: '',
+        license_image_url: '',
+        cin_image_url: '',
+        passport_image_url: '',
     });
 
     useEffect(() => {
@@ -58,6 +65,13 @@ export default function Customers() {
             city: 'Taourirt',
             status: 'Actif',
             notes: '',
+            license_number: '',
+            license_expiry_date: '',
+            birth_date: '',
+            birth_place: '',
+            license_image_url: '',
+            cin_image_url: '',
+            passport_image_url: '',
         });
         setShowForm(true);
     };
@@ -106,6 +120,7 @@ export default function Customers() {
             case 'VIP': return 'bg-purple-50 text-purple-700 border-purple-200';
             case 'Actif': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
             case 'Nouveau': return 'bg-blue-50 text-blue-700 border-blue-200';
+            case 'Bloque':
             case 'Bloqué': return 'bg-red-50 text-red-600 border-red-200';
             default: return 'bg-slate-50 text-slate-500 border-slate-200';
         }
@@ -197,8 +212,86 @@ export default function Customers() {
                                             <option value="Actif">Actif</option>
                                             <option value="VIP">VIP</option>
                                             <option value="Nouveau">Nouveau</option>
-                                            <option value="Bloqué">Bloqué</option>
+                                            <option value="Bloque">Bloque</option>
                                         </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Additional Customer Info */}
+                        <div className="bg-[#F8FAFF] p-6 rounded-2xl border border-slate-100 space-y-6">
+                            <h3 className="text-sm font-black text-[#1C0770] uppercase tracking-widest flex items-center gap-2">
+                                <Shield className="w-4 h-4" /> Informations de Conduite et Identite
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Numero de Permis</label>
+                                    <input type="text" value={formData.license_number} onChange={e => setFormData({ ...formData, license_number: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" placeholder="ex: 12/34567" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Date d'expiration</label>
+                                    <input type="date" value={formData.license_expiry_date} onChange={e => setFormData({ ...formData, license_expiry_date: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Date de Naissance</label>
+                                        <input type="date" value={formData.birth_date} onChange={e => setFormData({ ...formData, birth_date: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Lieu de Naissance</label>
+                                        <input type="text" value={formData.birth_place} onChange={e => setFormData({ ...formData, birth_place: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" placeholder="Ville" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-3">
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Photo du Permis (Recto/Verso)</label>
+                                    <div className="flex items-center gap-4">
+                                        {formData.license_image_url && (
+                                            <img src={formData.license_image_url} className="w-20 h-20 object-cover rounded-lg border shadow-sm" alt="Permis" />
+                                        )}
+                                        <input
+                                            type="file"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    try {
+                                                        const url = await customersApi.uploadFile(file);
+                                                        setFormData({ ...formData, license_image_url: url });
+                                                        toast.success('Permis uploade');
+                                                    } catch (err) {
+                                                        toast.error('Erreur upload');
+                                                    }
+                                                }
+                                            }}
+                                            className="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-3">
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Photo CIN / Passeport</label>
+                                    <div className="flex items-center gap-4">
+                                        {formData.cin_image_url && (
+                                            <img src={formData.cin_image_url} className="w-20 h-20 object-cover rounded-lg border shadow-sm" alt="CIN" />
+                                        )}
+                                        <input
+                                            type="file"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    try {
+                                                        const url = await customersApi.uploadFile(file);
+                                                        setFormData({ ...formData, cin_image_url: url });
+                                                        toast.success('CIN uploade');
+                                                    } catch (err) {
+                                                        toast.error('Erreur upload');
+                                                    }
+                                                }
+                                            }}
+                                            className="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                        />
                                     </div>
                                 </div>
                             </div>

@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "set CYPRESS_CACHE_FOLDER=D:\\cypress_cache&& npx cypress run",
+    "test:ui": "set CYPRESS_CACHE_FOLDER=D:\\cypress_cache&& npx cypress open"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
@@ -28,6 +30,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
+    "cypress": "^15.13.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",

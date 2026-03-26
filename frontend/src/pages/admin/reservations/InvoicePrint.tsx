@@ -13,7 +13,8 @@ export default function InvoicePrint() {
     const [settings, setSettings] = useState<any>(null);
     const [role, setRole] = useState<string | null>(null);
     const [searchParams] = useSearchParams();
-    const shouldPrint = searchParams.get('action') === 'print';
+    const action = searchParams.get('action');
+    const shouldPrint = action === 'print' || action === 'download';
 
     useEffect(() => {
         const loadData = async () => {
@@ -42,6 +43,9 @@ export default function InvoicePrint() {
                 if (shouldPrint) {
                     setTimeout(() => {
                         window.print();
+                        if (action === 'download') {
+                            window.onafterprint = () => window.close();
+                        }
                     }, 1000);
                 }
             } catch (err: any) {
@@ -72,7 +76,8 @@ export default function InvoicePrint() {
                 @media print {
                     @page { size: A4; margin: 0; }
                     body { background: white !important; margin: 0; padding: 0; }
-                    .print\\:hidden { display: none !important; }
+                    * { color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    .print\\:hidden, .print\\:hidden * { display: none !important; }
                     .invoice-container { box-shadow: none !important; border: none !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 15mm !important; }
                     .bg-slate-50 { background-color: #f8fafc !important; -webkit-print-color-adjust: exact; }
                     .bg-slate-900 { background-color: #0f172a !important; -webkit-print-color-adjust: exact; color: white !important; }

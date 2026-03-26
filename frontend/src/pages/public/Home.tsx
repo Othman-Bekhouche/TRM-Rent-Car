@@ -41,7 +41,7 @@ export default function Home() {
                         || '/images/cars/default.png';
                     return { ...v, image_url: coverImg } as any;
                 });
-                setVehicles(mapped.filter(v => v.status === 'available').slice(0, 4));
+                setVehicles(mapped.slice(0, 4));
             } catch (error) {
                 console.error("Error fetching popular vehicles:", error);
             } finally {
