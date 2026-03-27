@@ -150,6 +150,7 @@ export interface Transaction {
     reservation_id: string | null;
     customer_id: string | null;
     transaction_type: string;
+    category?: string;
     amount: number;
     payment_method: string;
     description: string;
@@ -157,6 +158,7 @@ export interface Transaction {
     transaction_date: string;
     created_at: string;
     customer?: Customer;
+    reservation?: Reservation & { vehicle?: Vehicle };
 }
 
 export interface AdminUser {
@@ -387,13 +389,13 @@ export const reservationsApi = {
         return data as (Reservation & { customers: Customer; vehicles: Vehicle });
     },
     async create(reservation: Partial<Reservation>) {
-        const { id, created_at, updated_at, customers, vehicles, handover, ...cleanData } = reservation as any;
+        const { id, created_at, updated_at, customers, vehicles, handover, rental_contracts, invoices, ...cleanData } = reservation as any;
         const { data, error } = await supabase.from('reservations').insert(cleanData).select().single();
         if (error) throw error;
         return data as Reservation;
     },
     async update(id: string, updates: Partial<Reservation>) {
-        const { id: _, created_at, updated_at, customers, vehicles, handover, ...cleanUpdates } = updates as any;
+        const { id: _, created_at, updated_at, customers, vehicles, handover, rental_contracts, invoices, ...cleanUpdates } = updates as any;
         const { data, error } = await supabase.from('reservations').update(cleanUpdates).eq('id', id).select().single();
         if (error) throw error;
         return data as Reservation;
@@ -544,7 +546,7 @@ export const transactionsApi = {
     async getAll() {
         const { data, error } = await supabase
             .from('transactions')
-            .select('*, customer:customers(*)')
+            .select('*, customer:customers(*), reservation:reservations(*, vehicle:vehicles(*))')
             .order('transaction_date', { ascending: false });
         if (error) throw error;
         return data as Transaction[];

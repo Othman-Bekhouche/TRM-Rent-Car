@@ -49,3 +49,24 @@ Correction d'un blocage lors du réamorçage de la base de données (Seed) lié 
 
 ---
 *Date de dernière mise à jour : 09/03/2026*
+## [2026-03-27] - Accounting Module v2 (Categorization & Automation)
+
+### Fixed & Improved
+- **Transaction Categorization**: Added a `category` field to the `transactions` table to move beyond simple entrance/expense tracking.
+- **Automated Sync**: Updated database triggers to automatically categorize transactions:
+  - `Location`: From reservation payments.
+  - `Maintenance`: From vehicle maintenance records.
+  - `Caution`: From handover deposits.
+- **Financial Analytics**:
+  - Added **Growth Analysis** (Comparison with previous periods).
+  - Added **Category Breakdown** (Pie chart analysis).
+  - Improved **Filtering** by Type, Category, and Payment Method.
+- **Reporting**:
+  - Added **Print / Statement** functionality.
+  - Improved **CSV Export** with more metadata.
+- **User Interface**: 
+  - New "Opération de Caisse" modal with category selection.
+  - Premium aesthetics with glassmorphism and sub-kpis (Basket size, Pending revenue).
+
+### New Files
+- `supabase/migrations/09_accounting_v2.sql`: Database schema updates and triggers.

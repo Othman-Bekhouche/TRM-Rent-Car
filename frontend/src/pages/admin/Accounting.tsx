@@ -5,7 +5,6 @@ import {
     TrendingUp,
     TrendingDown,
     Download,
-    ArrowUpRight,
     Banknote,
     Receipt,
     Loader2,
@@ -16,7 +15,9 @@ import {
     Search,
     Plus,
     X,
-    CheckCircle2
+    CheckCircle2,
+    Printer,
+    ArrowRightLeft
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import {
@@ -53,11 +54,16 @@ export default function Accounting() {
     const [isSaving, setIsSaving] = useState(false);
     const [newTx, setNewTx] = useState<Partial<Transaction>>({
         transaction_type: 'encaissement',
+        category: 'Location',
         amount: 0,
         payment_method: 'Espèces',
         status: 'Payé',
         description: ''
     });
+
+    const [filterType, setFilterType] = useState<string>('all');
+    const [filterCategory, setFilterCategory] = useState<string>('all');
+    const [filterMethod, setFilterMethod] = useState<string>('all');
 
     const fetchData = async () => {
         try {
@@ -93,13 +99,38 @@ export default function Accounting() {
             });
             toast.success("Transaction enregistrée !");
             setShowModal(false);
-            setNewTx({ transaction_type: 'encaissement', amount: 0, payment_method: 'Espèces', status: 'Payé', description: '' });
+            setNewTx({ transaction_type: 'encaissement', category: 'Location', amount: 0, payment_method: 'Espèces', status: 'Payé', description: '' });
             await fetchData();
         } catch (error) {
             toast.error("Erreur lors de l'enregistrement");
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const exportToCSV = () => {
+        if (transactions.length === 0) return;
+        const headers = ['ID', 'Date', 'Client', 'Type', 'Methode', 'Status', 'Montant'];
+        const rows = transactions.map(t => [
+            t.id,
+            t.transaction_date || t.created_at,
+            t.customer?.full_name || 'Passager',
+            t.transaction_type,
+            t.payment_method,
+            t.status,
+            t.amount
+        ]);
+        const csvContent = [headers, ...rows].map(r => r.join(',')).join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `comptabilite_trm_${format(new Date(), 'dd_MM_yyyy')}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("Export CSV terminé");
     };
 
     const dataAnalysis = useMemo(() => {
@@ -115,6 +146,17 @@ export default function Accounting() {
             case 'all': default: start = subMonths(now, 120); break;
         }
 
+        // Calculate Previous Period for Growth
+        let prevStart: Date;
+        let prevEnd: Date = start;
+        switch (period) {
+            case 'today': prevStart = startOfDay(subMonths(now, 0)); prevStart.setDate(prevStart.getDate() - 1); prevEnd = startOfDay(now); break;
+            case 'week': prevStart = startOfWeek(subMonths(now, 0), { weekStartsOn: 1 }); prevStart.setDate(prevStart.getDate() - 7); prevEnd = startOfWeek(now, { weekStartsOn: 1 }); break;
+            case 'month': prevStart = startOfMonth(subMonths(now, 1)); break;
+            case 'year': prevStart = startOfMonth(subMonths(now, 23)); prevEnd = startOfMonth(subMonths(now, 11)); break;
+            default: prevStart = start; break;
+        }
+
         const filteredTxs = transactions.filter(t => {
             const d = parseISO(t.transaction_date || t.created_at);
             return isWithinInterval(d, { start, end });
@@ -126,16 +168,27 @@ export default function Accounting() {
         });
 
         const totalRevenue = filteredTxs
-            .filter(t => t.transaction_type === 'encaissement' && t.status === 'Payé')
+            .filter(t => t.transaction_type === 'encaissement' && (t.status?.toUpperCase() === 'PAYÉ' || t.status?.toUpperCase() === 'ENCAISSÉ'))
             .reduce((acc, t) => acc + Number(t.amount || 0), 0);
 
         const totalExpenses = filteredTxs
-            .filter(t => t.transaction_type === 'décaissement' && t.status === 'Payé')
+            .filter(t => (t.transaction_type === 'décaissement' || t.transaction_type === 'charge' || t.transaction_type === 'remboursement') && (t.status?.toUpperCase() === 'PAYÉ' || t.status?.toUpperCase() === 'ENCAISSÉ'))
             .reduce((acc, t) => acc + Number(t.amount || 0), 0);
 
         const pendingRevenue = filteredTxs
-            .filter(t => t.transaction_type === 'encaissement' && (t.status === 'En attente' || t.status === 'Impayé'))
+            .filter(t => t.transaction_type === 'encaissement' && (t.status?.toUpperCase() === 'EN ATTENTE' || t.status?.toUpperCase() === 'IMPAYÉ' || t.status?.toUpperCase() === 'PENDING'))
             .reduce((acc, t) => acc + Number(t.amount || 0), 0);
+
+        // Previous period calc
+        const prevTxs = transactions.filter(t => {
+            const d = parseISO(t.transaction_date || t.created_at);
+            return isWithinInterval(d, { start: prevStart, end: prevEnd });
+        });
+        const prevRevenue = prevTxs
+            .filter(t => t.transaction_type === 'encaissement' && (t.status?.toUpperCase() === 'PAYÉ' || t.status?.toUpperCase() === 'ENCAISSÉ'))
+            .reduce((acc, t) => acc + Number(t.amount || 0), 0);
+        
+        const growth = prevRevenue > 0 ? ((totalRevenue - prevRevenue) / prevRevenue) * 100 : 0;
 
         // Chart Data Generation
         let chartPoints: any[] = [];
@@ -145,7 +198,7 @@ export default function Accounting() {
                 const dayTxs = transactions.filter(t => isSameDay(parseISO(t.transaction_date || t.created_at), day));
                 return {
                     label: format(day, 'EEE', { locale: fr }),
-                    revenue: dayTxs.filter(t => t.transaction_type === 'encaissement' && t.status === 'Payé').reduce((acc, t) => acc + Number(t.amount), 0)
+                    revenue: dayTxs.filter(t => t.transaction_type === 'encaissement' && (t.status?.toUpperCase() === 'PAYÉ' || t.status?.toUpperCase() === 'ENCAISSÉ')).reduce((acc, t) => acc + Number(t.amount), 0)
                 };
             });
         } else {
@@ -154,10 +207,37 @@ export default function Accounting() {
                 const monthTxs = transactions.filter(t => isSameMonth(parseISO(t.transaction_date || t.created_at), month));
                 return {
                     label: format(month, 'MMM', { locale: fr }),
-                    revenue: monthTxs.filter(t => t.transaction_type === 'encaissement' && t.status === 'Payé').reduce((acc, t) => acc + Number(t.amount), 0)
+                    revenue: monthTxs.filter(t => t.transaction_type === 'encaissement' && (t.status?.toUpperCase() === 'PAYÉ' || t.status?.toUpperCase() === 'ENCAISSÉ')).reduce((acc, t) => acc + Number(t.amount), 0)
                 };
             });
         }
+
+        // Top Vehicles calc
+        const vehicleRevenue: Record<string, { brand: string; model: string; amount: number; count: number }> = {};
+        filteredTxs.forEach(t => {
+            if (t.transaction_type === 'encaissement' && (t.status?.toUpperCase() === 'PAYÉ' || t.status?.toUpperCase() === 'ENCAISSÉ')) {
+                const vehicle = t.reservation?.vehicle;
+                if (vehicle) {
+                    const key = vehicle.id;
+                    if (!vehicleRevenue[key]) {
+                        vehicleRevenue[key] = { brand: vehicle.brand, model: vehicle.model, amount: 0, count: 0 };
+                    }
+                    vehicleRevenue[key].amount += Number(t.amount || 0);
+                    vehicleRevenue[key].count += 1;
+                }
+            }
+        });
+
+        const topVehicles = Object.values(vehicleRevenue).sort((a, b) => b.amount - a.amount).slice(0, 3);
+
+        // Payment Distribution calc
+        const methodCounts: Record<string, number> = {};
+        filteredTxs.forEach(t => {
+            if (t.transaction_type === 'encaissement') {
+                const meth = t.payment_method || 'Espèces';
+                methodCounts[meth] = (methodCounts[meth] || 0) + Number(t.amount || 0);
+            }
+        });
 
         return {
             transactions: filteredTxs,
@@ -166,15 +246,31 @@ export default function Accounting() {
             totalExpenses,
             netBalance: totalRevenue - totalExpenses,
             pendingRevenue,
+            growth,
             chartPoints,
-            maxChartVal: Math.max(...chartPoints.map(p => p.revenue), 1)
+            maxChartVal: Math.max(...chartPoints.map(p => p.revenue), 1),
+            topVehicles,
+            methodCounts: Object.entries(methodCounts).map(([name, value]) => ({ name, value })),
+            categoryAnalysis: filteredTxs.reduce((acc: any, t) => {
+                const cat = t.category || 'Non classé';
+                acc[cat] = (acc[cat] || 0) + Number(t.amount || 0);
+                return acc;
+            }, {})
         };
     }, [transactions, reservations, period]);
 
-    const filteredTransactions = dataAnalysis.transactions.filter(t =>
-        t.customer?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredTransactions = dataAnalysis.transactions.filter(t => {
+        const matchesSearch = t.customer?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                             t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                             t.description?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesType = filterType === 'all' || t.transaction_type === filterType;
+        const matchesCategory = filterCategory === 'all' || t.category === filterCategory;
+        const matchesMethod = filterMethod === 'all' || t.payment_method === filterMethod;
+        
+        return matchesSearch && matchesType && matchesCategory && matchesMethod;
+    });
+
+    const categories = Array.from(new Set(transactions.map(t => t.category).filter(Boolean))) as string[];
 
     if (loading) {
         return (
@@ -230,13 +326,18 @@ export default function Accounting() {
                     <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/5 rounded-full blur-3xl transition-transform group-hover:scale-150"></div>
                     <div className="flex justify-between items-start mb-6">
                         <div className="p-3 bg-white/10 rounded-2xl"><DollarSign className="w-6 h-6 text-indigo-300" /></div>
-                        <ArrowUpRight className="w-5 h-5 text-emerald-400" />
+                        <div className={`flex items-center gap-1 text-[10px] font-black ${dataAnalysis.growth >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {dataAnalysis.growth >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                            {Math.abs(dataAnalysis.growth).toFixed(1)}%
+                        </div>
                     </div>
                     <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-1">Chiffre d'Affaires</p>
                     <p className="text-3xl font-black tracking-tighter">{dataAnalysis.totalRevenue.toLocaleString()} <span className="text-xs text-indigo-400 ml-1">MAD</span></p>
                     <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between text-[9px] font-black uppercase tracking-widest text-indigo-300/60">
                         <span>{dataAnalysis.transactions.length} Transactions</span>
-                        <span className="text-emerald-400">Stable</span>
+                        <span className={dataAnalysis.growth >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                            {dataAnalysis.growth >= 0 ? 'En Hausse' : 'En Baisse'}
+                        </span>
                     </div>
                 </div>
 
@@ -293,10 +394,12 @@ export default function Accounting() {
                     <div className="flex justify-between items-start mb-6 text-purple-600">
                         <div className="p-3 bg-purple-50 rounded-2xl"><Receipt className="w-6 h-6" /></div>
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Facturation</p>
-                    <p className="text-3xl font-black text-[#1C0770] tracking-tighter">{dataAnalysis.transactions.filter(t => t.transaction_type === 'encaissement').length} <span className="text-xs text-slate-300 ml-1">Docs</span></p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Top Véhicule</p>
+                    <p className="text-xl font-black text-[#1C0770] tracking-tighter truncate">
+                        {dataAnalysis.topVehicles[0] ? `${dataAnalysis.topVehicles[0].brand} ${dataAnalysis.topVehicles[0].model}` : 'N/A'}
+                    </p>
                     <div className="mt-4 pt-4 border-t border-slate-50 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                        Émissions sur la période
+                        {dataAnalysis.topVehicles[0] ? `${dataAnalysis.topVehicles[0].amount.toLocaleString()} MAD engrangés` : 'En attente de données'}
                     </div>
                 </div>
             </div>
@@ -388,6 +491,25 @@ export default function Accounting() {
                         </Link>
                     </div>
                 </div>
+
+                {/* Expense Categories Chart */}
+                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm col-span-1 lg:col-span-3">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 className="text-lg font-black text-[#1C0770] uppercase">Répartition par Catégorie</h2>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Analyse granulaire des flux</p>
+                        </div>
+                        <PieChart className="w-5 h-5 text-slate-200" />
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                        {Object.entries(dataAnalysis.categoryAnalysis).map(([cat, amount]: any, i) => (
+                            <div key={i} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:scale-[1.02] transition-all">
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">{cat}</p>
+                                <p className="text-lg font-black text-[#1C0770] tracking-tighter">{amount.toLocaleString()} <span className="text-[10px] text-slate-400">MAD</span></p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             {/* Registry Section (Transactions) */}
@@ -397,18 +519,56 @@ export default function Accounting() {
                         <h2 className="text-xl font-black text-[#1C0770] uppercase">Registre des Flux</h2>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Transaction synchronisées en direct avec la base Supabase</p>
                     </div>
-                    <div className="flex items-center gap-3 w-full md:w-auto">
-                        <div className="relative flex-1 md:w-64">
+                    <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <select 
+                            value={filterType} 
+                            onChange={(e) => setFilterType(e.target.value)}
+                            className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 ring-[#261CC1]/10 transition-all"
+                        >
+                            <option value="all">Tous Types</option>
+                            <option value="encaissement">Entrées (CA)</option>
+                            <option value="charge">Charges (Frais)</option>
+                            <option value="caution">Cautions</option>
+                        </select>
+                        <select 
+                            value={filterCategory} 
+                            onChange={(e) => setFilterCategory(e.target.value)}
+                            className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 ring-[#261CC1]/10 transition-all"
+                        >
+                            <option value="all">Toutes Catégories</option>
+                            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                        <select 
+                            value={filterMethod} 
+                            onChange={(e) => setFilterMethod(e.target.value)}
+                            className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 ring-[#261CC1]/10 transition-all"
+                        >
+                            <option value="all">Paiement</option>
+                            <option value="Espèces">Espèces</option>
+                            <option value="Virement">Virement</option>
+                            <option value="Carte Bancaire">Carte</option>
+                            <option value="Chèque">Chèque</option>
+                        </select>
+                        <div className="relative flex-1 md:w-48">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <input
                                 type="text"
-                                placeholder="Rechercher flux..."
+                                placeholder="Rechercher..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 pl-11 pr-4 text-xs font-bold outline-none focus:ring-2 ring-[#261CC1]/10 focus:bg-white transition-all"
+                                className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 pl-11 pr-4 text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 ring-[#261CC1]/10 focus:bg-white transition-all"
                             />
                         </div>
-                        <button className="p-3 bg-slate-900 text-white rounded-xl shadow-xl shadow-slate-900/10 hover:bg-black transition-all">
+                        <button 
+                            onClick={() => window.print()}
+                            className="p-3 bg-white border border-slate-200 text-slate-400 rounded-xl shadow-sm hover:text-slate-900 transition-all"
+                        >
+                            <Printer className="w-4 h-4" />
+                        </button>
+                        <button 
+                            onClick={exportToCSV}
+                            className="p-3 bg-slate-900 text-white rounded-xl shadow-xl shadow-slate-900/10 hover:bg-black transition-all"
+                        >
                             <Download className="w-4 h-4" />
                         </button>
                     </div>
@@ -527,11 +687,31 @@ export default function Accounting() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Catégorie</label>
+                                        <select
+                                            value={newTx.category}
+                                            onChange={(e) => setNewTx({ ...newTx, category: e.target.value })}
+                                            className="w-full bg-slate-50 border-2 border-transparent focus:border-[#261CC1]/20 focus:bg-white rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-widest outline-none transition-all"
+                                        >
+                                            <option value="Location">Location</option>
+                                            <option value="Maintenance">Maintenance</option>
+                                            <option value="Carburant">Carburant</option>
+                                            <option value="Lavage">Lavage</option>
+                                            <option value="Assurance">Assurance</option>
+                                            <option value="Vignette">Vignette</option>
+                                            <option value="Personnel">Salaire / Personnel</option>
+                                            <option value="Loyer">Loyer / Factures</option>
+                                            <option value="Marketing">Marketing / Publicité</option>
+                                            <option value="Caution">Caution</option>
+                                            <option value="Autre">Autre</option>
+                                        </select>
+                                    </div>
+                                    <div>
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Méthode</label>
                                         <select
                                             value={newTx.payment_method}
                                             onChange={(e) => setNewTx({ ...newTx, payment_method: e.target.value })}
-                                            className="w-full bg-slate-50 border-2 border-transparent rounded-2xl px-4 py-3 text-xs font-bold text-slate-600 outline-none"
+                                            className="w-full bg-slate-50 border-2 border-transparent focus:border-[#261CC1]/20 focus:bg-white rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-widest outline-none transition-all"
                                         >
                                             <option>Espèces</option>
                                             <option>Virement</option>
@@ -539,17 +719,21 @@ export default function Accounting() {
                                             <option>Chèque</option>
                                         </select>
                                     </div>
-                                    <div>
+                                    <div className="col-span-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Statut</label>
-                                        <select
-                                            value={newTx.status}
-                                            onChange={(e) => setNewTx({ ...newTx, status: e.target.value })}
-                                            className="w-full bg-slate-50 border-2 border-transparent rounded-2xl px-4 py-3 text-xs font-bold text-slate-600 outline-none"
-                                        >
-                                            <option>Payé</option>
-                                            <option>En attente</option>
-                                            <option>Impayé</option>
-                                        </select>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {['Payé', 'En attente', 'Impayé'].map(s => (
+                                                <button
+                                                    key={s}
+                                                    onClick={() => setNewTx({ ...newTx, status: s })}
+                                                    className={`py-2 rounded-xl text-[9px] font-black uppercase tracking-tighter border-2 transition-all ${newTx.status === s 
+                                                        ? 'bg-slate-900 border-slate-900 text-white' 
+                                                        : 'bg-slate-50 border-transparent text-slate-400'}`}
+                                                >
+                                                    {s}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
