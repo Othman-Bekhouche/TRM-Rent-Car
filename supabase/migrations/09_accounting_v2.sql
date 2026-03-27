@@ -114,7 +114,7 @@ BEGIN
             NEW.customer_id, 
             'caution', 
             'Caution',
-            0, 
+            NEW.deposit_collected, 
             'Espèces', 
             'Dépôt de garantie collecté', 
             'Payé', 

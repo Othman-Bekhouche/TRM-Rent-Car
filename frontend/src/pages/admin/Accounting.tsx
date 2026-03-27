@@ -167,16 +167,21 @@ export default function Accounting() {
             return isWithinInterval(d, { start, end });
         });
 
+        const isStatusValid = (s: string) => {
+            const normalized = (s || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            return ['PAYE', 'ENCAISSE', 'VALIDATED', 'PAID', 'SUCCESS', 'CONFIRMED'].includes(normalized);
+        };
+
         const totalRevenue = filteredTxs
-            .filter(t => t.transaction_type === 'encaissement' && (t.status?.toUpperCase() === 'PAYÉ' || t.status?.toUpperCase() === 'ENCAISSÉ'))
+            .filter(t => t.transaction_type === 'encaissement' && isStatusValid(t.status))
             .reduce((acc, t) => acc + Number(t.amount || 0), 0);
 
         const totalExpenses = filteredTxs
-            .filter(t => (t.transaction_type === 'décaissement' || t.transaction_type === 'charge' || t.transaction_type === 'remboursement') && (t.status?.toUpperCase() === 'PAYÉ' || t.status?.toUpperCase() === 'ENCAISSÉ'))
+            .filter(t => (t.transaction_type === 'charge' || t.transaction_type === 'remboursement') && isStatusValid(t.status))
             .reduce((acc, t) => acc + Number(t.amount || 0), 0);
 
         const pendingRevenue = filteredTxs
-            .filter(t => t.transaction_type === 'encaissement' && (t.status?.toUpperCase() === 'EN ATTENTE' || t.status?.toUpperCase() === 'IMPAYÉ' || t.status?.toUpperCase() === 'PENDING'))
+            .filter(t => t.transaction_type === 'encaissement' && !isStatusValid(t.status))
             .reduce((acc, t) => acc + Number(t.amount || 0), 0);
 
         // Previous period calc
@@ -185,7 +190,7 @@ export default function Accounting() {
             return isWithinInterval(d, { start: prevStart, end: prevEnd });
         });
         const prevRevenue = prevTxs
-            .filter(t => t.transaction_type === 'encaissement' && (t.status?.toUpperCase() === 'PAYÉ' || t.status?.toUpperCase() === 'ENCAISSÉ'))
+            .filter(t => t.transaction_type === 'encaissement' && isStatusValid(t.status))
             .reduce((acc, t) => acc + Number(t.amount || 0), 0);
         
         const growth = prevRevenue > 0 ? ((totalRevenue - prevRevenue) / prevRevenue) * 100 : 0;
@@ -198,7 +203,7 @@ export default function Accounting() {
                 const dayTxs = transactions.filter(t => isSameDay(parseISO(t.transaction_date || t.created_at), day));
                 return {
                     label: format(day, 'EEE', { locale: fr }),
-                    revenue: dayTxs.filter(t => t.transaction_type === 'encaissement' && (t.status?.toUpperCase() === 'PAYÉ' || t.status?.toUpperCase() === 'ENCAISSÉ')).reduce((acc, t) => acc + Number(t.amount), 0)
+                    revenue: dayTxs.filter(t => t.transaction_type === 'encaissement' && isStatusValid(t.status)).reduce((acc, t) => acc + Number(t.amount), 0)
                 };
             });
         } else {
@@ -207,7 +212,7 @@ export default function Accounting() {
                 const monthTxs = transactions.filter(t => isSameMonth(parseISO(t.transaction_date || t.created_at), month));
                 return {
                     label: format(month, 'MMM', { locale: fr }),
-                    revenue: monthTxs.filter(t => t.transaction_type === 'encaissement' && (t.status?.toUpperCase() === 'PAYÉ' || t.status?.toUpperCase() === 'ENCAISSÉ')).reduce((acc, t) => acc + Number(t.amount), 0)
+                    revenue: monthTxs.filter(t => t.transaction_type === 'encaissement' && isStatusValid(t.status)).reduce((acc, t) => acc + Number(t.amount), 0)
                 };
             });
         }
@@ -215,7 +220,7 @@ export default function Accounting() {
         // Top Vehicles calc
         const vehicleRevenue: Record<string, { brand: string; model: string; amount: number; count: number }> = {};
         filteredTxs.forEach(t => {
-            if (t.transaction_type === 'encaissement' && (t.status?.toUpperCase() === 'PAYÉ' || t.status?.toUpperCase() === 'ENCAISSÉ')) {
+            if (t.transaction_type === 'encaissement' && isStatusValid(t.status)) {
                 const vehicle = t.reservation?.vehicle;
                 if (vehicle) {
                     const key = vehicle.id;
@@ -260,9 +265,10 @@ export default function Accounting() {
     }, [transactions, reservations, period]);
 
     const filteredTransactions = dataAnalysis.transactions.filter(t => {
-        const matchesSearch = t.customer?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             t.description?.toLowerCase().includes(searchTerm.toLowerCase());
+        const s = searchTerm.toLowerCase();
+        const matchesSearch = (t.customer?.full_name?.toLowerCase() || '').includes(s) ||
+                             (t.id?.toLowerCase() || '').includes(s) ||
+                             (t.description?.toLowerCase() || '').includes(s);
         const matchesType = filterType === 'all' || t.transaction_type === filterType;
         const matchesCategory = filterCategory === 'all' || t.category === filterCategory;
         const matchesMethod = filterMethod === 'all' || t.payment_method === filterMethod;
@@ -525,7 +531,7 @@ export default function Accounting() {
                             onChange={(e) => setFilterType(e.target.value)}
                             className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 ring-[#261CC1]/10 transition-all"
                         >
-                            <option value="all">Tous Types</option>
+                            <option value="all">Tous Flux</option>
                             <option value="encaissement">Entrées (CA)</option>
                             <option value="charge">Charges (Frais)</option>
                             <option value="caution">Cautions</option>
@@ -655,8 +661,8 @@ export default function Accounting() {
                                     Entrée (CA)
                                 </button>
                                 <button
-                                    onClick={() => setNewTx({ ...newTx, transaction_type: 'décaissement' })}
-                                    className={`py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all ${newTx.transaction_type === 'décaissement'
+                                    onClick={() => setNewTx({ ...newTx, transaction_type: 'charge' })}
+                                    className={`py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all ${newTx.transaction_type === 'charge'
                                         ? 'bg-rose-50 border-rose-500 text-rose-600'
                                         : 'bg-slate-50 border-transparent text-slate-400'
                                         }`}
