@@ -1,0 +1,15 @@
+.env
+.env.*
+deploy_ssh.ps1
+node_modules/
+dist/
+*.pem
+*.key
+*.log
+SOCIAL MEDIA/
+social_media/
+trm logo.pdf
+trm-logo-pour-arriere-blanc.png
+trm-logo-pour-arriere-noir.png
+TRM CARTE recto.jpg.jpeg
+TRM CARTE verso.jpg.jpeg
