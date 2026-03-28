@@ -74,7 +74,7 @@ export default function Vehicles() {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-[var(--color-primary)]/5 rounded-[100%] blur-[120px] pointer-events-none" />
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-                    <h1 className="text-4xl lg:text-5xl font-extrabold text-white mb-6">
+                    <h1 className="text-3xl md:text-5xl lg:text-5xl font-extrabold text-white mb-6">
                         Notre Flotte Automobile
                     </h1>
                     <p className="text-xl text-[var(--color-text-muted)] max-w-3xl mx-auto">
@@ -149,11 +149,11 @@ export default function Vehicles() {
                             <div className="p-6 flex-1 flex flex-col relative z-10">
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
-                                        <h3 className="text-2xl font-extrabold text-white tracking-tight mb-1">{vehicle.brand}</h3>
+                                        <h3 className="text-xl md:text-2xl font-extrabold text-white tracking-tight mb-1">{vehicle.brand}</h3>
                                         <p className="text-[var(--color-primary)] font-medium text-lg">{vehicle.model}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-2xl font-black text-[var(--color-primary)] leading-none">{vehicle.price_per_day} <span className="text-sm font-normal text-[var(--color-text-muted)]">MAD</span></p>
+                                        <p className="text-xl md:text-2xl font-black text-[var(--color-primary)] leading-none">{vehicle.price_per_day} <span className="text-xs md:text-sm font-normal text-[var(--color-text-muted)]">MAD</span></p>
                                         <p className="text-[var(--color-text-muted)] text-xs mt-1 uppercase tracking-widest">/ jour</p>
                                     </div>
                                 </div>

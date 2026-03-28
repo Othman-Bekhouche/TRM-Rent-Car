@@ -245,8 +245,8 @@ export default function BookingCheckout() {
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-black border-2 transition-all duration-500 shadow-xl ${step >= s.n ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white scale-110' : 'border-[var(--color-border)] text-slate-500'}`}>
                                 {step > s.n ? <CheckCircle className="w-6 h-6" /> : s.n}
                             </div>
-                            <span className={`ml-4 text-[10px] font-black uppercase tracking-widest ${step >= s.n ? 'text-white' : 'text-slate-500'}`}>{s.label}</span>
-                            {i < 2 && <div className={`flex-1 h-1 mx-6 rounded-full transition-colors duration-1000 ${step > s.n ? 'bg-[var(--color-primary)] shadow-[0_0_10px_rgba(58,154,255,0.5)]' : 'bg-[var(--color-border)]'}`} />}
+                            <span className={`ml-4 hidden md:inline text-[10px] font-black uppercase tracking-widest ${step >= s.n ? 'text-white' : 'text-slate-500'}`}>{s.label}</span>
+                            {i < 2 && <div className={`flex-1 h-1 mx-2 md:mx-6 rounded-full transition-colors duration-1000 ${step > s.n ? 'bg-[var(--color-primary)] shadow-[0_0_10px_rgba(58,154,255,0.5)]' : 'bg-[var(--color-border)]'}`} />}
                         </div>
                     ))}
                 </div>
@@ -259,8 +259,8 @@ export default function BookingCheckout() {
                         {/* Step 1: Dates & Options */}
                         {step === 1 && (
                             <div className="bg-[#121826] rounded-3xl border border-[#1F2A3D] p-10 space-y-8 shadow-2xl relative overflow-hidden">
-                                <h2 className="text-xl font-black text-white uppercase tracking-wider flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center text-[var(--color-primary)]">
+                                <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-wider flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center text-[var(--color-primary)] shrink-0">
                                         <Calendar className="w-5 h-5" />
                                     </div>
                                     Dates & Options
@@ -285,7 +285,7 @@ export default function BookingCheckout() {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-2">
                                             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Retrait</label>
                                             <input
@@ -312,31 +312,31 @@ export default function BookingCheckout() {
                                     </div>
 
                                     <div className="space-y-4 pt-4">
-                                        <label className="flex items-center p-5 rounded-2xl border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5">
-                                            <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-[#121826]">
+                                        <label className="flex items-center p-4 md:p-5 rounded-2xl border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5">
+                                            <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-[#121826] shrink-0">
                                                 <CheckCircle className="w-6 h-6" />
                                             </div>
                                             <div className="ml-4">
-                                                <p className="text-sm font-black text-white uppercase tracking-tight">Assurance Multirisque</p>
-                                                <p className="text-xs text-slate-400">Protection complète incluse</p>
+                                                <p className="text-xs md:text-sm font-black text-white uppercase tracking-tight">Assurance Multirisque</p>
+                                                <p className="text-[10px] md:text-xs text-slate-400">Protection complète incluse</p>
                                             </div>
-                                            <span className="ml-auto text-[10px] font-black text-[var(--color-primary)] bg-white/5 px-4 py-2 rounded-full">OFFERT</span>
+                                            <span className="ml-auto text-[9px] md:text-[10px] font-black text-[var(--color-primary)] bg-white/5 px-2 md:px-4 py-2 rounded-full">OFFERT</span>
                                         </label>
-                                        <label className="flex items-center p-5 rounded-2xl border border-[#1F2A3D] bg-[#121826]/50 cursor-pointer">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${booking.childSeat ? 'bg-[var(--color-primary)]' : 'bg-[#1F2A3D]'}`}>
+                                        <label className="flex items-center p-4 md:p-5 rounded-2xl border border-[#1F2A3D] bg-[#121826]/50 cursor-pointer">
+                                            <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center ${booking.childSeat ? 'bg-[var(--color-primary)]' : 'bg-[#1F2A3D]'}`}>
                                                 <Car className="w-6 h-6" />
                                             </div>
                                             <div className="ml-4">
-                                                <p className="text-sm font-black text-white uppercase tracking-tight">Siège Enfant</p>
-                                                <p className="text-xs text-slate-400">Pour la sécurité des petits</p>
+                                                <p className="text-xs md:text-sm font-black text-white uppercase tracking-tight">Siège Enfant</p>
+                                                <p className="text-[10px] md:text-xs text-slate-400">Pour la sécurité des petits</p>
                                             </div>
-                                            <div className="ml-auto flex items-center gap-4">
-                                                <span className="text-[10px] font-black text-slate-500">+50 MAD/J</span>
+                                            <div className="ml-auto flex items-center gap-2 md:gap-4">
+                                                <span className="text-[9px] md:text-[10px] font-black text-slate-500">+50 MAD/J</span>
                                                 <input
                                                     type="checkbox"
                                                     checked={booking.childSeat}
                                                     onChange={(e) => setBooking({ ...booking, childSeat: e.target.checked })}
-                                                    className="w-6 h-6 bg-[#0B0F19] border-[#1F2A3D] rounded-lg"
+                                                    className="w-5 h-5 md:w-6 md:h-6 bg-[#0B0F19] border-[#1F2A3D] rounded-lg shrink-0"
                                                 />
                                             </div>
                                         </label>
@@ -404,8 +404,8 @@ export default function BookingCheckout() {
                         {/* Step 2: Client Info */}
                         {step === 2 && (
                             <div className="bg-[#121826] rounded-3xl border border-[#1F2A3D] p-10 space-y-8 shadow-2xl">
-                                <h2 className="text-xl font-black text-white uppercase tracking-wider flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center text-[var(--color-primary)]">
+                                <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-wider flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center text-[var(--color-primary)] shrink-0">
                                         <User className="w-5 h-5" />
                                     </div>
                                     Vos Informations
@@ -452,7 +452,7 @@ export default function BookingCheckout() {
                                     </div>
                                 )}
 
-                                <div className="flex gap-4 pt-4">
+                                <div className="flex flex-col-reverse md:flex-row gap-4 pt-4">
                                     <button onClick={() => setStep(1)} className="px-8 py-5 border border-[#1F2A3D] text-slate-400 font-black uppercase tracking-widest text-xs rounded-2xl">Précédent</button>
                                     <button onClick={handleSubmitBooking} disabled={loading} className="flex-1 py-5 bg-gradient-to-r from-[#261CC1] to-[#3A9AFF] text-white font-black uppercase tracking-widest text-sm rounded-2xl">
                                         {loading ? 'Traitement...' : 'Finaliser la Réservation'}

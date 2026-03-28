@@ -237,8 +237,8 @@ export default function Home() {
             {/* How it Works Section */}
             <section className="py-24 relative overflow-hidden">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-black text-white uppercase tracking-wider mb-2">Comment ça <span className="text-[var(--color-primary)]">marche ?</span></h2>
+                    <div className="text-center mb-10 md:mb-16">
+                        <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-wider mb-2">Comment ça <span className="text-[var(--color-primary)]">marche ?</span></h2>
                         <p className="text-slate-400 font-light">Réservez votre voiture en trois étapes simples.</p>
                     </div>
 
@@ -268,11 +268,11 @@ export default function Home() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-end mb-12 border-b border-[#1F2A3D] pb-6 animate-fade-in opacity-0">
                         <div>
-                            <h2 className="text-3xl font-black text-white uppercase tracking-tight mb-2">Véhicules <span className="text-[var(--color-primary)]">Favoris</span></h2>
-                            <p className="text-slate-500 font-light italic">Nos modèles les plus demandés cette semaine.</p>
+                            <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight mb-2">Véhicules <span className="text-[var(--color-primary)]">Favoris</span></h2>
+                            <p className="text-slate-500 font-light italic">Nos modèles les plus demandés.</p>
                         </div>
-                        <Link to="/vehicles" className="text-[var(--color-primary)] text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 hover:text-white transition-all group">
-                            Voir tout le catalogue <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        <Link to="/vehicles" className="text-[var(--color-primary)] text-[10px] md:text-xs font-black uppercase tracking-[0.2em] flex items-center gap-1 hover:text-white transition-all group">
+                            Voir tout <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </div>
 
@@ -333,7 +333,7 @@ export default function Home() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                     <div className="mb-24 text-center animate-fade-in opacity-0">
                         <div className="inline-block px-5 py-2 bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 rounded-full text-[var(--color-primary)] text-[10px] font-black uppercase tracking-[0.4em] mb-8">Partout au Maroc</div>
-                        <h2 className="text-6xl md:text-7xl font-black text-white uppercase tracking-tighter mb-8 leading-[0.85]">Liberté Sans <br /><span className="text-[var(--color-primary)]">Frontières.</span></h2>
+                        <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-white uppercase tracking-tighter mb-6 md:mb-8 leading-[0.85]">Liberté Sans <br /><span className="text-[var(--color-primary)]">Frontières.</span></h2>
                         <p className="text-slate-500 max-w-xl mx-auto text-xl font-light leading-relaxed">
                             Nous vous livrons l'excellence directement à votre porte, à l'aéroport ou à votre hôtel.
                         </p>
@@ -348,7 +348,7 @@ export default function Home() {
                             {DELIVERY_ZONES.map((zone, i) => (
                                 <div
                                     key={i}
-                                    className="min-w-[340px] md:min-w-[400px] snap-center group/card"
+                                    className="min-w-[280px] md:min-w-[400px] snap-center group/card"
                                 >
                                     <div className="relative h-[520px] rounded-[3rem] overflow-hidden border border-[#1F2A3D] group-hover/card:border-[var(--color-primary)]/50 transition-all duration-1000 shadow-2xl">
                                         <img
@@ -367,7 +367,7 @@ export default function Home() {
                                                 <span className="px-4 py-1.5 bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/30 backdrop-blur-md rounded-lg text-[var(--color-primary)] text-[9px] font-black uppercase tracking-[0.3em]">Siège Principal</span>
                                             )}
                                             <div className="space-y-2">
-                                                <h3 className="text-5xl font-black text-white uppercase tracking-tighter leading-none">{zone.name}</h3>
+                                                <h3 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none">{zone.name}</h3>
                                                 <p className="text-slate-400 text-sm font-medium leading-relaxed opacity-0 group-hover/card:opacity-100 translate-y-4 group-hover/card:translate-y-0 transition-all duration-700 delay-100">
                                                     {zone.desc}
                                                 </p>
@@ -392,7 +392,7 @@ export default function Home() {
                             <div className="inline-block px-4 py-1.5 bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 rounded-full mb-6 animate-fade-in opacity-0">
                                 <span className="text-[var(--color-primary)] text-[10px] font-black uppercase tracking-[0.2em]">Excellence TRM</span>
                             </div>
-                            <h2 className="text-5xl font-black text-white uppercase tracking-tight mb-8 leading-[0.9] animate-slide-up opacity-0">
+                            <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight mb-8 leading-[0.9] animate-slide-up opacity-0">
                                 Pourquoi nous faire <br />
                                 <span className="text-[var(--color-primary)]">confiance ?</span>
                             </h2>
@@ -426,7 +426,7 @@ export default function Home() {
                                 </div>
                             </div>
                         </div>
-                        <div className="relative h-[700px] border border-slate-800 rounded-[3rem] overflow-hidden p-3 bg-[#111827] shadow-[0_50px_100px_rgba(0,0,0,0.5)] animate-scale-in opacity-0">
+                        <div className="relative h-[400px] md:h-[700px] border border-slate-800 rounded-[3rem] overflow-hidden p-3 bg-[#111827] shadow-[0_50px_100px_rgba(0,0,0,0.5)] animate-scale-in opacity-0">
                             <div className="absolute inset-0 z-0 scale-125 opacity-20 blur-3xl bg-[var(--color-primary)]/20 animate-pulse" />
                             <img src={vehicles[0]?.image_url || '/images/cars/default.png'} alt="Premium TRM" className="w-full h-full object-cover rounded-[2.5rem] filter contrast-110 brightness-110 active:scale-95 transition-transform" />
                             <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F19] via-transparent to-transparent rounded-[2.5rem]" />

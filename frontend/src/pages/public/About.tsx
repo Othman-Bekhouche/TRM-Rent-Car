@@ -33,10 +33,10 @@ export default function About() {
                         <span className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-pulse" />
                         <span className="text-sm font-bold text-[var(--color-primary)] tracking-wider uppercase">Depuis Taourirt, Maroc</span>
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-black text-white mb-6 uppercase tracking-tight">
+                    <h1 className="text-4xl md:text-7xl font-black text-white mb-6 uppercase tracking-tight">
                         Qui sommes-<span className="text-[var(--color-primary)]">nous</span>
                     </h1>
-                    <p className="text-xl text-slate-300 max-w-3xl mx-auto font-light leading-relaxed">
+                    <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto font-light leading-relaxed">
                         Chez <span className="text-[var(--color-primary)] font-bold">TRM Rent Car</span>, nous redéfinissons les standards de la location de véhicules au Maroc. Plus qu'un simple déplacement : une expérience premium, abordable et sécurisée.
                     </p>
                 </div>
@@ -75,11 +75,11 @@ export default function About() {
                                 </p>
                             </div>
 
-                            <div className="mt-10 flex gap-4">
-                                <Link to="/vehicles" className="px-8 py-3 bg-[var(--color-primary)] text-[#0B0F19] font-black text-sm uppercase tracking-widest rounded-xl hover:shadow-[0_6px_25px_rgba(212,175,55,0.3)] transition-all">
+                            <div className="mt-10 flex flex-col md:flex-row gap-4">
+                                <Link to="/vehicles" className="px-8 py-4 md:py-3 bg-[var(--color-primary)] text-[#0B0F19] font-black text-sm text-center uppercase tracking-widest rounded-xl hover:shadow-[0_6px_25px_rgba(212,175,55,0.3)] transition-all">
                                     Voir la Flotte
                                 </Link>
-                                <Link to="/contact" className="px-8 py-3 border border-[var(--color-border)] text-white font-bold text-sm uppercase tracking-widest rounded-xl hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all">
+                                <Link to="/contact" className="px-8 py-4 md:py-3 border border-[var(--color-border)] text-white font-bold text-sm text-center uppercase tracking-widest rounded-xl hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all">
                                     Nous Contacter
                                 </Link>
                             </div>
