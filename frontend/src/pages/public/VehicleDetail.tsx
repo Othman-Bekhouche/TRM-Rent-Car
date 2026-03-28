@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Fuel, Users, MapPin, Search as Box, CheckCircle, CreditCard, Shield, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import toast, { Toaster } from 'react-hot-toast';
+import SEO from '../../components/common/SEO';
 
 export default function VehicleDetail() {
     const { id: vehicleId } = useParams();
@@ -78,6 +79,12 @@ export default function VehicleDetail() {
     return (
         <div className="pb-24 bg-[var(--color-background)] min-h-screen font-sans">
             <Toaster position="top-right" />
+            <SEO 
+                title={`${vehicle.brand} ${vehicle.model} | Location de Voiture Maroc`}
+                description={`Louez le ${vehicle.brand} ${vehicle.model} chez TRM Rent Car au meilleur prix. ${vehicle.description?.substring(0, 150)}...`}
+                keywords={`location ${vehicle.brand}, louer ${vehicle.model}, location voiture ${vehicle.brand} maroc, TRM rent car ${vehicle.model}`}
+                ogImage={vehicle.image_url}
+            />
 
             {/* SaaS Header Breadcrumb Navigation */}
             <div className="bg-[#141C2B] border-b border-[var(--color-border)] py-4">

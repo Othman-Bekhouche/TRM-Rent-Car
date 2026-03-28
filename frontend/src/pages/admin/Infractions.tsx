@@ -80,9 +80,10 @@ export default function Infractions() {
         const searchDate = new Date(`${dateStr}T12:00:00`); // Midday local is safe for date only
 
         // Find all potential matches
-        const potentials = reservations.filter(r => {
+        const potentials = (reservations || []).filter(r => {
+            if (!r) return false;
             if (r.vehicle_id !== vehicleId) return false;
-            if (['cancelled', 'rejected'].includes(r.status)) return false;
+            if (['cancelled', 'rejected'].includes(r.status || '')) return false;
 
             // 1. If we have precise handover times, use them
             const handover = r.handover?.[0]; // Supabase joins return array
@@ -261,11 +262,11 @@ export default function Infractions() {
         }
     };
 
-    const filteredInfractions = infractions.filter(i => {
-        const matchesStatus = filterStatus === 'all' || i.status === filterStatus;
-        const vehicleInfo = (i.vehicle?.brand || '') + ' ' + (i.vehicle?.model || '') + ' ' + (i.vehicle?.plate_number || '');
-        const matchesSearch =
-            vehicleInfo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const filteredInfractions = (infractions || []).filter(i => {
+        if (!i) return false;
+        const statusStr = i.status || 'pending';
+        const matchesStatus = filterStatus === 'all' || statusStr === filterStatus;
+        const matchesSearch = (i.vehicle?.brand || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
             (i.reference_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
             (i.customer?.full_name || '').toLowerCase().includes(searchTerm.toLowerCase());
         return matchesStatus && matchesSearch;

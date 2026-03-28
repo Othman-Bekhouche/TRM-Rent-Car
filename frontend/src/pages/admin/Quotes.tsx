@@ -85,8 +85,13 @@ export default function Quotes() {
 
     const handleAdd = () => {
         setSelectedQuote(null);
+        // Generate a more robust reference
+        const prefix = 'DEV';
+        const datePart = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+        const randomPart = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        
         setFormData({
-            quote_number: `DEV-${Date.now().toString().slice(-6)}`,
+            quote_number: `${prefix}-${datePart}-${randomPart}`,
             customer_id: '',
             vehicle_id: '',
             start_date: new Date().toISOString().split('T')[0],
@@ -126,14 +131,8 @@ export default function Quotes() {
                 vehicle_id: formData.vehicle_id,
                 start_date: formData.start_date,
                 end_date: formData.end_date,
-                pickup_location: formData.pickup_location,
-                dropoff_location: formData.dropoff_location,
-                daily_rate: formData.daily_rate,
-                total_days: formData.total_days,
                 total_amount: formData.total_amount,
-                status: formData.status,
-                valid_until: formData.valid_until,
-                notes: formData.notes
+                status: formData.status
             };
 
             if (selectedQuote) {
@@ -330,6 +329,7 @@ export default function Quotes() {
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Client</label>
                                         <select
                                             required
+                                            name="customer_id"
                                             className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#261CC1]/20 font-bold text-slate-700"
                                             value={formData.customer_id}
                                             onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
@@ -342,6 +342,7 @@ export default function Quotes() {
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Véhicule</label>
                                         <select
                                             required
+                                            name="vehicle_id"
                                             className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#261CC1]/20 font-bold text-slate-700"
                                             value={formData.vehicle_id}
                                             onChange={(e) => handleVehicleChange(e.target.value)}
@@ -398,6 +399,7 @@ export default function Quotes() {
                                         <input
                                             type="number"
                                             required
+                                            name="daily_rate"
                                             className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#261CC1]/20 font-bold text-slate-700"
                                             value={formData.daily_rate}
                                             onChange={(e) => setFormData({ ...formData, daily_rate: Number(e.target.value) })}

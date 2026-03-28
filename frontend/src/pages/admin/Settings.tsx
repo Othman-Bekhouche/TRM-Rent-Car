@@ -1,7 +1,8 @@
 import { Save, Building2, Phone, Mail, MapPin, Globe, CreditCard, Bell, Loader2, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import { settingsApi } from '../../lib/api';
+import * as api from '../../lib/api';
+const { settingsApi } = api;
 
 export default function Settings() {
     const [saved, setSaved] = useState(false);
@@ -14,6 +15,17 @@ export default function Settings() {
     useEffect(() => {
         const loadSettings = async () => {
             try {
+                // Check Role Protection
+                const { data: { user } } = await api.supabase.auth.getUser();
+                if (user) {
+                    const { data: profile } = await api.supabase.from('profiles').select('role').eq('id', user.id).single();
+                    if (profile && !['super_admin', 'admin', 'gestionnaire'].includes(profile.role)) {
+                        toast.error("Accès refusé : Droits insuffisants");
+                        window.location.href = '/admin'; // Redirect
+                        return;
+                    }
+                }
+
                 const data = await settingsApi.get();
                 if (data) {
                     setSettings(data);

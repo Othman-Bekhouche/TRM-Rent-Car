@@ -1,8 +1,14 @@
 import { Mail, Phone, MapPin, Send, Clock, MessageCircle } from 'lucide-react';
+import SEO from '../../components/common/SEO';
 
 export default function Contact() {
     return (
         <div className="bg-[var(--color-background)]">
+            <SEO 
+                title="Contactez TRM Rent Car | Support Client 24/7"
+                description="Besoin d'aide ? Contactez notre équipe pour vos réservations de voitures au Maroc. WhatsApp, Téléphone ou Email."
+                keywords="contact trm rent car, reserver voiture maroc, support client location voiture, louer voiture taourirt contact"
+            />
             {/* Hero Header */}
             <section className="relative py-24 border-b border-[var(--color-border)] overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#0B0F19] via-[#101828] to-[#161D2B]" />

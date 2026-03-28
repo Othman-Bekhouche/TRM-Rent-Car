@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Car as CarIcon, Users, Fuel, ArrowRight, Filter, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import SEO from '../../components/common/SEO';
 
 export default function Vehicles() {
     const [vehicles, setVehicles] = useState<any[]>([]);
@@ -62,6 +63,11 @@ export default function Vehicles() {
 
     return (
         <div className="bg-[var(--color-background)] min-h-screen pb-24">
+            <SEO 
+                title="Notre Flotte de Véhicules | Location de Voitures au Maroc"
+                description="Découvrez notre sélection de véhicules de location : citadines, SUVs et voitures de prestige. Meilleurs tarifs pour votre séjour à Casablanca, Marrakech, Oujda ou Taourirt."
+                keywords="flotte voiture maroc, louer voiture occasion, location suv maroc, location citadine maroc, trm rent car vehicles"
+            />
             {/* Dark Cinematic Header */}
             <div className="relative py-24 border-b border-[var(--color-border)] mb-12 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-[#0F141D] to-[var(--color-background)] z-0" />

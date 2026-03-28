@@ -176,9 +176,9 @@ export default function BookingCheckout() {
                 .insert({
                     customer_id: generatedCustomerId,
                     vehicle_id: vehicleId,
-                    start_date: booking.startDate,
-                    end_date: booking.endDate,
-                    pickup_location: booking.pickup,
+                    start_date: new Date(booking.startDate).toISOString(),
+                    end_date: new Date(booking.endDate).toISOString(),
+                    pickup_location: booking.pickup || 'Agence Taourirt (Siège)',
                     dropoff_location: 'Agence Taourirt',
                     total_price: totalPrice,
                     status: 'pending',

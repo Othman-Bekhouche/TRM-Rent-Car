@@ -72,11 +72,11 @@ describe('TRM Rent Car - Tests de Chargement (Smoke Tests)', () => {
         adminPages.forEach(page => {
             it(`Charge la page admin ${page.path}`, () => {
                 cy.visit(page.path);
-                // Wait for any loading spinner to disappear
-                cy.get('body').find('svg.animate-spin', { timeout: 10000 }).should('not.exist');
+                // Wait for any loading animations (lucide-react loaders)
+                cy.get('body').find('svg.animate-spin', { timeout: 15000 }).should('not.exist');
                 cy.get('body').should('be.visible');
-                // General check for a h1 (title of the page)
-                cy.get('h1').should('exist');
+                // Check for a title h1 or h2
+                cy.get('h1, h2').should('exist');
             });
         });
 

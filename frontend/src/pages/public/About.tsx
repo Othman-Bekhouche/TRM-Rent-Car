@@ -1,5 +1,6 @@
 import { ShieldCheck, Users, Award, Car, MapPin, Clock, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import SEO from '../../components/common/SEO';
 
 const VALUES = [
     { icon: ShieldCheck, title: 'Sécurité Maximale', desc: 'Assurance multirisque incluse, véhicules récents et contrôlés avant chaque location.' },
@@ -18,6 +19,11 @@ const MILESTONES = [
 export default function About() {
     return (
         <div className="bg-[var(--color-background)]">
+            <SEO 
+                title="À Propos de TRM Rent Car | Votre Agence de Location à Taourirt"
+                description="Découvrez l'histoire de TRM Rent Car, notre engagement pour la sécurité et notre flotte de véhicules neufs (modèles 2026) disponible au Maroc."
+                keywords="agence location voiture taourirt, trm rent car histoire, location voiture fiable maroc, equipe trm rent car"
+            />
             {/* Hero */}
             <section className="relative py-28 border-b border-[var(--color-border)] overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#0B0F19] via-[#101828] to-[#161D2B]" />

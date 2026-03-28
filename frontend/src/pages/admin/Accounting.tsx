@@ -592,6 +592,7 @@ export default function Accounting() {
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Montant (MAD)</label>
                                     <input
                                         type="number"
+                                        name="amount"
                                         value={newTx.amount || ''}
                                         onChange={(e) => setNewTx({ ...newTx, amount: Number(e.target.value) })}
                                         className="w-full bg-slate-50 border-2 border-transparent focus:border-[#261CC1]/20 focus:bg-white rounded-2xl px-6 py-4 text-lg font-black text-[#1C0770] transition-all outline-none"
@@ -601,6 +602,7 @@ export default function Accounting() {
                                 <div>
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Description / Motif</label>
                                     <textarea
+                                        name="description"
                                         value={newTx.description}
                                         onChange={(e) => setNewTx({ ...newTx, description: e.target.value })}
                                         className="w-full bg-slate-50 border-2 border-transparent focus:border-[#261CC1]/20 focus:bg-white rounded-2xl px-6 py-4 text-xs font-bold text-slate-600 transition-all outline-none min-h-[100px]"
@@ -619,6 +621,7 @@ export default function Accounting() {
                             <button
                                 onClick={handleCreateTransaction}
                                 disabled={isSaving}
+                                name="submit-transaction"
                                 className="flex-[2] py-4 bg-[#261CC1] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#261CC1]/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
                             >
                                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle2 className="w-4 h-4" /> Enregistrer</>}

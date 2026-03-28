@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { vehiclesApi, type Vehicle } from '../../lib/api';
+import SEO from '../../components/common/SEO';
 
 const DELIVERY_ZONES = [
     { name: 'Taourirt', desc: 'Agence Principale — Siège TRM', img: '/images/locations/taourirt.png', abbr: 'TRT', isMain: true },
@@ -67,6 +68,56 @@ export default function Home() {
 
     return (
         <div className="bg-[var(--color-background)]">
+            <SEO 
+                title="Location de Voitures de Prestige au Maroc | Casablanca, Marrakech, Taourirt"
+                description="Réservez votre voiture de luxe chez TRM Rent Car au Maroc. Large choix de véhicules de prestige type SUV, Berlines, Sportives pour vos déplacements à Casablanca, Marrakech, Oujda et partout au Maroc."
+                keywords="location voiture luxe maroc, location voiture casablanca, location voiture marrakech, trm rent car, location voiture prestige, location voiture taourirt"
+            >
+                <script type="application/ld+json">
+                    {`
+                    {
+                      "@context": "https://schema.org",
+                      "@type": "CarRental",
+                      "name": "TRM Rent Car",
+                      "image": "https://trmrentcar.com/trm-logo-pour-arriere-blanc.png",
+                      "@id": "https://trmrentcar.com",
+                      "url": "https://trmrentcar.com",
+                      "telephone": "+212000000000",
+                      "address": {
+                        "@type": "PostalAddress",
+                        "streetAddress": "Agence Taourirt (Siège)",
+                        "addressLocality": "Taourirt",
+                        "postalCode": "63000",
+                        "addressCountry": "MA"
+                      },
+                      "geo": {
+                        "@type": "GeoCoordinates",
+                        "latitude": 34.4073,
+                        "longitude": -2.8973
+                      },
+                      "openingHoursSpecification": {
+                        "@type": "OpeningHoursSpecification",
+                        "dayOfWeek": [
+                          "Monday",
+                          "Tuesday",
+                          "Wednesday",
+                          "Thursday",
+                          "Friday",
+                          "Saturday",
+                          "Sunday"
+                        ],
+                        "opens": "00:00",
+                        "closes": "23:59"
+                      },
+                      "aggregateRating": {
+                        "@type": "AggregateRating",
+                        "ratingValue": "4.9",
+                        "reviewCount": "150"
+                      }
+                    }
+                    `}
+                </script>
+            </SEO>
             {/* SaaS Booking Hero Section */}
             <section className="relative min-h-[95vh] flex flex-col justify-center overflow-hidden border-b border-[var(--color-border)]">
                 {/* Hero Background Image */}
