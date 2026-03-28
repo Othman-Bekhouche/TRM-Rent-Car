@@ -11,6 +11,13 @@ DECLARE
     uuid_sandero_2 UUID := gen_random_uuid();
     uuid_sandero_3 UUID := gen_random_uuid();
 BEGIN
+    -- 0. NETTOYAGE COMPLET (Suppression totale de l'historique et des anciennes voitures)
+    -- Remarque : Ceci supprimera toutes les réservations en cascade pour éviter les conflits
+    DELETE FROM public.quotes;
+    DELETE FROM public.infractions;
+    DELETE FROM public.reservations;
+    DELETE FROM public.vehicles;
+
     -- 1. Insertion des véhicules dans la table `vehicles`
     INSERT INTO public.vehicles (
         id, brand, model, year, plate_number, transmission, fuel_type, 
