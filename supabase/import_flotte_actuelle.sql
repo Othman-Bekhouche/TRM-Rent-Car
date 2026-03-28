@@ -11,12 +11,18 @@ DECLARE
     uuid_sandero_2 UUID := gen_random_uuid();
     uuid_sandero_3 UUID := gen_random_uuid();
 BEGIN
-    -- 0. NETTOYAGE COMPLET (Suppression totale de l'historique et des anciennes voitures)
-    -- Remarque : Ceci supprimera toutes les réservations en cascade pour éviter les conflits
+    -- 0. NETTOYAGE COMPLET (Suppression totale de l'historique, voitures, et clients sauf ADMINS)
     DELETE FROM public.quotes;
     DELETE FROM public.infractions;
-    DELETE FROM public.reservations;
-    DELETE FROM public.vehicles;
+    DELETE FROM public.transactions;
+    DELETE FROM public.system_notifications;
+    DELETE FROM public.reservations; -- Supprime en cascade contrats, factures, handovers
+    DELETE FROM public.vehicles;     -- Supprime en cascade images, alertes, maintenance, logs
+
+    -- Nettoyage des utilisateurs, profils et clients, SAUF les 3 administrateurs
+    DELETE FROM public.customers WHERE LOWER(email) NOT IN ('admin@trmrentcar.com', 'gestion@trmrentcar.com', 'asistant@trmrentcar.com');
+    DELETE FROM public.profiles WHERE LOWER(email) NOT IN ('admin@trmrentcar.com', 'gestion@trmrentcar.com', 'asistant@trmrentcar.com');
+    DELETE FROM auth.users WHERE LOWER(email) NOT IN ('admin@trmrentcar.com', 'gestion@trmrentcar.com', 'asistant@trmrentcar.com');
 
     -- 1. Insertion des véhicules dans la table `vehicles`
     INSERT INTO public.vehicles (
