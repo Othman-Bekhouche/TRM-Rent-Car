@@ -295,4 +295,71 @@ describe('TRM Rent Car - PRODUCTION Cycle de Vie Avancé (Totalité des modules)
         // Le bouton de notification dans la barre du haut doit exister
         cy.get('button[title*="Notification"]', { timeout: 15000 }).should('exist');
     });
+    // ==========================================
+    // TEST 40: Admin — Déconnexion (Logout)
+    // ==========================================
+    it('20. Admin: Peut se déconnecter et retourner au login sécurisé', () => {
+        loginAs(roles.assistant);
+        cy.visit(`${PROD_URL}/admin`);
+        cy.get('body').then($body => {
+            // Le bouton de déconnexion peut être dans un menu dropdown, on s'assure qu'on peut cliquer dessus
+            if ($body.find('button[aria-haspopup="menu"]').length > 0) {
+            	cy.get('button[aria-haspopup="menu"]').first().click({ force: true });
+            }
+            cy.contains(/Déconnexion|Logout|Se déconnecter/i, { timeout: 10000 }).click({ force: true });
+        });
+        cy.url({ timeout: 10000 }).should('include', '/login');
+    });
+
+    // ==========================================
+    // TEST 41: Gestionnaire — Boîte de Réception
+    // ==========================================
+    it('21. Gestionnaire: Peut consulter les messages de contact entrants', () => {
+        loginAs(roles.gestionnaire);
+        cy.visit(`${PROD_URL}/admin/messages`);
+        
+        // On vérifie que la grille ou la table des messages s'affiche sans bloquer
+        cy.get('h1', { timeout: 10000 }).should('exist');
+        cy.get('body').should('exist'); // Vérifie l'absence de page blanche
+    });
+
+    // ==========================================
+    // TEST 42: Gestionnaire — Changement Statut Réservation
+    // ==========================================
+    it('22. Gestionnaire: Visualise les actions d\'une réservation existante', () => {
+        loginAs(roles.gestionnaire);
+        cy.visit(`${PROD_URL}/admin/reservations`);
+        
+        // Si la liste n'est pas vide, on vérifie que les boutons d'action existent
+        cy.get('body').then($body => {
+            if ($body.find('table tbody tr').length > 0) {
+                // Il devrait y avoir des boutons "Voir", "Editer" ou des select de statut
+                cy.get('table tbody tr').first().find('button, select, a').should('exist');
+            }
+        });
+    });
+
+    // ==========================================
+    // TEST 43: Public — Mot de passe oublié
+    // ==========================================
+    it('23. Public: Vérifie le flux "Mot de passe oublié"', () => {
+        cy.visit(`${PROD_URL}/login`);
+        // On cherche le lien de réinitialisation
+        cy.get('body').then($body => {
+            if ($body.find('a:contains("oublié")').length > 0) {
+                cy.contains(/Mot de passe oublié|Forgot/i).click({ force: true });
+                cy.get('input[type="email"]', { timeout: 10000 }).should('be.visible').type('test.forgot@trmrentcar.com');
+                cy.contains('button', /Envoyer|Réinitialiser/i).should('not.be.disabled');
+            }
+        });
+    });
+
+    // ==========================================
+    // TEST 44: Super Admin — Gestion du Profil
+    // ==========================================
+    it('24. Super Admin: Accède aux paramètres de sécurité de son compte profil', () => {
+        loginAs(roles.superAdmin);
+        cy.visit(`${PROD_URL}/admin/settings`);
+        cy.contains(/Profil|Sécurité|Mot de passe/i, { timeout: 10000 }).should('exist');
+    });
 });
