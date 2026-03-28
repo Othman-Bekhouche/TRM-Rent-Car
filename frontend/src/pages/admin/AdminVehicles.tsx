@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Search, Edit, Trash2, X, Loader2, AlertCircle, Check, Car, ImagePlus, Eye, Upload, Wrench } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, X, Loader2, AlertCircle, Check, Car, ImagePlus, Upload, Wrench } from 'lucide-react';
 import { vehiclesApi, type Vehicle } from '../../lib/api';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -43,7 +43,7 @@ export default function AdminVehicles() {
             setLoading(true);
             const data = await vehiclesApi.getAll();
             setVehicles(data);
-        } catch (err: any) {
+        } catch {
             toast.error("Erreur lors du chargement des véhicules");
         } finally {
             setLoading(false);
@@ -91,7 +91,7 @@ export default function AdminVehicles() {
             await vehiclesApi.delete(id);
             toast.success('Véhicule supprimé');
             setVehicles(prev => prev.filter(v => v.id !== id));
-        } catch (err: any) {
+        } catch {
             toast.error('Erreur lors de la suppression');
         }
     };
@@ -121,8 +121,9 @@ export default function AdminVehicles() {
                 toast.success('Véhicule ajouté');
             }
             setShowForm(false);
-        } catch (err: any) {
-            toast.error(err.message || 'Erreur lors de l\'enregistrement');
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Erreur lors de l\'enregistrement';
+            toast.error(message);
         } finally {
             setIsSaving(false);
         }
@@ -161,7 +162,6 @@ export default function AdminVehicles() {
         return imgs.find(i => i.is_cover)?.image_url || imgs[0]?.image_url || '';
     };
 
-    const getImageCount = (v: Vehicle) => (v.vehicle_images || []).length;
     const [uploading, setUploading] = useState<string | null>(null);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, setter: (v: string) => void, slotName: string) => {
@@ -173,8 +173,9 @@ export default function AdminVehicles() {
             const publicUrl = await vehiclesApi.uploadImage(file);
             setter(publicUrl);
             toast.success('Image téléchargée avec succès');
-        } catch (err: any) {
-            toast.error('Erreur lors du téléchargement : ' + err.message);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Erreur inconnue';
+            toast.error('Erreur lors du téléchargement : ' + message);
         } finally {
             setUploading(null);
         }

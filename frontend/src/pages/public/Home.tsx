@@ -26,7 +26,7 @@ const DELIVERY_ZONES = [
 ];
 
 export default function Home() {
-    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+    const [vehicles, setVehicles] = useState<(Vehicle & { image_url: string })[]>([]);
     const [loading, setLoading] = useState(true);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -39,7 +39,7 @@ export default function Home() {
                     const coverImg = v.vehicle_images?.find(img => img.is_cover)?.image_url
                         || v.vehicle_images?.[0]?.image_url
                         || '/images/cars/default.png';
-                    return { ...v, image_url: coverImg } as any;
+                    return { ...v, image_url: coverImg };
                 });
                 setVehicles(mapped.slice(0, 4));
             } catch (error) {
@@ -231,9 +231,9 @@ export default function Home() {
                                 <div key={i} className="bg-[#121826] h-[450px] rounded-[2rem] animate-pulse border border-[#1F2A3D]" />
                             ))}
                         </div>
-                    ) : (vehicles as any[]).length > 0 ? (
+                    ) : vehicles.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                            {(vehicles as any[]).map((car) => (
+                            {vehicles.map((car) => (
                                 <div key={car.id} className="bg-[#121826] border border-[#1F2A3D] rounded-[2.5rem] overflow-hidden group hover:border-[var(--color-primary)]/50 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)] transition-all duration-500 animate-scale-in opacity-0">
                                     <div className="h-56 relative bg-gradient-to-b from-[#1C2539] to-[#121826] p-6 flex items-center justify-center overflow-hidden">
                                         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#121826] to-transparent z-0"></div>
@@ -377,7 +377,7 @@ export default function Home() {
                         </div>
                         <div className="relative h-[700px] border border-slate-800 rounded-[3rem] overflow-hidden p-3 bg-[#111827] shadow-[0_50px_100px_rgba(0,0,0,0.5)] animate-scale-in opacity-0">
                             <div className="absolute inset-0 z-0 scale-125 opacity-20 blur-3xl bg-[var(--color-primary)]/20 animate-pulse" />
-                            <img src={(vehicles as any[])[0]?.image_url || '/images/cars/default.png'} alt="Premium TRM" className="w-full h-full object-cover rounded-[2.5rem] filter contrast-110 brightness-110 active:scale-95 transition-transform" />
+                            <img src={vehicles[0]?.image_url || '/images/cars/default.png'} alt="Premium TRM" className="w-full h-full object-cover rounded-[2.5rem] filter contrast-110 brightness-110 active:scale-95 transition-transform" />
                             <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F19] via-transparent to-transparent rounded-[2.5rem]" />
                             <div className="absolute bottom-12 left-12 right-12 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-8 shadow-2xl">
                                 <div className="flex items-end gap-2 mb-2">

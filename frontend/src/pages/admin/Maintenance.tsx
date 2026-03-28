@@ -18,10 +18,10 @@ const MAINTENANCE_TYPES = [
 ];
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
-    'Planifie': { label: 'Planifie', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: Clock },
-    'En cours': { label: 'En cours', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: Wrench },
-    'Termine': { label: 'Termine', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle },
-    'Annule': { label: 'Annule', color: 'bg-slate-50 text-slate-500 border-slate-200', icon: X },
+    'planned': { label: 'Planifié', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: Clock },
+    'in_progress': { label: 'En cours', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: Wrench },
+    'completed': { label: 'Terminé', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle },
+    'cancelled': { label: 'Annulé', color: 'bg-slate-50 text-slate-500 border-slate-200', icon: X },
 };
 
 export default function Maintenance() {
@@ -42,7 +42,7 @@ export default function Maintenance() {
     // Form states
     const [recordData, setRecordData] = useState<Partial<MaintenanceRecord>>({
         maintenance_type: 'Vidange',
-        status: 'Planifie',
+        status: 'planned',
         last_service_date: new Date().toISOString().split('T')[0],
         last_service_mileage: 0,
         next_service_date: '',
@@ -89,7 +89,7 @@ export default function Maintenance() {
         setRecordData({
             vehicle_id: vehicle?.id || '',
             maintenance_type: 'Vidange',
-            status: 'Planifié',
+            status: 'planned',
             last_service_date: new Date().toISOString().split('T')[0],
             last_service_mileage: vehicle?.mileage || 0,
             next_service_date: '',
@@ -116,11 +116,17 @@ export default function Maintenance() {
         e.preventDefault();
         setIsSaving(true);
         try {
+            // Clean up empty strings for nullable date fields to prevent 400 errors
+            const payload = { ...recordData };
+            if (payload.next_service_date === '') payload.next_service_date = undefined;
+            if (payload.last_service_date === '') payload.last_service_date = undefined;
+            if (payload.vendor_name === '') payload.vendor_name = undefined;
+
             if (editingRecord) {
-                await maintenanceApi.update(editingRecord.id, recordData);
+                await maintenanceApi.update(editingRecord.id, payload);
                 toast.success('Entretien mis à jour');
             } else {
-                await maintenanceApi.create(recordData);
+                await maintenanceApi.create(payload);
                 toast.success('Entretien enregistré');
             }
             setShowRecordForm(false);
@@ -228,7 +234,7 @@ export default function Maintenance() {
                         <div className="p-3 bg-blue-50 rounded-2xl"><History className="w-6 h-6 text-blue-600" /></div>
                         <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">En Maintenance</h3>
                     </div>
-                    <p className="text-4xl font-black text-blue-600">{records.filter(r => r.status === 'En cours').length}</p>
+                    <p className="text-4xl font-black text-blue-600">{records.filter(r => r.status === 'in_progress').length}</p>
                     <p className="text-xs font-bold text-slate-400 mt-2">Véhicules actuellement au garage</p>
                 </div>
 
@@ -240,7 +246,7 @@ export default function Maintenance() {
                         <div className="p-3 bg-white/10 rounded-2xl"><TrendingUp className="w-6 h-6 text-[#3A9AFF]" /></div>
                         <h3 className="text-xs font-black text-white/60 uppercase tracking-widest">Coûts Annuels</h3>
                     </div>
-                    <p className="text-3xl font-black text-white mt-4">{records.filter(r => r.status === 'Terminé' && new Date(r.last_service_date).getFullYear() === new Date().getFullYear()).reduce((sum, r) => sum + Number(r.actual_cost), 0).toLocaleString()} <span className="text-sm font-bold opacity-60">MAD</span></p>
+                    <p className="text-3xl font-black text-white mt-4">{records.filter(r => r.status === 'completed' && new Date(r.last_service_date).getFullYear() === new Date().getFullYear()).reduce((sum, r) => sum + Number(r.actual_cost), 0).toLocaleString()} <span className="text-sm font-bold opacity-60">MAD</span></p>
                     <p className="text-xs font-bold text-white/40 mt-2">Investissement entretien total {new Date().getFullYear()}</p>
                 </div>
             </div>
@@ -387,7 +393,7 @@ export default function Maintenance() {
                                 </thead>
                                 <tbody>
                                     {records.map(r => {
-                                        const st = STATUS_MAP[r.status] || STATUS_MAP.Planifié;
+                                        const st = STATUS_MAP[r.status] || STATUS_MAP.planned;
                                         return (
                                             <tr key={r.id} className="border-b border-slate-50 hover:bg-slate-50/5 transition-colors group">
                                                 <td className="py-5 px-3">

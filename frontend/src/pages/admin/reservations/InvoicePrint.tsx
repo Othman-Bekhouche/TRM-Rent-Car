@@ -48,15 +48,14 @@ export default function InvoicePrint() {
                         }
                     }, 1000);
                 }
-            } catch (err: any) {
-                console.error(err);
+            } catch {
                 toast.error("Erreur de chargement");
             } finally {
                 setLoading(false);
             }
         };
         loadData();
-    }, [id, shouldPrint]);
+    }, [id, shouldPrint, action]);
 
     if (loading) return <div className="p-10 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>;
     if (!reservation) return <div className="p-10 text-center uppercase font-bold tracking-widest text-slate-400">Dossier Introuvable</div>;

@@ -62,15 +62,14 @@ export default function ContractPrint() {
                         }
                     }, 800);
                 }
-            } catch (err: any) {
-                console.error(err);
+            } catch {
                 toast.error("Erreur de chargement");
             } finally {
                 setLoading(false);
             }
         };
         loadData();
-    }, [id, shouldPrint]);
+    }, [id, shouldPrint, action]);
 
     const contractNo = reservation?.rental_contracts?.[0]?.contract_number || contractIndex || id?.slice(0, 8).toUpperCase();
     const [editableContractNo, setEditableContractNo] = useState(contractNo);

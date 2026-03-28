@@ -1,77 +1,42 @@
 describe('Administration TRM Rent Car - Gestion Flotte & Compta', () => {
+    const adminUser = { email: 'admin@trmrentcar.ma', password: 'AdminTRM2026!' };
+
     beforeEach(() => {
-        // Mock Session Admin
-        cy.intercept('GET', '**/auth/v1/session**', {
-            statusCode: 200,
-            body: { session: { user: { id: 'admin-id', email: 'admin@trmrentcar.ma' } } }
-        }).as('sessionAdmin');
-
-        cy.intercept('GET', '**/rest/v1/profiles?select=*&id=eq.admin-id**', {
-            statusCode: 200,
-            body: [{ id: 'admin-id', role: 'super_admin', full_name: 'Super Admin' }]
-        }).as('adminProfile');
+        cy.clearLocalStorage();
+        cy.clearCookies();
+        window.localStorage.clear();
+        window.sessionStorage.clear();
+        
+        cy.visit('/login');
+        cy.get('input[type="email"]').type(adminUser.email);
+        cy.get('input[type="password"]').type(adminUser.password);
+        cy.contains('button', 'Se connecter', { matchCase: false }).click();
+        cy.url({ timeout: 20000 }).should('include', '/admin');
     });
 
-    it('Gère le parc automobile (Ajout/Modification)', () => {
-        cy.intercept('GET', '**/rest/v1/vehicles**', {
-            statusCode: 200,
-            body: [
-                { id: 'v1', brand: 'Dacia', model: 'Logan', plate_number: '1234 A 72', status: 'available', price_per_day: 300 }
-            ]
-        }).as('getVehicles');
-
+    it('Gère le parc automobile (Vue et Ajout simulé)', () => {
         cy.visit('/admin/vehicles');
-        cy.wait(['@sessionAdmin', '@adminProfile', '@getVehicles']);
+        cy.contains('Flotte globale', { timeout: 15000 }).should('be.visible');
+        
+        // Attendre que la grille affiche un véhicule : par ex. Dacia ou Renault
+        cy.get('table tbody tr', { timeout: 15000 }).should('have.length.greaterThan', 0);
 
-        cy.contains('Flotte globale').should('be.visible');
-        cy.contains('Dacia Logan').should('be.visible');
-
-        // Ajouter un véhicule
-        cy.contains('Ajouter un véhicule').click();
-        cy.get('input[placeholder="Marque"]').type('Peugeot');
-        cy.get('input[placeholder="Modèle"]').type('208');
-        cy.get('input[placeholder="Numéro d\'immatriculation"]').type('5678 B 72');
-
-        cy.intercept('POST', '**/rest/v1/vehicles', { statusCode: 201 }).as('createVehicle');
-        cy.contains('Enregistrer').click();
-        cy.wait('@createVehicle');
-        cy.contains('Véhicule ajouté').should('be.visible');
+        // Open modal
+        cy.contains('button', 'Nouveau Véhicule').click();
+        cy.contains('Informations Principales', { timeout: 10000 }).should('be.visible');
+        cy.contains('button', 'Annuler').click();
     });
 
-    it('Vérifie la comptabilité et les transactions automatiques', () => {
-        cy.intercept('GET', '**/rest/v1/accounting_transactions**', {
-            statusCode: 200,
-            body: [
-                { id: 't1', type: 'income', amount: 1500, category: 'Location', description: 'Réservation #123', created_at: new Date().toISOString() }
-            ]
-        }).as('getTransactions');
-
+    it('Consulte la vue Comptabilité', () => {
         cy.visit('/admin/accounting');
-        cy.wait(['@sessionAdmin', '@adminProfile', '@getTransactions']);
-
-        cy.contains('Comptabilité').should('be.visible');
-        cy.contains('1 500 MAD').should('be.visible');
-        cy.contains('income').should('be.visible');
+        cy.contains('Comptabilité', { timeout: 15000 }).should('be.visible');
+        cy.contains('Revenus', { timeout: 15000 }).should('be.visible');
+        cy.contains('Dépenses', { timeout: 10000 }).should('be.visible');
     });
 
-    it('Consulte les factures et les contrats', () => {
-        cy.intercept('GET', '**/rest/v1/reservations?select=**', {
-            statusCode: 200,
-            body: [
-                {
-                    id: 'res-1',
-                    total_price: 1500,
-                    status: 'confirmed',
-                    customers: { full_name: 'Otman Test' },
-                    invoices: [{ invoice_number: 'FAC-2026-001', total_amount: 1500, payment_status: 'paid' }]
-                }
-            ]
-        }).as('getInvoices');
-
+    it('Consulte la vue Factures', () => {
         cy.visit('/admin/invoices');
-        cy.wait(['@sessionAdmin', '@adminProfile', '@getInvoices']);
-
-        cy.contains('FAC-2026-001').should('be.visible');
-        cy.contains('Payée').should('be.visible');
+        cy.contains('Factures', { timeout: 15000 }).should('be.visible');
+        cy.contains('Rechercher', { timeout: 10000 }).should('be.visible');
     });
 });

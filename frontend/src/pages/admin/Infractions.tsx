@@ -282,7 +282,7 @@ export default function Infractions() {
                 </div>
                 {!showForm && (
                     <button onClick={handleAdd} className="flex items-center gap-2 px-5 py-2.5 bg-[#E11D48] text-sm font-bold text-white rounded-xl hover:shadow-[0_6px_20px_rgba(225,29,72,0.4)] transition-all">
-                        <Plus className="w-4 h-4" /> Signaler une infraction
+                        <Plus className="w-4 h-4" /> Ajouter une infraction
                     </button>
                 )}
             </div>

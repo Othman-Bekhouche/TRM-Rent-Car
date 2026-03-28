@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Edit, Mail, Loader2, Check, Trash2 } from 'lucide-react';
+import { Shield, Edit, Mail, Loader2, Check, Trash2, Plus } from 'lucide-react';
 import { adminsApi, type AdminUser } from '../../lib/api';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -32,7 +32,7 @@ export default function Users() {
             setLoading(true);
             const data = await adminsApi.getAll();
             setAdmins(data);
-        } catch (err: any) {
+        } catch {
             toast.error("Erreur chargement administrateurs");
         } finally {
             setLoading(false);
@@ -54,7 +54,7 @@ export default function Users() {
             await adminsApi.delete(id);
             setAdmins(prev => prev.filter(a => a.id !== id));
             toast.success("Administrateur supprimé");
-        } catch (err: any) {
+        } catch {
             toast.error("Erreur suppression");
         }
     };
@@ -68,8 +68,9 @@ export default function Users() {
             setAdmins(prev => prev.map(a => a.id === updated.id ? updated : a));
             toast.success("Profil mis à jour");
             setShowForm(false);
-        } catch (err: any) {
-            toast.error(err.message || "Erreur mise à jour");
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Erreur mise à jour";
+            toast.error(message);
         } finally {
             setIsSaving(false);
         }
@@ -84,6 +85,9 @@ export default function Users() {
                     <h1 className="text-3xl font-black text-[#1C0770] tracking-tight">Administrateurs</h1>
                     <p className="text-slate-500 text-sm mt-1">Gérez les accès et rôles de votre équipe</p>
                 </div>
+                <button onClick={() => toast.success("Utilisez l'invitation pour ajouter des membres")} className="flex items-center gap-2 px-5 py-2.5 bg-[#1C0770] text-sm font-bold text-white rounded-xl shadow-lg hover:shadow-[#1C0770]/20 transition-all">
+                    <Plus className="w-4 h-4" /> Ajouter un admin
+                </button>
             </div>
 
             {showForm && (

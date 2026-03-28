@@ -6,14 +6,10 @@ import {
     XCircle,
     Plus,
     Search,
-    Check,
     X,
-    Loader2,
     FileText,
     Edit,
     Trash2,
-    AlertCircle,
-    Calendar as CalendarIcon,
     ChevronLeft,
     ChevronRight,
     ArrowLeft
@@ -49,10 +45,9 @@ const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = 
 };
 
 export default function Reservations() {
-    const [reservations, setReservations] = useState<any[]>([]);
+    const [reservations, setReservations] = useState<Reservation[]>([]);
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [customers, setCustomers] = useState<Customer[]>([]);
-    const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [showForm, setShowForm] = useState(false);
@@ -61,7 +56,7 @@ export default function Reservations() {
     const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
     const [showPickupCustom, setShowPickupCustom] = useState(false);
     const [showDropoffCustom, setShowDropoffCustom] = useState(false);
-    const [vehicleReservations, setVehicleReservations] = useState<any[]>([]);
+    const [vehicleReservations, setVehicleReservations] = useState<{ id: string; start_date: string; end_date: string; status: string; customers?: { full_name: string } }[]>([]);
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
     const PRESET_LOCATIONS = [
@@ -112,12 +107,16 @@ export default function Reservations() {
             if (error) throw error;
 
             // Filter inactive statuses AND the current reservation being edited
-            const activeReservations = (data || []).map((res: any) => ({
-                ...res,
-                // Ensure dates are strings for parsing
-                start_date: res.start_date,
-                end_date: res.end_date
-            })).filter((res: any) => {
+            const activeReservations = (data || []).map((res: any) => {
+                const customers = Array.isArray(res.customers) ? res.customers[0] : res.customers;
+                return {
+                    id: res.id,
+                    start_date: res.start_date,
+                    end_date: res.end_date,
+                    status: res.status,
+                    customers: customers
+                };
+            }).filter((res) => {
                 const isActive = !['cancelled', 'completed', 'returned', 'confirmed_rejected', 'rejected'].includes(res.status);
                 const isNotCurrent = excludeId ? res.id !== excludeId : true;
                 return isActive && isNotCurrent;
@@ -142,7 +141,7 @@ export default function Reservations() {
             if (!hasChanged) return;
         }
 
-        const isAvail = await checkAvailability(selectedReservation?.id);
+        await checkAvailability(selectedReservation?.id);
         // Feedback UI uniquement
     };
 
@@ -166,7 +165,6 @@ export default function Reservations() {
 
     const loadData = async () => {
         try {
-            setLoading(true);
             const [resData, vehData, custData] = await Promise.all([
                 reservationsApi.getAll(),
                 vehiclesApi.getAll(),
@@ -175,14 +173,13 @@ export default function Reservations() {
             setReservations(resData);
             setVehicles(vehData);
             setCustomers(custData);
-        } catch (err: any) {
+        } catch {
             toast.error("Erreur lors du chargement des données");
         } finally {
-            setLoading(false);
         }
     };
 
-    const handleEdit = (res: any) => {
+    const handleEdit = (res: Reservation) => {
         setSelectedReservation(res);
         setFormData({
             ...res,
@@ -215,7 +212,7 @@ export default function Reservations() {
             await reservationsApi.delete(id);
             toast.success('Reservation supprimee');
             setReservations(prev => prev.filter(r => r.id !== id));
-        } catch (err: any) {
+        } catch {
             toast.error('Erreur lors de la suppression');
         }
     };
@@ -288,11 +285,12 @@ export default function Reservations() {
                 toast.success('Reservation ajoutee');
             }
             setShowForm(false);
-        } catch (err: any) {
-            if (err.message?.includes('ERREUR_CHEVAUCHEMENT')) {
+        } catch (err: unknown) {
+            const message = (err as any).message || "Erreur lors de l'enregistrement";
+            if (message.includes('ERREUR_CHEVAUCHEMENT')) {
                 toast.error('Ce vehicule est deja reserve sur cette periode !');
             } else {
-                toast.error(err.message || "Erreur lors de l'enregistrement");
+                toast.error(message);
             }
         } finally {
             setIsSaving(false);

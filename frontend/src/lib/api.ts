@@ -39,10 +39,6 @@ export interface Customer {
     passport: string;
     address: string;
     city: string;
-    total_spent: number;
-    total_reservations: number;
-    status: string;
-    notes: string;
     license_number?: string;
     license_expiry_date?: string;
     birth_date?: string;
@@ -50,6 +46,10 @@ export interface Customer {
     license_image_url?: string;
     cin_image_url?: string;
     passport_image_url?: string;
+    total_spent: number;
+    total_reservations: number;
+    status: string;
+    notes: string;
     created_at: string;
     updated_at: string;
 }
@@ -106,7 +106,7 @@ export interface MaintenanceRecord {
     id: string;
     vehicle_id: string;
     maintenance_type: string;
-    status: 'Planifie' | 'En cours' | 'Termine' | 'Annule' | 'Planifié' | 'Terminé' | 'Annulé';
+    status: 'planned' | 'in_progress' | 'completed' | 'cancelled';
     last_service_date: string;
     last_service_mileage: number;
     next_service_date: string;
@@ -223,8 +223,8 @@ export interface HandoverRecord {
     return_fuel_level: string;
     return_condition_notes: string;
     accessories_checklist: any;
-    deposit_collected: boolean;
-    payment_collected: boolean;
+    deposit_collected: number;
+    payment_collected: number;
     extra_charges: number;
     admin_notes: string;
     created_at: string;
@@ -461,7 +461,7 @@ const mapToDB = (record: Partial<MaintenanceRecord>) => {
 const mapFromDB = (data: any): MaintenanceRecord => {
     return {
         ...data,
-        status: data.status || 'Planifie'
+        status: data.status || 'planned'
     } as MaintenanceRecord;
 };
 

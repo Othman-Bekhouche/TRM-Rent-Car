@@ -91,12 +91,17 @@ export default function Customers() {
         e.preventDefault();
         setIsSaving(true);
         try {
+            // Clean up empty strings for nullable dates
+            const payload = { ...formData };
+            if (payload.license_expiry_date === '') payload.license_expiry_date = undefined;
+            if (payload.birth_date === '') payload.birth_date = undefined;
+
             if (selectedCustomer) {
-                const updated = await customersApi.update(selectedCustomer.id, formData);
+                const updated = await customersApi.update(selectedCustomer.id, payload);
                 setCustomers(prev => prev.map(c => c.id === updated.id ? updated : c));
                 toast.success('Client mis à jour');
             } else {
-                const created = await customersApi.create(formData);
+                const created = await customersApi.create(payload);
                 setCustomers(prev => [created, ...prev]);
                 toast.success('Client ajouté');
             }
@@ -164,21 +169,21 @@ export default function Customers() {
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nom Complet *</label>
                                     <div className="relative">
                                         <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                        <input required type="text" value={formData.full_name} onChange={e => setFormData({ ...formData, full_name: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 pl-10 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" placeholder="Prénom Nom" />
+                                        <input required name="full_name" type="text" value={formData.full_name} onChange={e => setFormData({ ...formData, full_name: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 pl-10 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" placeholder="Prénom Nom" />
                                     </div>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Email *</label>
                                     <div className="relative">
                                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                        <input required type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 pl-10 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" placeholder="email@exemple.com" />
+                                        <input required name="email" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 pl-10 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" placeholder="email@exemple.com" />
                                     </div>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Téléphone *</label>
                                     <div className="relative">
                                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                        <input required type="text" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 pl-10 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" placeholder="+212 ..." />
+                                        <input required name="phone" type="text" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 pl-10 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" placeholder="+212 ..." />
                                     </div>
                                 </div>
                             </div>
@@ -189,22 +194,22 @@ export default function Customers() {
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">CIN</label>
                                         <div className="relative">
                                             <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                            <input type="text" value={formData.cin} onChange={e => setFormData({ ...formData, cin: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 pl-10 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" placeholder="ex: BH123456" />
+                                            <input name="cin" type="text" value={formData.cin} onChange={e => setFormData({ ...formData, cin: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 pl-10 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF] text-slate-800" placeholder="ex: BH123456" />
                                         </div>
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Passeport</label>
-                                        <input type="text" value={formData.passport} onChange={e => setFormData({ ...formData, passport: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" placeholder="ex: EX12345" />
+                                        <input name="passport" type="text" value={formData.passport} onChange={e => setFormData({ ...formData, passport: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" placeholder="ex: EX12345" />
                                     </div>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Adresse</label>
-                                    <input type="text" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" placeholder="Adresse complète" />
+                                    <input name="address" type="text" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" placeholder="Adresse complète" />
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Ville</label>
-                                        <input type="text" value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" placeholder="Taourirt" />
+                                        <input name="city" type="text" value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} className="w-full bg-[#F0F4FF] border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" placeholder="Taourirt" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Statut</label>
@@ -227,20 +232,20 @@ export default function Customers() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Numero de Permis</label>
-                                    <input type="text" value={formData.license_number} onChange={e => setFormData({ ...formData, license_number: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" placeholder="ex: 12/34567" />
+                                    <input name="license_number" type="text" value={formData.license_number} onChange={e => setFormData({ ...formData, license_number: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" placeholder="ex: 12/34567" />
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Date d'expiration</label>
-                                    <input type="date" value={formData.license_expiry_date} onChange={e => setFormData({ ...formData, license_expiry_date: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" />
+                                    <input name="license_expiry_date" type="date" value={formData.license_expiry_date} onChange={e => setFormData({ ...formData, license_expiry_date: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Date de Naissance</label>
-                                        <input type="date" value={formData.birth_date} onChange={e => setFormData({ ...formData, birth_date: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" />
+                                        <input name="birth_date" type="date" value={formData.birth_date} onChange={e => setFormData({ ...formData, birth_date: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Lieu de Naissance</label>
-                                        <input type="text" value={formData.birth_place} onChange={e => setFormData({ ...formData, birth_place: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" placeholder="Ville" />
+                                        <input name="birth_place" type="text" value={formData.birth_place} onChange={e => setFormData({ ...formData, birth_place: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-[#3A9AFF] focus:border-[#3A9AFF]" placeholder="Ville" />
                                     </div>
                                 </div>
                             </div>

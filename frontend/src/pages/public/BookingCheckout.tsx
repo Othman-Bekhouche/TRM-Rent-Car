@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, Car, User, CheckCircle, Shield, Loader2, Lock, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Car, User, CheckCircle, Shield, Loader2, AlertCircle } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 
@@ -38,7 +38,7 @@ export default function BookingCheckout() {
         image_url: ''
     });
 
-    const [vehicleReservations, setVehicleReservations] = useState<any[]>([]);
+    const [vehicleReservations, setVehicleReservations] = useState<{ start_date: string; end_date: string; status: string }[]>([]);
 
     useEffect(() => {
         if (vehicleId) {
@@ -77,7 +77,7 @@ export default function BookingCheckout() {
                     if (error) throw error;
 
                     if (vehicle) {
-                        const coverImage = vehicle.vehicle_images?.find((img: any) => img.is_cover)?.image_url
+                        const coverImage = vehicle.vehicle_images?.find((img: { is_cover: boolean; image_url: string }) => img.is_cover)?.image_url
                             || vehicle.vehicle_images?.[0]?.image_url
                             || '/images/cars/default.png';
 
@@ -131,7 +131,7 @@ export default function BookingCheckout() {
             }
         };
         loadInitialData();
-    }, [vehicleId]);
+    }, [vehicleId, searchParams]);
 
     const totalDays = booking.startDate && booking.endDate
         ? Math.max(1, Math.ceil((new Date(booking.endDate).getTime() - new Date(booking.startDate).getTime()) / (1000 * 60 * 60 * 24)))
@@ -210,8 +210,9 @@ export default function BookingCheckout() {
 
             setStep(3);
             toast.success('Réservation envoyée avec succès !');
-        } catch (err: any) {
-            toast.error(err?.message || 'Erreur lors de la réservation.');
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Erreur lors de la réservation.';
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -298,6 +299,8 @@ export default function BookingCheckout() {
                                         <div className="space-y-2">
                                             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Retour</label>
                                             <input
+                                                id="booking-end-date"
+                                                name="end_date"
                                                 type="date"
                                                 value={booking.endDate}
                                                 onChange={(e) => setBooking({ ...booking, endDate: e.target.value })}
@@ -411,30 +414,30 @@ export default function BookingCheckout() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Prénom *</label>
-                                        <input type="text" value={client.firstName} onChange={(e) => setClient({ ...client, firstName: e.target.value })} className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold" />
+                                         <input id="client-first-name" name="first_name" type="text" value={client.firstName} onChange={(e) => setClient({ ...client, firstName: e.target.value })} className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Nom *</label>
-                                        <input type="text" value={client.lastName} onChange={(e) => setClient({ ...client, lastName: e.target.value })} className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold" />
+                                         <input id="client-last-name" name="last_name" type="text" value={client.lastName} onChange={(e) => setClient({ ...client, lastName: e.target.value })} className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold" />
                                     </div>
                                     <div className="md:col-span-2 space-y-2">
                                         <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Email *</label>
-                                        <input type="email" value={client.email} onChange={(e) => setClient({ ...client, email: e.target.value })} className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold" />
+                                         <input id="client-email" name="email" type="email" value={client.email} onChange={(e) => setClient({ ...client, email: e.target.value })} className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Téléphone *</label>
-                                        <input type="tel" value={client.phone} onChange={(e) => setClient({ ...client, phone: e.target.value })} className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold" />
+                                         <input id="client-phone" name="phone" type="tel" value={client.phone} onChange={(e) => setClient({ ...client, phone: e.target.value })} className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">CIN / Passeport</label>
-                                        <input type="text" value={client.cin} onChange={(e) => setClient({ ...client, cin: e.target.value })} className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold" />
+                                         <input id="client-cin" name="cin" type="text" value={client.cin} onChange={(e) => setClient({ ...client, cin: e.target.value })} className="w-full bg-[#0B0F19] border border-[#1F2A3D] text-white rounded-xl px-5 py-4 text-sm font-bold" />
                                     </div>
                                 </div>
 
                                 {!isLoggedIn && (
                                     <div className="bg-[#0B0F19] border border-[#1F2A3D] rounded-3xl p-8">
                                         <label className="flex items-center cursor-pointer">
-                                            <input type="checkbox" checked={client.createAccount} onChange={(e) => setClient({ ...client, createAccount: e.target.checked })} className="w-6 h-6 mr-4" />
+                                             <input id="create-account-toggle" name="create_account" type="checkbox" checked={client.createAccount} onChange={(e) => setClient({ ...client, createAccount: e.target.checked })} className="w-6 h-6 mr-4" />
                                             <div>
                                                 <p className="text-sm font-black text-white uppercase tracking-tight">Créer un profil client</p>
                                                 <p className="text-[10px] text-slate-500">Pour suivre vos locations</p>
@@ -443,7 +446,7 @@ export default function BookingCheckout() {
                                         {client.createAccount && (
                                             <div className="mt-8">
                                                 <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Mot de passe</label>
-                                                <input type="password" value={client.password} onChange={(e) => setClient({ ...client, password: e.target.value })} className="w-full bg-[#121826] border border-[#3A9AFF]/30 text-white rounded-xl px-5 py-4 text-sm font-bold" />
+                                                  <input id="client-password" name="password" type="password" value={client.password} onChange={(e) => setClient({ ...client, password: e.target.value })} className="w-full bg-[#121826] border border-[#3A9AFF]/30 text-white rounded-xl px-5 py-4 text-sm font-bold" />
                                             </div>
                                         )}
                                     </div>

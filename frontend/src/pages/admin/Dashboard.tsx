@@ -2,16 +2,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Car,
-    Users,
     Calendar,
     DollarSign,
     Clock,
     Loader2,
     Activity,
-    ArrowUpRight,
     BarChart3,
-    Filter,
-    LayoutDashboard
+    Filter
 } from 'lucide-react';
 import {
     dashboardApi,
@@ -88,7 +85,7 @@ export default function Dashboard() {
 
         const now = new Date();
         let start: Date;
-        let end: Date = endOfDay(now);
+        const end: Date = endOfDay(now);
 
         const isPaid = (status: string) => {
             if (!status) return false;
@@ -118,7 +115,7 @@ export default function Dashboard() {
 
         // Calculate 15 point chart data representing daily revenue over the last 15 days
         const last15Days = Array.from({ length: 15 }).map((_, i) => subDays(now, 14 - i));
-        let chartDataRaw = last15Days.map(date => {
+        const chartDataRaw = last15Days.map(date => {
             const dayTxs = allTransactions.filter(t =>
                 t.transaction_type === 'encaissement' &&
                 isPaid(t.status) &&

@@ -12,7 +12,8 @@
         "moduleResolution": "node",
         "allowJs": true,
         "skipLibCheck": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "module": "esnext"
     },
     "include": [
         "**/*.ts"

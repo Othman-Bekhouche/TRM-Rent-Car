@@ -1,23 +1,18 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import {
     DollarSign,
     TrendingUp,
     TrendingDown,
-    Download,
     Banknote,
-    Receipt,
-    Loader2,
-    BarChart3,
     Activity,
-    PieChart,
-    ChevronRight,
-    Search,
     Plus,
-    X,
+    BarChart3,
+    Loader2,
     CheckCircle2,
     Printer,
-    ArrowRightLeft
+    PieChart,
+    Search,
+    X
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import {
@@ -62,8 +57,8 @@ export default function Accounting() {
     });
 
     const [filterType, setFilterType] = useState<string>('all');
-    const [filterCategory, setFilterCategory] = useState<string>('all');
-    const [filterMethod, setFilterMethod] = useState<string>('all');
+    const [filterCategory] = useState<string>('all');
+    const [filterMethod] = useState<string>('all');
 
     const fetchData = async () => {
         try {
@@ -108,7 +103,7 @@ export default function Accounting() {
         }
     };
 
-    const exportToCSV = () => {
+    const handleExportToCSV = () => {
         if (transactions.length === 0) return;
         const headers = ['ID', 'Date', 'Client', 'Type', 'Methode', 'Status', 'Montant'];
         const rows = transactions.map(t => [
@@ -136,7 +131,7 @@ export default function Accounting() {
     const dataAnalysis = useMemo(() => {
         const now = new Date();
         let start: Date;
-        let end: Date = endOfDay(now);
+        const end: Date = endOfDay(now);
 
         switch (period) {
             case 'today': start = startOfDay(now); break;
@@ -169,7 +164,7 @@ export default function Accounting() {
 
         const isStatusValid = (s: string) => {
             const normalized = (s || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            return ['PAYE', 'ENCAISSE', 'VALIDATED', 'PAID', 'SUCCESS', 'CONFIRMED'].includes(normalized);
+            return ['PAYE', 'ENCAISSE', 'VALIDATED', 'PAID', 'SUCCESS', 'CONFIRMED', 'ATTENTE', 'PENDING'].includes(normalized);
         };
 
         const totalRevenue = filteredTxs
@@ -276,7 +271,6 @@ export default function Accounting() {
         return matchesSearch && matchesType && matchesCategory && matchesMethod;
     });
 
-    const categories = Array.from(new Set(transactions.map(t => t.category).filter(Boolean))) as string[];
 
     if (loading) {
         return (
@@ -316,12 +310,20 @@ export default function Accounting() {
                     ))}
                 </div>
 
-                <button
-                    onClick={() => setShowModal(true)}
-                    className="px-6 py-3 bg-[#261CC1] text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-xl shadow-[#261CC1]/20 hover:scale-[1.05] transition-all flex items-center gap-3"
-                >
-                    <Plus className="w-4 h-4" /> Nouveau Flux
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleExportToCSV}
+                        className="px-6 py-3 bg-white border border-slate-200 text-slate-600 font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-sm hover:bg-slate-50 transition-all flex items-center gap-3"
+                    >
+                        Exporter
+                    </button>
+                    <button
+                        onClick={() => setShowModal(true)}
+                        className="px-6 py-3 bg-[#261CC1] text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-xl shadow-[#261CC1]/20 hover:scale-[1.05] transition-all flex items-center gap-3"
+                    >
+                        <Plus className="w-4 h-4" /> Nouveau Flux
+                    </button>
+                </div>
             </div>
 
             <Toaster position="top-right" />
@@ -384,30 +386,6 @@ export default function Accounting() {
                         <span>Solde actuel</span>
                     </div>
                 </div>
-
-                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-xl group">
-                    <div className="flex justify-between items-start mb-6 text-amber-500">
-                        <div className="p-3 bg-amber-50 rounded-2xl"><Activity className="w-6 h-6" /></div>
-                    </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Encours / Créances</p>
-                    <p className="text-3xl font-black text-amber-500 tracking-tighter">{dataAnalysis.pendingRevenue.toLocaleString()} <span className="text-xs text-slate-200 ml-1">MAD</span></p>
-                    <div className="mt-4 pt-4 border-t border-slate-50 text-[9px] font-black uppercase tracking-widest text-amber-600/60 underline underline-offset-4 cursor-pointer hover:text-amber-600 transition-colors">
-                        Relancer les impayés
-                    </div>
-                </div>
-
-                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-xl group">
-                    <div className="flex justify-between items-start mb-6 text-purple-600">
-                        <div className="p-3 bg-purple-50 rounded-2xl"><Receipt className="w-6 h-6" /></div>
-                    </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Top Véhicule</p>
-                    <p className="text-xl font-black text-[#1C0770] tracking-tighter truncate">
-                        {dataAnalysis.topVehicles[0] ? `${dataAnalysis.topVehicles[0].brand} ${dataAnalysis.topVehicles[0].model}` : 'N/A'}
-                    </p>
-                    <div className="mt-4 pt-4 border-t border-slate-50 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                        {dataAnalysis.topVehicles[0] ? `${dataAnalysis.topVehicles[0].amount.toLocaleString()} MAD engrangés` : 'En attente de données'}
-                    </div>
-                </div>
             </div>
 
             {/* Dynamic Charts & Regional Analytics */}
@@ -454,17 +432,10 @@ export default function Accounting() {
                             })}
                         </div>
                     </div>
-                    <div className="pt-6 border-t border-slate-50 flex items-center gap-6">
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-[#261CC1]"></div>
-                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Chiffre d'Affaires Réel</span>
-                        </div>
-                    </div>
                 </div>
 
-                {/* Regional Sector Analytics */}
-                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                    <div className="flex items-center justify-between mb-8">
+                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-between">
+                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h2 className="text-lg font-black text-[#1C0770] uppercase">Répartition Géo.</h2>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Zones de départs locatifs</p>
@@ -491,30 +462,6 @@ export default function Accounting() {
                             );
                         })}
                     </div>
-                    <div className="mt-10 pt-6 border-t border-slate-50 text-center">
-                        <Link to="/admin/gps" className="text-[10px] font-black text-[#3A9AFF] uppercase tracking-widest hover:underline flex items-center justify-center gap-1">
-                            Analyse de mouvement complète <ChevronRight className="w-3 h-3" />
-                        </Link>
-                    </div>
-                </div>
-
-                {/* Expense Categories Chart */}
-                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm col-span-1 lg:col-span-3">
-                    <div className="flex items-center justify-between mb-8">
-                        <div>
-                            <h2 className="text-lg font-black text-[#1C0770] uppercase">Répartition par Catégorie</h2>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Analyse granulaire des flux</p>
-                        </div>
-                        <PieChart className="w-5 h-5 text-slate-200" />
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                        {Object.entries(dataAnalysis.categoryAnalysis).map(([cat, amount]: any, i) => (
-                            <div key={i} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:scale-[1.02] transition-all">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">{cat}</p>
-                                <p className="text-lg font-black text-[#1C0770] tracking-tighter">{amount.toLocaleString()} <span className="text-[10px] text-slate-400">MAD</span></p>
-                            </div>
-                        ))}
-                    </div>
                 </div>
             </div>
 
@@ -529,31 +476,12 @@ export default function Accounting() {
                         <select 
                             value={filterType} 
                             onChange={(e) => setFilterType(e.target.value)}
-                            className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 ring-[#261CC1]/10 transition-all"
+                            className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-[10px] font-black uppercase tracking-widest outline-none"
                         >
                             <option value="all">Tous Flux</option>
                             <option value="encaissement">Entrées (CA)</option>
                             <option value="charge">Charges (Frais)</option>
                             <option value="caution">Cautions</option>
-                        </select>
-                        <select 
-                            value={filterCategory} 
-                            onChange={(e) => setFilterCategory(e.target.value)}
-                            className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 ring-[#261CC1]/10 transition-all"
-                        >
-                            <option value="all">Toutes Catégories</option>
-                            {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                        <select 
-                            value={filterMethod} 
-                            onChange={(e) => setFilterMethod(e.target.value)}
-                            className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 ring-[#261CC1]/10 transition-all"
-                        >
-                            <option value="all">Paiement</option>
-                            <option value="Espèces">Espèces</option>
-                            <option value="Virement">Virement</option>
-                            <option value="Carte Bancaire">Carte</option>
-                            <option value="Chèque">Chèque</option>
                         </select>
                         <div className="relative flex-1 md:w-48">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -562,7 +490,7 @@ export default function Accounting() {
                                 placeholder="Rechercher..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 pl-11 pr-4 text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 ring-[#261CC1]/10 focus:bg-white transition-all"
+                                className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 pl-11 pr-4 text-[10px] font-black uppercase tracking-widest"
                             />
                         </div>
                         <button 
@@ -570,12 +498,6 @@ export default function Accounting() {
                             className="p-3 bg-white border border-slate-200 text-slate-400 rounded-xl shadow-sm hover:text-slate-900 transition-all"
                         >
                             <Printer className="w-4 h-4" />
-                        </button>
-                        <button 
-                            onClick={exportToCSV}
-                            className="p-3 bg-slate-900 text-white rounded-xl shadow-xl shadow-slate-900/10 hover:bg-black transition-all"
-                        >
-                            <Download className="w-4 h-4" />
                         </button>
                     </div>
                 </div>
@@ -627,19 +549,13 @@ export default function Accounting() {
                             ))}
                         </tbody>
                     </table>
-                    {filteredTransactions.length === 0 && (
-                        <div className="py-20 text-center animate-[fadeIn_0.3s]">
-                            <Search className="w-10 h-10 text-slate-100 mx-auto mb-4" />
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aucune donnée trouvée sur cette sélection</p>
-                        </div>
-                    )}
                 </div>
             </div>
 
             {/* Modal Nouveau Flux */}
             {showModal && (
                 <div className="fixed inset-0 bg-[#0B0F19]/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-[slideUp_0.3s_ease-out]">
+                    <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden">
                         <div className="p-8 border-b border-slate-50 flex justify-between items-center">
                             <div>
                                 <h3 className="text-xl font-black text-[#1C0770] uppercase">Opération de Caisse</h3>
@@ -690,57 +606,6 @@ export default function Accounting() {
                                         className="w-full bg-slate-50 border-2 border-transparent focus:border-[#261CC1]/20 focus:bg-white rounded-2xl px-6 py-4 text-xs font-bold text-slate-600 transition-all outline-none min-h-[100px]"
                                         placeholder="Ex: Frais de dossier, Révision, Règlement..."
                                     />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Catégorie</label>
-                                        <select
-                                            value={newTx.category}
-                                            onChange={(e) => setNewTx({ ...newTx, category: e.target.value })}
-                                            className="w-full bg-slate-50 border-2 border-transparent focus:border-[#261CC1]/20 focus:bg-white rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-widest outline-none transition-all"
-                                        >
-                                            <option value="Location">Location</option>
-                                            <option value="Maintenance">Maintenance</option>
-                                            <option value="Carburant">Carburant</option>
-                                            <option value="Lavage">Lavage</option>
-                                            <option value="Assurance">Assurance</option>
-                                            <option value="Vignette">Vignette</option>
-                                            <option value="Personnel">Salaire / Personnel</option>
-                                            <option value="Loyer">Loyer / Factures</option>
-                                            <option value="Marketing">Marketing / Publicité</option>
-                                            <option value="Caution">Caution</option>
-                                            <option value="Autre">Autre</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Méthode</label>
-                                        <select
-                                            value={newTx.payment_method}
-                                            onChange={(e) => setNewTx({ ...newTx, payment_method: e.target.value })}
-                                            className="w-full bg-slate-50 border-2 border-transparent focus:border-[#261CC1]/20 focus:bg-white rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-widest outline-none transition-all"
-                                        >
-                                            <option>Espèces</option>
-                                            <option>Virement</option>
-                                            <option>Carte Bancaire</option>
-                                            <option>Chèque</option>
-                                        </select>
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Statut</label>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {['Payé', 'En attente', 'Impayé'].map(s => (
-                                                <button
-                                                    key={s}
-                                                    onClick={() => setNewTx({ ...newTx, status: s })}
-                                                    className={`py-2 rounded-xl text-[9px] font-black uppercase tracking-tighter border-2 transition-all ${newTx.status === s 
-                                                        ? 'bg-slate-900 border-slate-900 text-white' 
-                                                        : 'bg-slate-50 border-transparent text-slate-400'}`}
-                                                >
-                                                    {s}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </div>

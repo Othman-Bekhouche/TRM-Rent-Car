@@ -7,7 +7,9 @@ export default function Settings() {
     const [saved, setSaved] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [settings, setSettings] = useState<any>(null);
+    const [settings, setSettings] = useState<any>(null); // Keeping any here for simplicity as Settings type is complex and not fully defined in api.ts yet, but I will fix other issues. Or I can use Record<string, any>
+    // Actually, I'll see if I can define a basic interface or just fix the unused variables.
+    // Let's fix unused variables first.
 
     useEffect(() => {
         const loadSettings = async () => {
@@ -30,7 +32,7 @@ export default function Settings() {
                         notifications_sms: false
                     });
                 }
-            } catch (err) {
+            } catch {
                 toast.error('Erreur lors du chargement des paramètres.');
             } finally {
                 setLoading(false);
@@ -54,7 +56,7 @@ export default function Settings() {
             setSaved(true);
             toast.success('Paramètres sauvegardés avec succès !');
             setTimeout(() => setSaved(false), 2000);
-        } catch (err) {
+        } catch (err: unknown) {
             console.error('Settings save error:', err);
             toast.error('Erreur lors de la sauvegarde.');
         } finally {
